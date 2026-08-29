@@ -15,6 +15,9 @@ outputs_*/
 *.png
 *.ppm
 
+# Keep documentation assets
+!assets/*
+
 # Model weights and checkpoints
 *.safetensors
 *.bin
