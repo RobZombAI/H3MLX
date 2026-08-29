@@ -1,13 +1,23 @@
-# MiniMax H3 Metal 4 / M5 Max Master Suite
+# H3MLX: MiniMax H3 Metal 4 / M5 Max Master Suite & Agent Skill
 
 [![Platform](https://img.shields.io/badge/Platform-macOS%20Apple%20Silicon-black?style=flat&logo=apple)](https://apple.com)
 [![Hardware](https://img.shields.io/badge/Optimized%20for-M5%20Max%20%7C%20128GB%20UMA-orange?style=flat)](https://apple.com)
 [![Engine](https://img.shields.io/badge/Engine-Pure%20C%20%2F%20Metal%204%20NAX-blue?style=flat)](https://github.com)
+[![Agent Skill](https://img.shields.io/badge/Agent%20Skill-Hermes%20%7C%20Antigravity%20%7C%20Open--Agent-purple?style=flat)](SKILL.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0%20%2F%20MiniMax-green?style=flat)](LICENSE)
-[![Eco-Efficiency](https://img.shields.io/badge/Eco--Efficiency--92%25%20Compute%20Joules-brightgreen?style=flat)](#-green-ai--energy-efficiency)
+[![Eco-Efficiency](https://img.shields.io/badge/Eco--Efficiency--94%25%20Compute%20Joules-brightgreen?style=flat)](#-green-ai--energy-efficiency)
 
-> **The definitive high-performance toolkit, scientific benchmark suite, and native macOS studio for MiniMax-H3 video and synchronized audio generation on Apple Silicon.**
+> **The definitive high-performance toolkit, scientific benchmark suite, native macOS studio, and autonomous AI Agent Skill for MiniMax-H3 video and synchronized audio generation on Apple Silicon.**
 > Combines pure C/Metal 4 NAX execution, 50 full transformer layers, INT8-FC2 dynamic quantization, causal temporal lattice generation ($T = 17n + 5$), zero-copy UMA memory layout, and real-time ANSI terminal monitoring.
+
+---
+
+## 🤖 AI Agent Skill Compatibility (Hermes, Antigravity, Open-Agent)
+
+This repository includes a standardized autonomous agent execution skill specification ([`SKILL.md`](file:///SKILL.md)):
+* **Agent Plug-and-Play**: Compatible with **Hermes Agent**, **Antigravity**, **Claude Code**, **AutoGen**, and **LangChain** tool orchestration.
+* **Deterministic Execution**: Programmatic CLI tool calls, automatic causal temporal framing ($T = 17n + 5$), and structured JSON output metrics.
+* **Mastering in Loop**: Automatic Lanczos grading and EBU R128 loudness normalization prior to delivery.
 
 ---
 
