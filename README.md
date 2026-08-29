@@ -11,6 +11,12 @@
 
 ---
 
+<p align="center">
+  <img src="assets/h3mlx_benchmark_hero.jpg" alt="H3MLX Speed Benchmark on Apple Silicon M5 Max" width="100%">
+</p>
+
+---
+
 ## 🎨 Galleria Visiva dei Benchmark (Render Live su M5 Max)
 
 | 🏆 Fast Master Champion (`champion`) | ⚡ FastVideo v0.2 Turbo (`turbo`) |
