@@ -59,7 +59,7 @@ The script outputs structured JSON metadata upon completion:
     "gpu_denoise_sec": 12.55,
     "vae_decode_sec": 9.88,
     "total_latency_sec": 44.92,
-    "energy_joules": 1211.4
+    "throughput_fps": 3.11
   }
 }
 ```
