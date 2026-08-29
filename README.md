@@ -104,7 +104,15 @@
 
 ---
 
-### 🗺️ 3. The 126-Configuration Super Matrix Heatmap (7 Presets × 18 Samplers)
+### 📈 3. Quality vs. Total Latency Pareto Efficiency Frontier
+
+<p align="center">
+  <img src="assets/h3mlx_pareto_frontier_benchmark.png" alt="Pareto Quality vs Total Latency Frontier" width="100%">
+</p>
+
+---
+
+### 🗺️ 4. The 126-Configuration Super Matrix Heatmap (7 Presets × 18 Samplers)
 
 <p align="center">
   <img src="assets/h3mlx_master_sampler_heatmap_matrix.png" alt="Super Matrix Heatmap 7x18" width="100%">
