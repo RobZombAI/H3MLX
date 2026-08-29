@@ -152,7 +152,13 @@ graph TD
   $$\sigma(t) = \frac{s \cdot t}{1 + (s - 1) \cdot t}$$
 * Directs denoising compute power to high-energy visual frequency bands ($s_{\text{video}} = 12.0$, $s_{\text{audio}} = 3.0$).
 
-### 6. Zero-Latency In-Place ANSI Terminal Rendering (`\r\033[K`)
+### 6. Trailing Flow Discretization (DPM++ 2M Trailing Schedule)
+* **Why Trailing over Leading/Uniform**: Standard diffusion schedules often truncate or space out timesteps uniformly across $[1.0, 0.0]$, which wastes compute in early gaussian noise and starves the final convergence phase.
+* **Trailing Flow Alignment**: By anchoring the final timestep exactly at zero ($t_N = 0.0$) with trailing boundaries:
+  $$t_i = 1.0 - \frac{i}{N} \quad (i = 1, \dots, N)$$
+  In combination with Flow Shift ($s = 12.0$), Trailing Flow allocates the densest ODE integration steps precisely where high-frequency optical details (pupil reflections, skin pores, fine smoke particles) crystallize, enabling genuine 8K macro quality in just 8 steps.
+
+### 7. Zero-Latency In-Place ANSI Terminal Rendering (`\r\033[K`)
 * Single-line terminal live updating with ANSI escape sequences for tokenizer, text encoder, denoise steps, and VAE decoders.
 * Non-blocking logging with zero I/O slowdown on generation throughput.
 
