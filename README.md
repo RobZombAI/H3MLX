@@ -29,9 +29,11 @@
 | ![Cinema 16:9](assets/cinema_preview.gif) | ![Vertical Reel 9:16](assets/reel_preview.gif) |
 | **960x544 Nativo · 8-Step · 50 Layer**<br>$\mathbf{16.41\text{ s}}$ Denoise · Inquadratura anamorfica | **544x960 Nativo · 8-Step · 50 Layer**<br>$\mathbf{16.44\text{ s}}$ Denoise · Cross-Attention First-Frame |
 
----
+## 📊 Grafico a Barre Verticali & Lavagna delle Tempistiche (GPU Denoise su M5 Max)
 
-## 📋 Lavagna Comparativa delle Tempistiche (GPU Denoise su M5 Max)
+<p align="center">
+  <img src="assets/h3mlx_vertical_barchart.png" alt="H3MLX Vertical Bar Chart Benchmark" width="100%">
+</p>
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
