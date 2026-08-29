@@ -12,7 +12,7 @@
 ---
 
 <p align="center">
-  <img src="assets/h3mlx_benchmark_hero.jpg" alt="H3MLX Speed Benchmark on Apple Silicon M5 Max" width="100%">
+  <img src="assets/h3mlx_benchmark_chart.png" alt="H3MLX Empirical Performance Breakdown: GPU Denoise (DiT) vs 3D Video VAE Decoding" width="100%">
 </p>
 
 ---
