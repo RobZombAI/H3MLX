@@ -254,6 +254,36 @@ Lo script autonomo [`h3_master_cli.sh`](file:///h3_master_cli.sh) gestisce auto-
 
 ---
 
+## 🔊 Il Problema della Risoluzione Audio nei Render Rapidi (Analisi & RFC)
+
+Nelle generazioni ultra-rapide a 4-8 passi, si osserva una discrepanza fisica fondamentale tra le due modalità:
+* **Video Latents**: Convergono rapidamente a nitidezza 8K grazie allo shift visivo elevato ($s_{\text{video}} = 12.0$) e ai forti prior visivi.
+* **Audio Latents (48 kHz Stereo)**: Operando su spettrogrammi continui ad alta frequenza, i tensori audio richiedono una velocità di flusso differente ($s_{\text{audio}} \approx 3.0$). Con soli 4-8 step condivisi, la traiettoria di rumore audio non sempre si risolve completamente, provocando occasionali attenuazioni o rumore residuo di fondo.
+
+### 💡 Soluzioni Ingegneristiche Proposte:
+1. **Decoupled Multi-Rate Audio ODE Solver**: Disaccoppiare gli step del ramo audio, consentendo micro-iterazioni dedicate sull'attenzione audio senza rallentare la GPU sui token video.
+2. **Audio Latent Refiner / DMD2 LoRA**: Introdurre un modulo leggero a 1 dimensione (Audio Refiner Head) distillato specificamente per la decodifica audio a 48 kHz.
+3. **Filtro Spettrale Adattivo nel Mastering**: Implementare un noise-gate dinamico con FFT spettrale (`afftdn` / `anlmdn`) durante la fase di mastering a 10-bit.
+
+---
+
+## 🤝 Open for Community Contributions & PRs
+
+Questo progetto è **interamente aperto ai contributi della community open-source**! Sei uno sviluppatore C/Metal, un ricercatore di modelli di diffusione o un ingegnere DSP?
+
+### 🛠️ Aree di Contributo Prioritarie:
+* **Audio ODE Scheduler Optimization**: Implementazione di schedule di diffusione asincroni per l'audio.
+* **Kernel Metal 4 / MLX**: Nuove fusioni di kernel matriciali per Apple Silicon M1-M5.
+* **Distillazione LoRA & SFT**: Pesi LoRA per formati e stili cinematografici specifici.
+
+### 📋 Come Contribuire:
+1. Fai il **Fork** del repository `RobZombAI/H3MLX`.
+2. Crea un branch per la tua feature (`git checkout -b feature/audio-decoupled-schedule`).
+3. Testa l'integrità con `python3 tests/verify_matrix_integrity.py`.
+4. Apri una **Pull Request**: tutti i contributi verranno revisionati, testati su Apple Silicon e confermati dal maintainer ([@RobZombAI](https://github.com/RobZombAI)).
+
+---
+
 ## 📜 Autori, Citazioni & Licenza
 
 * **Salvatore Sanfilippo (antirez)**: Ideatore e autore del motore sorgente C/Metal `h3.c`.
