@@ -17,17 +17,47 @@
 
 ---
 
-## 🎨 Galleria Visiva dei Benchmark (Render Live su M5 Max)
+## 🎨 Galleria Visiva Completa dei Benchmark (Tutti i Video della Matrice)
 
-| 🏆 Fast Master Champion (`champion`) | ⚡ FastVideo v0.2 Turbo (`turbo`) |
-| :---: | :---: |
-| ![Fast Master Champion](assets/champion_preview.gif) | ![FastVideo v0.2 Turbo](assets/turbo_preview.gif) |
-| **8-Step DPM++ · 50 Layer · INT8-FC2**<br>$\mathbf{12.55\text{ s}}$ Denoise · Resa ottica macro 8K | **4-Step Ladder · 50 Layer · INT8-FC2**<br>$\mathbf{6.53\text{ s}}$ Denoise · Nessun cartoon-smoothing |
+### 🏆 1. Fast Master Champion (`champion` — 8-Step · 50 Layer · INT8-FC2 · Flow Shift 12.0)
+| Clip 1.0s (22f) — Denoise: 12.55s | Clip 2.0s (39f) — Denoise: 24.11s | Clip 4.0s (90f) — Denoise: 78.35s |
+| :---: | :---: | :---: |
+| ![Champion 1s](assets/matrix/champion_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/champion_1s.mp4) | ![Champion 2s](assets/matrix/champion_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/champion_2s.mp4) | ![Champion 4s](assets/matrix/champion_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/champion_4s.mp4) |
 
-| 🎬 Cinema 16:9 Widescreen (`cinema`) | 📱 Vertical Reel 9:16 (`reel`) |
+---
+
+### ⚡ 2. FastVideo v0.2 Turbo (`turbo` — 4-Step Ladder [999,749,500,250] · 50 Layer · INT8-FC2)
+| Clip 1.0s (22f) — Denoise: 6.53s | Clip 2.0s (39f) — Denoise: 12.28s | Clip 4.0s (90f) — Denoise: 39.94s |
+| :---: | :---: | :---: |
+| ![Turbo 1s](assets/matrix/turbo_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/turbo_1s.mp4) | ![Turbo 2s](assets/matrix/turbo_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/turbo_2s.mp4) | ![Turbo 4s](assets/matrix/turbo_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/turbo_4s.mp4) |
+
+---
+
+### 🎬 3. Cinema 16:9 Widescreen (`cinema` — 960x544 Nativo · 8-Step · 50 Layer)
+| Clip 1.0s (22f) — Denoise: 16.41s | Clip 2.0s (39f) — Denoise: 33.76s | Clip 4.0s (90f) — Denoise: 113.68s |
+| :---: | :---: | :---: |
+| ![Cinema 1s](assets/matrix/cinema16x9_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/cinema16x9_1s.mp4) | ![Cinema 2s](assets/matrix/cinema16x9_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/cinema16x9_2s.mp4) | ![Cinema 4s](assets/matrix/cinema16x9_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/cinema16x9_4s.mp4) |
+
+---
+
+### 📱 4. Vertical Reel 9:16 (`reel` — 544x960 Nativo · 8-Step · 50 Layer)
+| Clip 1.0s (22f) — Denoise: 16.44s | Clip 2.0s (39f) — Denoise: 33.38s | Clip 4.0s (90f) — Denoise: 115.32s |
+| :---: | :---: | :---: |
+| ![Reel 1s](assets/matrix/reel9x16_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/reel9x16_1s.mp4) | ![Reel 2s](assets/matrix/reel9x16_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/reel9x16_2s.mp4) | ![Reel 4s](assets/matrix/reel9x16_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/reel9x16_4s.mp4) |
+
+---
+
+### 👀 5. Ultra Draft (`draft` — 4-Step · 45 Layer Gate-Ranking · Step-Reuse 2)
+| Clip 1.0s (22f) — Denoise: 3.29s (6.69 FPS) | Clip 2.0s (39f) — Denoise: 6.43s (6.07 FPS) | Clip 4.0s (90f) — Denoise: 23.21s (3.88 FPS) |
+| :---: | :---: | :---: |
+| ![Draft 1s](assets/matrix/draft_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/draft_1s.mp4) | ![Draft 2s](assets/matrix/draft_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/draft_2s.mp4) | ![Draft 4s](assets/matrix/draft_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/draft_4s.mp4) |
+
+---
+
+### 💎 6. High Quality Master (`quality` — 20-Step · 50 Layer · Alta Convergenza)
+| Clip 1.0s (22f) — Denoise: 30.88s | Clip 2.0s (39f) — Denoise: 59.81s |
 | :---: | :---: |
-| ![Cinema 16:9](assets/cinema_preview.gif) | ![Vertical Reel 9:16](assets/reel_preview.gif) |
-| **960x544 Nativo · 8-Step · 50 Layer**<br>$\mathbf{16.41\text{ s}}$ Denoise · Inquadratura anamorfica | **544x960 Nativo · 8-Step · 50 Layer**<br>$\mathbf{16.44\text{ s}}$ Denoise · Cross-Attention First-Frame |
+| ![Quality 1s](assets/matrix/quality_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/quality_1s.mp4) | ![Quality 2s](assets/matrix/quality_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/quality_2s.mp4) |
 
 ## 📊 Grafico a Barre Verticali & Lavagna delle Tempistiche (GPU Denoise su M5 Max)
 
