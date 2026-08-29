@@ -11,9 +11,57 @@
 
 ---
 
-## 🛠️ Architettura Tecnica & Ottimizzazioni Implementate
+## 🎨 Galleria Visiva dei Benchmark (Render Live su M5 Max)
 
-Il motore implementa una suite di soluzioni ingegneristiche a basso livello sviluppate specificamente per massimizzare la banda e i core GPU di Apple Silicon:
+| 🏆 Fast Master Champion (`champion`) | ⚡ FastVideo v0.2 Turbo (`turbo`) |
+| :---: | :---: |
+| ![Fast Master Champion](assets/champion_preview.gif) | ![FastVideo v0.2 Turbo](assets/turbo_preview.gif) |
+| **8-Step DPM++ · 50 Layer · INT8-FC2**<br>$\mathbf{12.55\text{ s}}$ Denoise · Resa ottica macro 8K | **4-Step Ladder · 50 Layer · INT8-FC2**<br>$\mathbf{6.53\text{ s}}$ Denoise · Nessun cartoon-smoothing |
+
+| 🎬 Cinema 16:9 Widescreen (`cinema`) | 📱 Vertical Reel 9:16 (`reel`) |
+| :---: | :---: |
+| ![Cinema 16:9](assets/cinema_preview.gif) | ![Vertical Reel 9:16](assets/reel_preview.gif) |
+| **960x544 Nativo · 8-Step · 50 Layer**<br>$\mathbf{16.41\text{ s}}$ Denoise · Inquadratura anamorfica | **544x960 Nativo · 8-Step · 50 Layer**<br>$\mathbf{16.44\text{ s}}$ Denoise · Cross-Attention First-Frame |
+
+---
+
+## 📋 Lavagna Comparativa delle Tempistiche (GPU Denoise su M5 Max)
+
+```
+╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                      📊 LAVAGNA COMPARATIVA TEMPI DI DENOISING GPU (M5 MAX)                       ║
+╠═══════════════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                                   ║
+║  ⏱️ CLIP 1.0s (22 Frame @ 24fps)                                                                  ║
+║  ├─ 👀 Draft (4L, Reuse 2)      ███▌ (3.29s)                                                      ║
+║  ├─ ⚡ Turbo (4L, Ladder)       ██████▌ (6.53s)                                                   ║
+║  ├─ 🏆 Champion (8L, Shift 12)  ████████████▌ (12.55s)                                            ║
+║  ├─ 🎬 Cinema 16:9 (960x544)    ████████████████▌ (16.41s)                                        ║
+║  ├─ 📱 Reel 9:16 (544x960)      ████████████████▌ (16.44s)                                        ║
+║  ├─ 💎 Quality (20L)            ███████████████████████████████ (30.88s)                          ║
+║  └─ 👑 Oracle 50L (BF16)        ██████████████████████████████████████████████████████ (120.0s)    ║
+║                                                                                                   ║
+║  ⏱️ CLIP 2.0s (39 Frame @ 24fps)                                                                  ║
+║  ├─ 👀 Draft (4L, Reuse 2)      ██████▌ (6.43s)                                                   ║
+║  ├─ ⚡ Turbo (4L, Ladder)       ████████████▌ (12.28s)                                            ║
+║  ├─ 🏆 Champion (8L, Shift 12)  ████████████████████████▌ (24.11s)                                ║
+║  ├─ 🎬 Cinema 16:9 (960x544)    █████████████████████████████████▌ (33.76s)                       ║
+║  ├─ 📱 Reel 9:16 (544x960)      █████████████████████████████████▌ (33.38s)                       ║
+║  └─ 💎 Quality (20L)            █████████████████████████████████████████████████████▌ (59.81s)   ║
+║                                                                                                   ║
+║  ⏱️ CLIP 4.0s (90 Frame @ 24fps - 5 Chunks Causali)                                              ║
+║  ├─ 👀 Draft (4L, Reuse 2)      ███████████████████████▌ (23.21s)                                 ║
+║  ├─ ⚡ Turbo (4L, Ladder)       ████████████████████████████████████████ (39.94s)                  ║
+║  ├─ 🏆 Champion (8L, Shift 12)  ██████████████████████████████████████████████████████ (78.35s)   ║
+║  ├─ 🎬 Cinema 16:9 (960x544)    ████████████████████████████████████████████████████████ (113.6s) ║
+║  └─ 📱 Reel 9:16 (544x960)      ████████████████████████████████████████████████████████ (115.3s) ║
+║                                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 🛠️ Architettura Tecnica & Ottimizzazioni Implementate
 
 ```mermaid
 graph TD
@@ -72,8 +120,6 @@ graph TD
 
 ## 🎛️ I Preset Implementati: Guida Tecnica Dettagliata
 
-Ogni preset è stato calibrato per risolvere uno specifico compromesso tra convergenza, velocità e risoluzione:
-
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
 │                               SPECIFICA TECNICA DEI PRESET                                  │
@@ -107,7 +153,7 @@ Ogni preset è stato calibrato per risolvere uno specifico compromesso tra conve
 
 ## 📊 Matrice dei Benchmark Empirici (Apple Silicon M5 Max 128GB)
 
-| Preset Name | Risoluzione | Step & Layer | Denoise 1s (22f) | Denoise 2s (39f) | Denoise 4s (90f) | Throughput (FPS) | VAE Decode (1s) |
+| Preset Name | Risoluzione | Step & Layer | Denoise 1s (22f) | Denoise 2s (39f) | Denoise 4s (90f) | Throughput GPU | VAE Decode (1s) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **`draft`** *(Ultra Draft)* | $640 \times 640$ | 4 Step / 45L / Reuse 2 | **$\mathbf{3.29\text{ s}}$** | **$\mathbf{6.43\text{ s}}$** | **$\mathbf{23.21\text{ s}}$** | **$6.69\text{ fps}$** | $8.82\text{ s}$ |
 | **`turbo`** *(FastVideo v0.2)* | $640 \times 640$ | 4 Step / 50L (Ladder) | **$\mathbf{6.53\text{ s}}$** | **$\mathbf{12.28\text{ s}}$** | **$\mathbf{39.94\text{ s}}$** | **$3.37\text{ fps}$** | $9.98\text{ s}$ |
