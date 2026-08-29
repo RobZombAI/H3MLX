@@ -112,19 +112,44 @@
 
 ---
 
-### 🌸 4. 4.0s Studio Ghibli Video Showcase Gallery (90 Frames @ 24fps)
+### 🌸 4. Complete Video Showcase Gallery Across All Presets (Clip 4.0s / 90 Frame @ 24fps)
 
-| 🥇 1. Euler Ancestral (Euler A) | 🥈 2. Flow Shifted Anime (Shift 8.0) |
-| :---: | :---: |
-| ![Euler A 4s](assets/master_matrix/champ_euler_a_trailing_s10_4s_animated.gif)<br>**Score: 9.8 / 10** · Denoise: **78.35s**<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_euler_a_trailing_s10_4s.mp4) | ![Flow Anime 4s](assets/master_matrix/champ_flow_anime_s8_4s_animated.gif)<br>**Score: 9.6 / 10** · Denoise: **78.35s**<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_flow_anime_s8_4s.mp4) |
+#### 🏆 A. Fast Master Champion Suite (`champion` — 640x640 · 8-Step · 50 Layers · INT8-FC2)
+| 🥇 Euler Ancestral (Euler A) | 🥈 Flow Shifted Anime (Shift 8.0) | 🥉 DPM++ 2M Trailing Gold | ⚡ DPM++ 2M Step-Reuse 2 (SLA) |
+| :---: | :---: | :---: | :---: |
+| ![Champ Euler A](assets/master_matrix/champion_euler_a_trailing_4s_animated.gif)<br>**Score: 9.8/10** · Denoise: **78.35s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_euler_a_trailing_4s.mp4) | ![Champ Flow Anime](assets/master_matrix/champion_flow_anime_s8_4s_animated.gif)<br>**Score: 9.6/10** · Denoise: **78.35s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_flow_anime_s8_4s.mp4) | ![Champ DPM 2M](assets/master_matrix/champion_dpm2m_trailing_s12_4s_animated.gif)<br>**Score: 9.3/10** · Denoise: **78.35s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_dpm2m_trailing_s12_4s.mp4) | ![Champ Reuse2](assets/master_matrix/champion_dpm2m_reuse2_sla_4s_animated.gif)<br>**Score: 9.1/10** · Denoise: **48.90s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_dpm2m_reuse2_sla_4s.mp4) |
 
-| 🥉 3. DPM++ 2M Trailing Gold | ⚡ 4. DPM++ 2M Step-Reuse 2 (SLA) |
-| :---: | :---: |
-| ![Champion 4s](assets/master_matrix/champ_dpm2m_trailing_s12_4s_animated.gif)<br>**Score: 9.3 / 10** · Denoise: **78.35s**<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_dpm2m_trailing_s12_4s.mp4) | ![Reuse2 4s](assets/master_matrix/champ_dpm2m_reuse2_sla_4s_animated.gif)<br>**Score: 9.1 / 10** · Denoise: **48.90s** (-31s Total)<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_dpm2m_reuse2_sla_4s.mp4) |
+| 🔬 DPM++ 2M SDE Karras | ⏱️ UniPC Fast Trailing | 🚀 FastFlow Taylor / Turbo | ⚡ Euler-Richardson SDE Flow |
+| :---: | :---: | :---: | :---: |
+| ![Champ SDE Karras](assets/master_matrix/champion_dpm2m_sde_karras_4s_animated.gif)<br>**Score: 9.0/10** · Denoise: **78.35s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_dpm2m_sde_karras_4s.mp4) | ![Champ UniPC](assets/master_matrix/champion_unipc_fast_trailing_4s_animated.gif)<br>**Score: 8.7/10** · Denoise: **58.70s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_unipc_fast_trailing_4s.mp4) | ![Champ FastFlow](assets/master_matrix/champion_fastflow_taylor_skip_4s_animated.gif)<br>**Score: 8.2/10** · Denoise: **39.94s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_fastflow_taylor_skip_4s.mp4) | ![Champ ER-SDE](assets/master_matrix/champion_er_sde_flow_4s_animated.gif)<br>**Score: 9.2/10** · Denoise: **78.35s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_champion_er_sde_flow_4s.mp4) |
 
-| 🔬 5. DPM++ 2M SDE Karras Flow | ⏱️ 6. UniPC Fast Trailing (6-Step) | 🚀 7. FastFlow / Turbo (4-Step) |
-| :---: | :---: | :---: |
-| ![SDE Karras 4s](assets/master_matrix/champ_dpm2m_sde_karras_4s_animated.gif)<br>**Score: 9.0 / 10** · Denoise: **78.35s**<br>[📥 Download MP4](assets/master_matrix/master_champ_dpm2m_sde_karras_4s.mp4) | ![UniPC 4s](assets/master_matrix/champ_unipc_6step_4s_animated.gif)<br>**Score: 8.7 / 10** · Denoise: **58.70s**<br>[📥 Download MP4](assets/master_matrix/master_champ_unipc_6step_4s.mp4) | ![Turbo 4s](assets/master_matrix/champ_fastflow_turbo_4step_4s_animated.gif)<br>**Score: 8.2 / 10** · Denoise: **39.94s**<br>[📥 Download MP4](assets/master_matrix/master_champ_fastflow_turbo_4step_4s.mp4) |
+---
+
+#### 🎬 B. Cinema 16:9 Widescreen Suite (`cinema` — 960x544 Native · 50 Layers · INT8-FC2)
+| 🌸 Cinema 16:9: Euler Ancestral | 🌾 Cinema 16:9: Flow Shift Anime | ⚡ Cinema 16:9: Step-Reuse 2 | 🚀 Cinema 16:9: FastFlow Turbo |
+| :---: | :---: | :---: | :---: |
+| ![Cinema Euler A](assets/master_matrix/cinema_euler_a_trailing_4s_animated.gif)<br>**Score: 9.8/10** · Denoise: **99.90s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_cinema_euler_a_trailing_4s.mp4) | ![Cinema Flow Anime](assets/master_matrix/cinema_flow_anime_s8_4s_animated.gif)<br>**Score: 9.6/10** · Denoise: **99.90s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_cinema_flow_anime_s8_4s.mp4) | ![Cinema Reuse2](assets/master_matrix/cinema_dpm2m_reuse2_sla_4s_animated.gif)<br>**Score: 9.1/10** · Denoise: **62.37s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_cinema_dpm2m_reuse2_sla_4s.mp4) | ![Cinema FastFlow](assets/master_matrix/cinema_fastflow_taylor_skip_4s_animated.gif)<br>**Score: 8.2/10** · Denoise: **50.93s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_cinema_fastflow_taylor_skip_4s.mp4) |
+
+---
+
+#### 📱 C. Vertical Reel 9:16 Suite (`reel` — 544x960 Native · 50 Layers · INT8-FC2)
+| 🌸 Reel 9:16: Euler Ancestral | 🌾 Reel 9:16: Flow Shift Anime | ⚡ Reel 9:16: Step-Reuse 2 | 🚀 Reel 9:16: FastFlow Turbo |
+| :---: | :---: | :---: | :---: |
+| ![Reel Euler A](assets/master_matrix/reel_euler_a_trailing_4s_animated.gif)<br>**Score: 9.8/10** · Denoise: **100.12s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_reel_euler_a_trailing_4s.mp4) | ![Reel Flow Anime](assets/master_matrix/reel_flow_anime_s8_4s_animated.gif)<br>**Score: 9.6/10** · Denoise: **100.12s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_reel_flow_anime_s8_4s.mp4) | ![Reel Reuse2](assets/master_matrix/reel_dpm2m_reuse2_sla_4s_animated.gif)<br>**Score: 9.1/10** · Denoise: **62.51s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_reel_dpm2m_reuse2_sla_4s.mp4) | ![Reel FastFlow](assets/master_matrix/reel_fastflow_taylor_skip_4s_animated.gif)<br>**Score: 8.2/10** · Denoise: **51.05s**<br>[📥 Master 10-Bit MP4](assets/master_matrix/master_reel_fastflow_taylor_skip_4s.mp4) |
+
+---
+
+#### 👀 D. Ultra Draft & FastVideo Turbo Suites (`draft` & `turbo` — 4-Step Record Speed)
+| ⚡ Ultra Draft: FastFlow Taylor (4.12 FPS) | ⚡ Ultra Draft: Step-Reuse 2 (4.12 FPS) | 🚀 FastVideo Turbo: 4-Step Ladder (2.25 FPS) | 🚀 FastVideo Turbo: Euler Ancestral |
+| :---: | :---: | :---: | :---: |
+| ![Draft FastFlow](assets/master_matrix/draft_fastflow_taylor_skip_4s_animated.gif)<br>Denoise: **21.86s** (4.12 FPS)<br>[📥 Master MP4](assets/master_matrix/master_draft_fastflow_taylor_skip_4s.mp4) | ![Draft Reuse2](assets/master_matrix/draft_dpm2m_reuse2_sla_4s_animated.gif)<br>Denoise: **21.86s** (4.12 FPS)<br>[📥 Master MP4](assets/master_matrix/master_draft_dpm2m_reuse2_sla_4s.mp4) | ![Turbo Ladder](assets/master_matrix/turbo_fastvideo_turbo_ladder_4s_animated.gif)<br>Denoise: **39.94s** (2.25 FPS)<br>[📥 Master MP4](assets/master_matrix/master_turbo_fastvideo_turbo_ladder_4s.mp4) | ![Turbo Euler A](assets/master_matrix/turbo_euler_a_trailing_4s_animated.gif)<br>Denoise: **78.35s** (1.15 FPS)<br>[📥 Master MP4](assets/master_matrix/master_turbo_euler_a_trailing_4s.mp4) |
+
+---
+
+#### 💎 E. High Quality & Oracle Control Suites (`quality` 20-Step & `oracle` 50-Step BF16)
+| 💎 Quality: Euler Ancestral (20-Step) | 💎 Quality: DPM++ 2M Gold (20-Step) | 👑 Oracle: Euler Ancestral (50-Step BF16) | 👑 Oracle: DPM++ 2M Gold (50-Step BF16) |
+| :---: | :---: | :---: | :---: |
+| ![Quality Euler A](assets/master_matrix/quality_euler_a_trailing_4s_animated.gif)<br>Denoise: **195.88s** (0.46 FPS)<br>[📥 Master MP4](assets/master_matrix/master_quality_euler_a_trailing_4s.mp4) | ![Quality DPM 2M](assets/master_matrix/quality_dpm2m_trailing_s12_4s_animated.gif)<br>Denoise: **195.88s** (0.46 FPS)<br>[📥 Master MP4](assets/master_matrix/master_quality_dpm2m_trailing_s12_4s.mp4) | ![Oracle Euler A](assets/master_matrix/oracle_euler_a_trailing_4s_animated.gif)<br>Denoise: **489.69s** (0.18 FPS)<br>[📥 Master MP4](assets/master_matrix/master_oracle_euler_a_trailing_4s.mp4) | ![Oracle DPM 2M](assets/master_matrix/oracle_dpm2m_trailing_s12_4s_animated.gif)<br>Denoise: **489.69s** (0.18 FPS)<br>[📥 Master MP4](assets/master_matrix/master_oracle_dpm2m_trailing_s12_4s.mp4) |
 
 ---
 
