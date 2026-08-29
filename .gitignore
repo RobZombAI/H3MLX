@@ -1,0 +1,31 @@
+# Build artifacts
+*.o
+*.d
+*.a
+h3-lora-lab/h3
+h3-lora-lab/h3_resident_engine
+
+# Generated Media & Outputs
+outputs/
+outputs_*/
+*.mp4
+*.gif
+*.jpg
+*.jpeg
+*.png
+*.ppm
+
+# Model weights and checkpoints
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.aria2
+
+# System and Cache files
+.DS_Store
+__pycache__/
+*.pyc
+.cache/
+.vscode/
+.idea/

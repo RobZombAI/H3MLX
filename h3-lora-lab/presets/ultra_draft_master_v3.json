@@ -1,0 +1,14 @@
+{
+  "preset_name": "Ultra-Draft Master V3 (Gold Champion)",
+  "resolution": [640, 640],
+  "steps": 5,
+  "reuse": 2,
+  "gpu_evaluations": 3,
+  "layers": 50,
+  "quantization": "int8-row-fc2",
+  "token_reduction": false,
+  "solver": "DPM++ 2M Trailing Flow",
+  "fps": 24.0,
+  "hardware_target": "Apple Silicon M5 Max 128GB",
+  "benchmark_speed_4s": "37.77s DiT Denoise (66.6% faster than 20-step baseline)"
+}

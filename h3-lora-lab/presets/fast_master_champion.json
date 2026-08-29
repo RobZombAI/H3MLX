@@ -1,0 +1,21 @@
+{
+  "name": "MiniMax H3 Fast Master Champion",
+  "version": "4.0",
+  "description": "Gold Standard configuration for ultra-photorealistic video generation on Apple Silicon M5 Max",
+  "settings": {
+    "width": 640,
+    "height": 640,
+    "steps": 8,
+    "reuse": 1,
+    "layers": 50,
+    "use_int8_row_fc2": true,
+    "token_reduction": false,
+    "model_dir": "/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step"
+  },
+  "benchmarks": {
+    "1s_22f_denoise_gpu_s": 10.46,
+    "1s_22f_total_cold_s": 36.0,
+    "4s_90f_denoise_gpu_s": 44.66,
+    "4s_90f_total_cold_s": 107.0
+  }
+}
