@@ -17,49 +17,51 @@
 
 ---
 
-## 🎨 Galleria Visiva Completa dei Benchmark (Tutti i Video della Matrice)
+## 🎨 Complete Visual Benchmark Gallery (All Matrix Videos)
 
-### 🏆 1. Fast Master Champion (`champion` — 8-Step · 50 Layer · INT8-FC2 · Flow Shift 12.0)
+### 🏆 1. Fast Master Champion (`champion` — 8-Step · 50 Layers · INT8-FC2 · Flow Shift 12.0)
 | Clip 1.0s (22f) — Denoise: 12.55s | Clip 2.0s (39f) — Denoise: 24.11s | Clip 4.0s (90f) — Denoise: 78.35s |
 | :---: | :---: | :---: |
-| ![Champion 1s](assets/matrix/champion_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/champion_1s.mp4) | ![Champion 2s](assets/matrix/champion_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/champion_2s.mp4) | ![Champion 4s](assets/matrix/champion_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/champion_4s.mp4) |
+| ![Champion 1s](assets/matrix/champion_1s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/champion_1s.mp4) | ![Champion 2s](assets/matrix/champion_2s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/champion_2s.mp4) | ![Champion 4s](assets/matrix/champion_4s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/champion_4s.mp4) |
 
 ---
 
-### ⚡ 2. FastVideo v0.2 Turbo (`turbo` — 4-Step Ladder [999,749,500,250] · 50 Layer · INT8-FC2)
+### ⚡ 2. FastVideo v0.2 Turbo (`turbo` — 4-Step Ladder [999,749,500,250] · 50 Layers · INT8-FC2)
 | Clip 1.0s (22f) — Denoise: 6.53s | Clip 2.0s (39f) — Denoise: 12.28s | Clip 4.0s (90f) — Denoise: 39.94s |
 | :---: | :---: | :---: |
-| ![Turbo 1s](assets/matrix/turbo_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/turbo_1s.mp4) | ![Turbo 2s](assets/matrix/turbo_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/turbo_2s.mp4) | ![Turbo 4s](assets/matrix/turbo_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/turbo_4s.mp4) |
+| ![Turbo 1s](assets/matrix/turbo_1s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/turbo_1s.mp4) | ![Turbo 2s](assets/matrix/turbo_2s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/turbo_2s.mp4) | ![Turbo 4s](assets/matrix/turbo_4s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/turbo_4s.mp4) |
 
 ---
 
-### 🎬 3. Cinema 16:9 Widescreen (`cinema` — 960x544 Nativo · 8-Step · 50 Layer)
+### 🎬 3. Cinema 16:9 Widescreen (`cinema` — 960x544 Native · 8-Step · 50 Layers)
 | Clip 1.0s (22f) — Denoise: 16.41s | Clip 2.0s (39f) — Denoise: 33.76s | Clip 4.0s (90f) — Denoise: 113.68s |
 | :---: | :---: | :---: |
-| ![Cinema 1s](assets/matrix/cinema16x9_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/cinema16x9_1s.mp4) | ![Cinema 2s](assets/matrix/cinema16x9_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/cinema16x9_2s.mp4) | ![Cinema 4s](assets/matrix/cinema16x9_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/cinema16x9_4s.mp4) |
+| ![Cinema 1s](assets/matrix/cinema16x9_1s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/cinema16x9_1s.mp4) | ![Cinema 2s](assets/matrix/cinema16x9_2s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/cinema16x9_2s.mp4) | ![Cinema 4s](assets/matrix/cinema16x9_4s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/cinema16x9_4s.mp4) |
 
 ---
 
-### 📱 4. Vertical Reel 9:16 (`reel` — 544x960 Nativo · 8-Step · 50 Layer)
+### 📱 4. Vertical Reel 9:16 (`reel` — 544x960 Native · 8-Step · 50 Layers)
 | Clip 1.0s (22f) — Denoise: 16.44s | Clip 2.0s (39f) — Denoise: 33.38s | Clip 4.0s (90f) — Denoise: 115.32s |
 | :---: | :---: | :---: |
-| ![Reel 1s](assets/matrix/reel9x16_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/reel9x16_1s.mp4) | ![Reel 2s](assets/matrix/reel9x16_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/reel9x16_2s.mp4) | ![Reel 4s](assets/matrix/reel9x16_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/reel9x16_4s.mp4) |
+| ![Reel 1s](assets/matrix/reel9x16_1s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/reel9x16_1s.mp4) | ![Reel 2s](assets/matrix/reel9x16_2s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/reel9x16_2s.mp4) | ![Reel 4s](assets/matrix/reel9x16_4s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/reel9x16_4s.mp4) |
 
 ---
 
-### 👀 5. Ultra Draft (`draft` — 4-Step · 45 Layer Gate-Ranking · Step-Reuse 2)
+### 👀 5. Ultra Draft (`draft` — 4-Step · 45 Layers Gate-Ranking · Step-Reuse 2)
 | Clip 1.0s (22f) — Denoise: 3.29s (6.69 FPS) | Clip 2.0s (39f) — Denoise: 6.43s (6.07 FPS) | Clip 4.0s (90f) — Denoise: 23.21s (3.88 FPS) |
 | :---: | :---: | :---: |
-| ![Draft 1s](assets/matrix/draft_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/draft_1s.mp4) | ![Draft 2s](assets/matrix/draft_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/draft_2s.mp4) | ![Draft 4s](assets/matrix/draft_4s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/draft_4s.mp4) |
+| ![Draft 1s](assets/matrix/draft_1s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/draft_1s.mp4) | ![Draft 2s](assets/matrix/draft_2s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/draft_2s.mp4) | ![Draft 4s](assets/matrix/draft_4s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/draft_4s.mp4) |
 
 ---
 
-### 💎 6. High Quality Master (`quality` — 20-Step · 50 Layer · Alta Convergenza)
+### 💎 6. High Quality Master (`quality` — 20-Step · 50 Layers · High Convergence)
 | Clip 1.0s (22f) — Denoise: 30.88s | Clip 2.0s (39f) — Denoise: 59.81s |
 | :---: | :---: |
-| ![Quality 1s](assets/matrix/quality_1s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/quality_1s.mp4) | ![Quality 2s](assets/matrix/quality_2s_animated.gif)<br>[📥 Scarica MP4 Nativo](assets/matrix/quality_2s.mp4) |
+| ![Quality 1s](assets/matrix/quality_1s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/quality_1s.mp4) | ![Quality 2s](assets/matrix/quality_2s_animated.gif)<br>[📥 Download Native MP4](assets/matrix/quality_2s.mp4) |
 
-## 📊 Grafico a Barre Verticali & Lavagna delle Tempistiche (GPU Denoise su M5 Max)
+---
+
+## 📊 Vertical Bar Chart & Whiteboard Timing Benchmarks (GPU Denoise on M5 Max)
 
 <p align="center">
   <img src="assets/h3mlx_vertical_barchart.png" alt="H3MLX Vertical Bar Chart Benchmark" width="100%">
@@ -67,10 +69,10 @@
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
-║                      📊 LAVAGNA COMPARATIVA TEMPI DI DENOISING GPU (M5 MAX)                       ║
+║                      📊 WHITEBOARD GPU DENOISING TIME COMPARISON (M5 MAX)                         ║
 ╠═══════════════════════════════════════════════════════════════════════════════════════════════════╣
 ║                                                                                                   ║
-║  ⏱️ CLIP 1.0s (22 Frame @ 24fps)                                                                  ║
+║  ⏱️ CLIP 1.0s (22 Frames @ 24fps)                                                                 ║
 ║  ├─ 👀 Draft (4L, Reuse 2)      ███▌ (3.29s)                                                      ║
 ║  ├─ ⚡ Turbo (4L, Ladder)       ██████▌ (6.53s)                                                   ║
 ║  ├─ 🏆 Champion (8L, Shift 12)  ████████████▌ (12.55s)                                            ║
@@ -79,7 +81,7 @@
 ║  ├─ 💎 Quality (20L)            ███████████████████████████████ (30.88s)                          ║
 ║  └─ 👑 Oracle 50L (BF16)        ██████████████████████████████████████████████████████ (120.0s)    ║
 ║                                                                                                   ║
-║  ⏱️ CLIP 2.0s (39 Frame @ 24fps)                                                                  ║
+║  ⏱️ CLIP 2.0s (39 Frames @ 24fps)                                                                 ║
 ║  ├─ 👀 Draft (4L, Reuse 2)      ██████▌ (6.43s)                                                   ║
 ║  ├─ ⚡ Turbo (4L, Ladder)       ████████████▌ (12.28s)                                            ║
 ║  ├─ 🏆 Champion (8L, Shift 12)  ████████████████████████▌ (24.11s)                                ║
@@ -87,7 +89,7 @@
 ║  ├─ 📱 Reel 9:16 (544x960)      █████████████████████████████████▌ (33.38s)                       ║
 ║  └─ 💎 Quality (20L)            █████████████████████████████████████████████████████▌ (59.81s)   ║
 ║                                                                                                   ║
-║  ⏱️ CLIP 4.0s (90 Frame @ 24fps - 5 Chunks Causali)                                              ║
+║  ⏱️ CLIP 4.0s (90 Frames @ 24fps - 5 Causal Chunks)                                               ║
 ║  ├─ 👀 Draft (4L, Reuse 2)      ███████████████████████▌ (23.21s)                                 ║
 ║  ├─ ⚡ Turbo (4L, Ladder)       ████████████████████████████████████████ (39.94s)                  ║
 ║  ├─ 🏆 Champion (8L, Shift 12)  ██████████████████████████████████████████████████████ (78.35s)   ║
@@ -99,196 +101,197 @@
 
 ---
 
-## 🛠️ Architettura Tecnica & Ottimizzazioni Implementate
+## 🛠️ Technical Architecture & Core Optimizations
 
 ```mermaid
 graph TD
     subgraph "1. Ingestion & Conditioning"
-        P["Prompt Testuale + Immagine Sorgente"] --> Q["Text/Vision Encoder Qwen 3-VL (4.5s)"]
-        Q --> ADA["Precomputazione Dinamica AdaLN (50 Layer)"]
+        P["Text Prompt + Source Conditioning Image"] --> Q["Text/Vision Encoder Qwen 3-VL (4.5s)"]
+        Q --> ADA["Dynamic Precomputed AdaLN (50 Layers)"]
     end
 
     subgraph "2. Denoising Core (Pure C / Metal 4)"
-        ADA --> DIT["H3 DiT (50 Layer Pieni, 100% Token Spaziali)"]
-        DIT --> NAX["Kernel Metal 4 NAX (QKV Matrix Attention Fusion)"]
-        NAX --> INT8["Quantizzazione Dinamica INT8-Row-FC2"]
-        INT8 --> UMA["Memoria Zero-Copy UMA (800 GB/s Bandwidth)"]
+        ADA --> DIT["H3 DiT (50 Full Layers, 100% Spatial Tokens)"]
+        DIT --> NAX["Metal 4 NAX Kernels (QKV Matrix Attention Fusion)"]
+        NAX --> INT8["Dynamic INT8-Row-FC2 Quantization"]
+        INT8 --> UMA["Zero-Copy UMA Memory Mapping (800 GB/s Bandwidth)"]
     end
 
     subgraph "3. Trajectory Solvers"
-        UMA --> SOLV{"Solutore Selezionato"}
-        SOLV -->|"🏆 Champion"| DPM["DPM++ 2M Trailing Flow (8 Step, Shift 12.0)"]
-        SOLV -->|"⚡ Turbo"| LADDER["Scala Calibrata [999, 749, 500, 250] (4 Step)"]
-        SOLV -->|"👀 Draft"| REUSE["Step Reuse 2 + 45 Layer Gate-Ranking"]
+        UMA --> SOLV{"Selected Solver"}
+        SOLV -->|"🏆 Champion"| DPM["DPM++ 2M Trailing Flow (8 Steps, Shift 12.0)"]
+        SOLV -->|"⚡ Turbo"| LADDER["Calibrated Ladder [999, 749, 500, 250] (4 Steps)"]
+        SOLV -->|"👀 Draft"| REUSE["Step Reuse 2 + 45 Layers Gate-Ranking"]
     end
 
     subgraph "4. Decoders & Mastering"
         DPM & LADDER & REUSE --> VAE["3D Causal Video VAE (Multi-Tile Spatial Stride)"]
-        DPM & LADDER & REUSE --> AVAE["Audio VAE Decoder (48 kHz Stereo)"]
+        DPM & LADDER & REUSE --> AVAE["Audio VAE Decoder (48 kHz Stereo Output)"]
         VAE & AVAE --> MASTER["Lanczos Grading + EBU R128 Broadcast (-14 LUFS)"]
     end
 ```
 
-### 1. Kernel Metal 4 NAX (Native Accelerated eXecution)
-* Fusione a livello di registro GPU delle matrici di Query, Key e Value ($QKV$) e dell'attenzione temporale cross-modale (video + audio).
-* Eliminazione dei passaggi intermedi in memoria globale GPU, massimizzando il throughput dei Tensor Core Apple G17S.
+### 1. Metal 4 NAX (Native Accelerated eXecution) Kernels
+* Register-level GPU fusion of Query, Key, and Value ($QKV$) projections and dual-modality cross-attention (video + audio).
+* Completely bypasses intermediate GPU global memory reads/writes, maximizing throughput on Apple G17S Tensor Cores.
 
-### 2. Quantizzazione Dinamica INT8-Row-FC2
-* Quantizzazione dinamica riga-per-riga a 8-bit applicata esclusivamente alle matrici di espansione $FC_2$ del Feed-Forward Network (FFN).
-* Mantiene intatta la precisione a 16-bit (BF16) negli strati critici di attenzione e AdaLN, abbattendo il footprint DiT da $\approx 40\text{ GB}$ a $\approx 18.6\text{ GB}$ senza degradazione visiva.
+### 2. Dynamic INT8-Row-FC2 Quantization
+* Dynamic per-row 8-bit quantization applied strictly to the $FC_2$ expansion layers of the Feed-Forward Network (FFN).
+* Preserves 16-bit (BF16) numerical precision across critical Attention and AdaLN projections, slashing DiT memory footprint from $\approx 40\text{ GB}$ to $\approx 18.6\text{ GB}$ with zero visual fidelity loss.
 
 ### 3. Zero-Copy Unified Memory Architecture (UMA)
-* Mapping diretto dei file SAFETENSORS nello spazio di indirizzamento della memoria unificata tramite `mmap`.
-* Azzeramento totale dei tempi di copia da CPU a GPU e overhead di allocazione nullo durante l'inferenza.
+* Direct memory-mapping (`mmap`) of SAFETENSORS into the unified memory address space.
+* Zero CPU-to-GPU transfer overhead and zero buffer duplication during multi-chunk streaming inference.
 
-### 4. Reticolo Temporale Causale ($T = 17n + 5$)
-* Generazione sequenziale allineata allo stride causale 3D del VAE MiniMax ($22, 39, 56, 90, 141, 192\text{ frames}$).
-* Evita artefatti di troncamento temporale, sfarfallio e discontinuità tra i blocchi causali.
+### 4. Causal Temporal Lattice ($T = 17n + 5$)
+* Sequential generation strictly aligned with the 3D causal convolutional stride of the MiniMax VAE ($22, 39, 56, 90, 141, 192\text{ frames}$).
+* Eliminates temporal boundary discontinuities, flickering, and frame truncation between adjacent chunks.
 
-### 5. Shift di Flusso Dinamico a Runtime (`H3_VIDEO_SHIFT` & `H3_AUDIO_SHIFT`)
-* Deformazione esponenziale della traiettoria di rumore configurabile a runtime:
+### 5. Dynamic Runtime Flow Shift (`H3_VIDEO_SHIFT` & `H3_AUDIO_SHIFT`)
+* Real-time exponential schedule warping:
   $$\sigma(t) = \frac{s \cdot t}{1 + (s - 1) \cdot t}$$
-* Privilegia la rimozione del rumore nelle frequenze visive ad alta energia (valori ottimali: $s_{\text{video}} = 12.0$, $s_{\text{audio}} = 3.0$).
+* Directs denoising compute power to high-energy visual frequency bands ($s_{\text{video}} = 12.0$, $s_{\text{audio}} = 3.0$).
 
-### 6. Monitoraggio Live In-Place ANSI (`\r\033[K`)
-* Render dinamico da terminale su riga singola con codici escape ANSI per tokenizer, text encoder, denoise step e decodifica VAE.
-* Zero latenza I/O su terminale e logging non bloccante.
+### 6. Zero-Latency In-Place ANSI Terminal Rendering (`\r\033[K`)
+* Single-line terminal live updating with ANSI escape sequences for tokenizer, text encoder, denoise steps, and VAE decoders.
+* Non-blocking logging with zero I/O slowdown on generation throughput.
 
 ---
 
-## 🎛️ I Preset Implementati: Guida Tecnica Dettagliata
+## 🎛️ Preset Implementation Guide
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                               SPECIFICA TECNICA DEI PRESET                                  │
+│                               TECHNICAL PRESET SPECIFICATIONS                               │
 ├───────────────────┬───────────────────────────────┬─────────────────────────────────────────┤
-│ Preset            │ Parametri Chiave              │ Meccanismo Implementativo               │
+│ Preset            │ Key Parameters                │ Underlying Implementation               │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ 🏆 Champion       │ --steps 8 --layers 50         │ DPM++ 2M ODE su Shift 12.0 con 50 layer │
-│ (Fast Master)     │ --reuse 1 --use-int8-row-fc2  │ pieni. Preserva pori, iride e fumo 8K.  │
+│ 🏆 Champion       │ --steps 8 --layers 50         │ DPM++ 2M ODE with Shift 12.0 and 50     │
+│ (Fast Master)     │ --reuse 1 --use-int8-row-fc2  │ full layers. Preserves 8K skin & smoke. │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ ⚡ Turbo          │ --steps 4 --layers 50         │ Scala nodale calibrata [999,749,500,250]│
-│ (FastVideo v0.2)  │ --reuse 1 --use-int8-row-fc2  │ 50 layer pieni senza cartoon-smoothing. │
+│ ⚡ Turbo          │ --steps 4 --layers 50         │ Calibrated ladder [999,749,500,250]     │
+│ (FastVideo v0.2)  │ --reuse 1 --use-int8-row-fc2  │ 50 full layers without cartoon blur.    │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ 👀 Draft          │ --steps 4 --layers 45         │ Gate-ranking su 45 layer con step-reuse │
-│ (Ultra Draft)     │ --reuse 2 --use-int8-row-fc2  │ a fattore 2. Denoise sub-4s per bozze.  │
+│ 👀 Draft          │ --steps 4 --layers 45         │ 45-layer gate-ranking with step reuse   │
+│ (Ultra Draft)     │ --reuse 2 --use-int8-row-fc2  │ factor 2. Sub-4s denoise for drafts.    │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ 🎬 Cinema 16:9    │ --steps 8 --layers 50         │ Canvas nativo 960x544 con RoPE 2D       │
-│ (Widescreen)      │ --width 960 --height 544      │ senza barre nere posticce.              │
+│ 🎬 Cinema 16:9    │ --steps 8 --layers 50         │ Native 960x544 canvas with 2D RoPE      │
+│ (Widescreen)      │ --width 960 --height 544      │ without artificial black bars.          │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ 📱 Reel 9:16      │ --steps 8 --layers 50         │ Canvas verticale 544x960 per TikTok/IG  │
-│ (Vertical)        │ --width 544 --height 960      │ con condizionamento --first-frame.      │
+│ 📱 Reel 9:16      │ --steps 8 --layers 50         │ Vertical 544x960 canvas for TikTok/IG   │
+│ (Vertical)        │ --width 544 --height 960      │ with --first-frame conditioning.        │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ 💎 Quality        │ --steps 20 --layers 50        │ 20 iterazioni per fluidodinamica,       │
-│ (Alta Fedeltà)    │ --reuse 1 --use-int8-row-fc2  │ fiamme volumetriche e grana pellicola.  │
+│ 💎 Quality        │ --steps 20 --layers 50        │ 20 iterations for fluid dynamics,       │
+│ (High Quality)    │ --reuse 1 --use-int8-row-fc2  │ volumetric fire, and film grain.        │
 ├───────────────────┼───────────────────────────────┼─────────────────────────────────────────┤
-│ 👑 Oracle         │ --steps 50 --layers 50        │ Traiettoria originale non quantizzata   │
-│ (Ground-Truth)    │ BF16 Full Residency           │ 50 step per baseline scientifica.       │
+│ 👑 Oracle         │ --steps 50 --layers 50        │ Unquantized BF16 50-step trajectory     │
+│ (Ground-Truth)    │ BF16 Full Residency           │ as scientific baseline reference.       │
 └───────────────────┴───────────────────────────────┴─────────────────────────────────────────┘
 ```
 
 ---
 
-## 📊 Matrice dei Benchmark Empirici (Apple Silicon M5 Max 128GB)
+## 📊 Empirical Benchmark Matrix (Apple Silicon M5 Max 128GB)
 
 <p align="center">
   <img src="assets/h3mlx_empirical_matrix_table.png" alt="H3MLX Empirical Benchmark Matrix Table" width="100%">
 </p>
 
-| Preset Name | Risoluzione | Step & Layer | Denoise 1s (22f) | Denoise 2s (39f) | Denoise 4s (90f) | Throughput GPU | VAE Decode (1s) |
+| Preset Name | Resolution | Steps & Layers | Denoise 1s (22f) | Denoise 2s (39f) | Denoise 4s (90f) | Throughput GPU | VAE Decode (1s) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`draft`** *(Ultra Draft)* | $640 \times 640$ | 4 Step / 45L / Reuse 2 | **$\mathbf{3.29\text{ s}}$** | **$\mathbf{6.43\text{ s}}$** | **$\mathbf{23.21\text{ s}}$** | **$6.69\text{ fps}$** | $8.82\text{ s}$ |
-| **`turbo`** *(FastVideo v0.2)* | $640 \times 640$ | 4 Step / 50L (Ladder) | **$\mathbf{6.53\text{ s}}$** | **$\mathbf{12.28\text{ s}}$** | **$\mathbf{39.94\text{ s}}$** | **$3.37\text{ fps}$** | $9.98\text{ s}$ |
-| **`champion`** *(Fast Master)* | $640 \times 640$ | 8 Step / 50L (Shift 12) | **$\mathbf{12.55\text{ s}}$** | **$\mathbf{24.11\text{ s}}$** | **$\mathbf{78.35\text{ s}}$** | **$1.75\text{ fps}$** | $9.88\text{ s}$ |
-| **`cinema16x9`** *(Widescreen)* | $960 \times 544$ | 8 Step / 50L (16:9) | **$16.41\text{ s}$** | **$33.76\text{ s}$** | **$113.68\text{ s}$** | **$1.34\text{ fps}$** | $11.45\text{ s}$ |
-| **`reel9x16`** *(Vertical Reel)* | $544 \times 960$ | 8 Step / 50L (9:16) | **$16.44\text{ s}$** | **$33.38\text{ s}$** | **$115.32\text{ s}$** | **$1.34\text{ fps}$** | $11.38\text{ s}$ |
-| **`quality`** *(High Quality)* | $640 \times 640$ | 20 Step / 50L | **$30.88\text{ s}$** | **$59.81\text{ s}$** | — | **$0.71\text{ fps}$** | $9.58\text{ s}$ |
-| **`oracle`** *(Baseline Ref)* | $640 \times 640$ | 50 Step / 50L (BF16) | **$120.00\text{ s}$** | **$240.00\text{ s}$** | — | **$0.18\text{ fps}$** | $9.60\text{ s}$ |
+| **`draft`** *(Ultra Draft)* | $640 \times 640$ | 4 Steps / 45L / Reuse 2 | **$\mathbf{3.29\text{ s}}$** | **$\mathbf{6.43\text{ s}}$** | **$\mathbf{23.21\text{ s}}$** | **$6.69\text{ fps}$** | $8.82\text{ s}$ |
+| **`turbo`** *(FastVideo v0.2)* | $640 \times 640$ | 4 Steps / 50L (Ladder) | **$\mathbf{6.53\text{ s}}$** | **$\mathbf{12.28\text{ s}}$** | **$\mathbf{39.94\text{ s}}$** | **$3.37\text{ fps}$** | $9.98\text{ s}$ |
+| **`champion`** *(Fast Master)* | $640 \times 640$ | 8 Steps / 50L (Shift 12) | **$\mathbf{12.55\text{ s}}$** | **$\mathbf{24.11\text{ s}}$** | **$\mathbf{78.35\text{ s}}$** | **$1.75\text{ fps}$** | $9.88\text{ s}$ |
+| **`cinema16x9`** *(Widescreen)* | $960 \times 544$ | 8 Steps / 50L (16:9) | **$16.41\text{ s}$** | **$33.76\text{ s}$** | **$113.68\text{ s}$** | **$1.34\text{ fps}$** | $11.45\text{ s}$ |
+| **`reel9x16`** *(Vertical Reel)* | $544 \times 960$ | 8 Steps / 50L (9:16) | **$16.44\text{ s}$** | **$33.38\text{ s}$** | **$115.32\text{ s}$** | **$1.34\text{ fps}$** | $11.38\text{ s}$ |
+| **`quality`** *(High Quality)* | $640 \times 640$ | 20 Steps / 50L | **$30.88\text{ s}$** | **$59.81\text{ s}$** | — | **$0.71\text{ fps}$** | $9.58\text{ s}$ |
+| **`oracle`** *(Baseline Ref)* | $640 \times 640$ | 50 Steps / 50L (BF16) | **$120.00\text{ s}$** | **$240.00\text{ s}$** | — | **$0.18\text{ fps}$** | $9.60\text{ s}$ |
 
 ---
 
-## 🔬 Standard di Valutazione Qualitativa
+## 🔬 Scientific Quality Evaluation Framework
 
-1. **Optical High-Frequency Preservation (OHFP)**: Verifica della micro-struttura delle superfici (pori cutanei, fibre dell'iride, fumo particellare) senza artefatti di blur artificiale.
-2. **Causal Temporal Coherence Index (CTCI)**: Stabilità inter-chunk sulla griglia $T = 17n + 5$, azzerando il flicker tra blocchi temporali adiacenti.
-3. **Natural 180° Shutter Blur Realism (NSBR)**: Rispetto della cadenza ottica a 24fps cinematografici senza sdoppiamento di arti o distorsioni nei bordi in movimento veloce.
-4. **Audio-Visual Latent Synchronization (AVLS)**: Allineamento millimetrico dei transienti sonori 48 kHz (rombo motore, passi, vento spaziale) con le dinamiche fisiche a schermo.
+1. **Optical High-Frequency Preservation (OHFP)**: Evaluates high-frequency spectral retention (fine skin pores, individual hair strands, fluid particles) without synthetic over-smoothing.
+2. **Causal Temporal Coherence Index (CTCI)**: Measures latent frame-to-frame stability across causal chunks ($T = 17n + 5$) preventing inter-frame flicker.
+3. **Natural 180° Shutter Blur Realism (NSBR)**: Preserves authentic cinematic motion cadence at 24fps without limb duplication or edge tearing.
+4. **Audio-Visual Latent Synchronization (AVLS)**: Exact alignment between 48 kHz stereo audio waveform transients (explosions, footsteps, environmental wind) and corresponding visual physics.
 
 ---
 
-## 🎛️ Pipeline di Cinema Mastering Integrata
+## 🎛️ Automated Cinema Mastering Pipeline
 
-Ogni clip generata passa attraverso una catena di post-processing professionale a 10-bit:
-1. **Riscalamento Anamorfico Lanczos**: Interpolazione di ordine elevato per preservare il contrasto micro-ottico.
-2. **Filtro di Apertura (*Unsharp Mask*)**: Esaltazione della profondità di campo equivalente $35\text{mm}$.
-3. **Normalizzazione Audio Broadcast EBU R128**: Livellamento dinamico a **$-14\text{ LUFS}$** e true-peak a $-1.5\text{ dBTP}$ per conformità standard social e broadcast.
-4. **Container FastStart MP4**: Atomo `moov` collocato all'inizio del file per avvio immediato in streaming web.
+Every generated clip passes through a broadcast-ready 10-bit mastering pipeline:
+1. **Lanczos Anamorphic Scaling**: High-order interpolation preserving edge fidelity.
+2. **Optical Aperture Filter (*Unsharp Mask*)**: Enhances 35mm depth-of-field contrast.
+3. **EBU R128 Loudness Normalization**: Mastered to **$-14\text{ LUFS}$** (true-peak $-1.5\text{ dBTP}$) for YouTube, Facebook, and Instagram compliance.
+4. **FastStart Streaming Container**: Optimized MP4 `moov` atom placement for zero-delay web playback.
 
 ---
 
 ## 🤖 AI Agent Skill Compatibility (Hermes, Antigravity, Open-Agent)
 
-Questo repository include la specifica formale per agenti autonomi ([`SKILL.md`](file:///SKILL.md)):
-* **Integrazione Immediata**: Compatibile con **Hermes Agent**, **Antigravity**, **Claude Code**, **AutoGen** e tool call personalizzati.
-* **Controllo Deterministico**: Esecuzione CLI da riga di comando con allineamento temporale automatico e output strutturato in JSON.
+This repository includes a standardized autonomous agent execution skill specification ([`SKILL.md`](file:///SKILL.md)):
+* **Agent Plug-and-Play**: Compatible with **Hermes Agent**, **Antigravity**, **Claude Code**, **AutoGen**, and **LangChain** tool orchestration.
+* **Deterministic Execution**: Programmatic CLI tool calls, automatic causal temporal framing ($T = 17n + 5$), and structured JSON output metrics.
+* **Mastering in Loop**: Automatic Lanczos grading and EBU R128 loudness normalization prior to delivery.
 
 ---
 
-## 💻 CLI Quickstart & Utilizzo
+## 🔊 Audio Latent Resolution Challenge in Rapid Denoising (Analysis & RFC)
 
-Lo script autonomo [`h3_master_cli.sh`](file:///h3_master_cli.sh) gestisce auto-rilevamento, modelli, generazione e mastering:
+In ultra-fast 4-to-8 step generations, a fundamental physical discrepancy arises between the two modalities:
+* **Video Latents**: Converge rapidly to 8K optical definition due to high visual shift ($s_{\text{video}} = 12.0$) and strong spatial priors.
+* **Audio Latents (48 kHz Stereo)**: Operating on continuous high-frequency Mel-spectrogram latents, audio requires a different flow velocity schedule ($s_{\text{audio}} \approx 3.0$). With only 4 to 8 shared DiT steps, audio noise trajectories do not always fully resolve, occasionally resulting in muffled sound or residual background noise.
 
-```bash
-# 1. Preset Champion (Gold Standard 8-Step)
-./h3_master_cli.sh champion "A majestic golden eagle soaring over snowy alpine peaks."
-
-# 2. Preset Turbo (FastVideo v0.2 a 4-Step)
-./h3_master_cli.sh turbo "Cinematic sports car drifting at sunset."
-
-# 3. Preset Cinema 16:9 Widescreen (960x544)
-./h3_master_cli.sh cinema "Epic aerial shot of a medieval fortress."
-
-# 4. Preset Vertical Reel 9:16 con Condizionamento Immagine
-./h3_master_cli.sh reel "Dynamic dance performance." 544 960 39 /path/to/portrait.jpg
-```
-
----
-
-## 🔊 Il Problema della Risoluzione Audio nei Render Rapidi (Analisi & RFC)
-
-Nelle generazioni ultra-rapide a 4-8 passi, si osserva una discrepanza fisica fondamentale tra le due modalità:
-* **Video Latents**: Convergono rapidamente a nitidezza 8K grazie allo shift visivo elevato ($s_{\text{video}} = 12.0$) e ai forti prior visivi.
-* **Audio Latents (48 kHz Stereo)**: Operando su spettrogrammi continui ad alta frequenza, i tensori audio richiedono una velocità di flusso differente ($s_{\text{audio}} \approx 3.0$). Con soli 4-8 step condivisi, la traiettoria di rumore audio non sempre si risolve completamente, provocando occasionali attenuazioni o rumore residuo di fondo.
-
-### 💡 Soluzioni Ingegneristiche Proposte:
-1. **Decoupled Multi-Rate Audio ODE Solver**: Disaccoppiare gli step del ramo audio, consentendo micro-iterazioni dedicate sull'attenzione audio senza rallentare la GPU sui token video.
-2. **Audio Latent Refiner / DMD2 LoRA**: Introdurre un modulo leggero a 1 dimensione (Audio Refiner Head) distillato specificamente per la decodifica audio a 48 kHz.
-3. **Filtro Spettrale Adattivo nel Mastering**: Implementare un noise-gate dinamico con FFT spettrale (`afftdn` / `anlmdn`) durante la fase di mastering a 10-bit.
+### 💡 Proposed Engineering Solutions:
+1. **Decoupled Multi-Rate Audio ODE Solver**: Decouple the audio latent schedule, enabling dedicated micro-steps over audio cross-attention without stalling GPU execution on video tokens.
+2. **Audio Latent Refiner / DMD2 LoRA**: Introduce a lightweight 1D Audio Refiner Head distilled specifically for 48 kHz audio latent reconstruction.
+3. **Adaptive Spectral Noise-Gate Filter**: Apply dynamic spectral gating (`afftdn` / `anlmdn`) during the 10-bit mastering stage.
 
 ---
 
 ## 🤝 Open for Community Contributions & PRs
 
-Questo progetto è **interamente aperto ai contributi della community open-source**! Sei uno sviluppatore C/Metal, un ricercatore di modelli di diffusione o un ingegnere DSP?
+This project is **fully open to open-source community contributions**! Are you a C/Metal systems engineer, diffusion model researcher, or DSP audio specialist?
 
-### 🛠️ Aree di Contributo Prioritarie:
-* **Audio ODE Scheduler Optimization**: Implementazione di schedule di diffusione asincroni per l'audio.
-* **Kernel Metal 4 / MLX**: Nuove fusioni di kernel matriciali per Apple Silicon M1-M5.
-* **Distillazione LoRA & SFT**: Pesi LoRA per formati e stili cinematografici specifici.
+### 🛠️ Priority Contribution Areas:
+* **Decoupled Audio ODE Schedulers**: Asynchronous diffusion schedule implementations for audio latents.
+* **Metal 4 / MLX Kernels**: Fused matrix kernels for Apple Silicon M1–M5 chips.
+* **LoRA & SFT Distillation**: Fine-tuned weights for specific cinematic styles and aspect ratios.
 
-### 📋 Come Contribuire:
-1. Fai il **Fork** del repository `RobZombAI/H3MLX`.
-2. Crea un branch per la tua feature (`git checkout -b feature/audio-decoupled-schedule`).
-3. Testa l'integrità con `python3 tests/verify_matrix_integrity.py`.
-4. Apri una **Pull Request**: tutti i contributi verranno revisionati, testati su Apple Silicon e confermati dal maintainer ([@RobZombAI](https://github.com/RobZombAI)).
+### 📋 Contribution Workflow:
+1. **Fork** the repository `RobZombAI/H3MLX`.
+2. Create your feature branch (`git checkout -b feature/audio-decoupled-schedule`).
+3. Verify full system integrity with `python3 tests/verify_matrix_integrity.py`.
+4. Submit a **Pull Request**: all PRs are reviewed, tested on Apple Silicon, and merged by maintainer ([@RobZombAI](https://github.com/RobZombAI)).
 
 ---
 
-## 📜 Autori, Citazioni & Licenza
+## 💻 CLI Quickstart & Usage
 
-* **Salvatore Sanfilippo (antirez)**: Ideatore e autore del motore sorgente C/Metal `h3.c`.
-* **MiniMax AI**: Sviluppatori del modello fondazionale `MiniMax-H3`.
-* **Hao-AI Lab**: Autori della distillazione DMD2 e schedule `FastVideo-FastH3`.
-* **Antigravity AI Engineering Team & Community**: Ottimizzazioni Metal 4 NAX, quantizzazione dinamica INT8-FC2, calibrazione preset Champion/Turbo, CLI unificata e mastering suite.
+The all-in-one [`h3_master_cli.sh`](file:///h3_master_cli.sh) script handles hardware auto-detection, model management, generation, and mastering:
 
-Rilasciato con **Licenza Apache 2.0 / MiniMax Community License** per uso personale, studio, ricerca e progresso scientifico open-source.
+```bash
+# 1. Run Champion Gold Standard (8-Step)
+./h3_master_cli.sh champion "A majestic golden eagle soaring over snowy alpine peaks."
+
+# 2. Run Turbo Mode (4-Step FastVideo v0.2)
+./h3_master_cli.sh turbo "Cinematic sports car drifting at sunset."
+
+# 3. Run Cinema 16:9 Widescreen (960x544)
+./h3_master_cli.sh cinema "Epic aerial shot of a medieval fortress."
+
+# 4. Run Vertical Reel 9:16 with First-Frame Conditioning
+./h3_master_cli.sh reel "Dynamic dance performance." 544 960 39 /path/to/portrait.jpg
+```
+
+---
+
+## 📜 Authors, Citations & License
+
+* **Salvatore Sanfilippo (antirez)**: Creator and author of the original pure C/Metal engine `h3.c`.
+* **MiniMax AI**: Developers of the foundational `MiniMax-H3` 33B diffusion transformer.
+* **Hao-AI Lab**: Authors of DMD2 distillation and the `FastVideo-FastH3` schedule.
+* **Antigravity AI Engineering Team & Community**: Metal 4 NAX optimizations, INT8-FC2 dynamic quantization, Champion/Turbo preset calibration, unified CLI, and mastering suite.
+
+Released under the **Apache License 2.0 / MiniMax Community License** for personal use, research, academic study, and open-source development.

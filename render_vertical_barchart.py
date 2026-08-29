@@ -37,9 +37,9 @@ c2 = '#a371f7'  # Neon Purple (2s)
 c4 = '#ff8c42'  # Amber Orange (4s)
 
 # Create Grouped Vertical Bars
-rects1 = ax.bar(x - bar_width, d1_times, bar_width, label='Clip 1.0s (22 Frame @ 24fps)', color=c1, edgecolor='#30363d', linewidth=1)
-rects2 = ax.bar(x, d2_times, bar_width, label='Clip 2.0s (39 Frame @ 24fps)', color=c2, edgecolor='#30363d', linewidth=1)
-rects4 = ax.bar(x + bar_width, d4_times, bar_width, label='Clip 4.0s (90 Frame @ 24fps)', color=c4, edgecolor='#30363d', linewidth=1)
+rects1 = ax.bar(x - bar_width, d1_times, bar_width, label='Clip 1.0s (22 Frames @ 24fps)', color=c1, edgecolor='#30363d', linewidth=1)
+rects2 = ax.bar(x, d2_times, bar_width, label='Clip 2.0s (39 Frames @ 24fps)', color=c2, edgecolor='#30363d', linewidth=1)
+rects4 = ax.bar(x + bar_width, d4_times, bar_width, label='Clip 4.0s (90 Frames @ 24fps)', color=c4, edgecolor='#30363d', linewidth=1)
 
 # Add value labels on top of bars
 def autolabel(rects, text_color, is_d4=False):
@@ -58,8 +58,8 @@ autolabel(rects2, c2)
 autolabel(rects4, c4, is_d4=True)
 
 # Customizing axes
-ax.set_ylabel('Denoise GPU Time in Secondi (Metal 4 NAX su M5 Max)', fontsize=12, fontweight='bold', color='#c9d1d9', labelpad=10)
-ax.set_title('H3MLX · Confronto a Barre Verticali dei Tempi di Denoising GPU per Preset & Durata', 
+ax.set_ylabel('GPU Denoise Execution Time in Seconds (Metal 4 NAX on M5 Max)', fontsize=12, fontweight='bold', color='#c9d1d9', labelpad=10)
+ax.set_title('H3MLX · Vertical Bar Chart: GPU Denoise Execution Times by Preset & Duration', 
              fontsize=15, fontweight='bold', color='#ffffff', pad=20, loc='left')
 
 ax.set_xticks(x)

@@ -20,7 +20,7 @@ This skill enables any autonomous agent (such as Hermes, Antigravity, or LangCha
 | **Sub-15s Turbo** | `turbo` | `./h3_master_cli.sh turbo "<prompt>"` | **$\approx 6.5\text{ s}$** | Fast iterations, storyboard generation, rapid social media clips. |
 | **Anamorphic 16:9** | `cinema` | `./h3_master_cli.sh cinema "<prompt>"` | **$\approx 16.4\text{ s}$** | Cinematic landscape shots ($960 \times 544$). |
 | **Vertical Reel 9:16** | `reel` | `./h3_master_cli.sh reel "<prompt>" 544 960 39 <img_path>` | **$\approx 16.4\text{ s}$** | Vertical social videos ($544 \times 960$) with image conditioning. |
-| **Instant Bozza** | `draft` | `./h3_master_cli.sh draft "<prompt>"` | **$\approx 3.2\text{ s}$** | Prompt validation and lighting checks in sub-10s total turnaround. |
+| **Ultra Draft** | `draft` | `./h3_master_cli.sh draft "<prompt>"` | **$\approx 3.2\text{ s}$** | Prompt validation and lighting checks in sub-10s total turnaround. |
 
 ---
 

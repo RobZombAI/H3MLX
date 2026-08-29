@@ -126,7 +126,7 @@ title_box = patches.FancyBboxPatch((0.02, 0.88), 0.96, 0.09, boxstyle="round,pad
                                     facecolor='#161b22', edgecolor='#30363d', linewidth=1.5)
 ax.add_patch(title_box)
 
-ax.text(0.04, 0.94, "H3MLX · MATRICE DEI BENCHMARK EMPIRICI", fontsize=17, fontweight='bold', color='#ffffff', va='center')
+ax.text(0.04, 0.94, "H3MLX · EMPIRICAL BENCHMARK MATRIX", fontsize=17, fontweight='bold', color='#ffffff', va='center')
 ax.text(0.04, 0.905, "Apple Silicon M5 Max (18 CPU Cores · 40 GPU Cores · Metal 4 NAX · 128 GB Unified Memory)", fontsize=11, fontweight='medium', color='#8b949e', va='center')
 
 # Hardware Pill Badges on the right of title
@@ -202,13 +202,13 @@ footer_box = patches.FancyBboxPatch((0.02, 0.03), 0.96, 0.065, boxstyle="round,p
                                      facecolor='#161b22', edgecolor='#30363d', linewidth=1)
 ax.add_patch(footer_box)
 
-ax.text(0.04, 0.063, "LEGENDA & METRICHE:", fontsize=9.5, fontweight='bold', color='#ffffff', va='center')
+ax.text(0.04, 0.063, "LEGEND & METRICS:", fontsize=9.5, fontweight='bold', color='#ffffff', va='center')
 
 # Legend items
-ax.text(0.20, 0.063, "■ Denoise GPU (Metal 4 NAX)", fontsize=9, fontweight='bold', color='#00d2ff', va='center')
-ax.text(0.42, 0.063, "■ Decodifica VAE 3D (Causal Tiles)", fontsize=9, fontweight='bold', color='#ff8c42', va='center')
-ax.text(0.66, 0.063, "■ Throughput Generativo (FPS)", fontsize=9, fontweight='bold', color='#39d353', va='center')
-ax.text(0.86, 0.063, "★ Preset Raccomandato", fontsize=9, fontweight='bold', color='#e3b341', va='center')
+ax.text(0.20, 0.063, "■ GPU Denoise (Metal 4 NAX)", fontsize=9, fontweight='bold', color='#00d2ff', va='center')
+ax.text(0.42, 0.063, "■ 3D Video VAE Decoding", fontsize=9, fontweight='bold', color='#ff8c42', va='center')
+ax.text(0.66, 0.063, "■ Generation Throughput (FPS)", fontsize=9, fontweight='bold', color='#39d353', va='center')
+ax.text(0.86, 0.063, "★ Recommended Preset", fontsize=9, fontweight='bold', color='#e3b341', va='center')
 
 plt.tight_layout()
 

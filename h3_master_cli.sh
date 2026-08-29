@@ -30,7 +30,7 @@ CORES=$(sysctl -n hw.ncpu 2>/dev/null || echo "16")
 RAM_BYTES=$(sysctl -n hw.memsize 2>/dev/null || echo "34359738368")
 RAM_GB=$((RAM_BYTES / 1024 / 1024 / 1024))
 
-echo -e "${BLUE}🔍 Hardware Rilevato:${RESET} ${BOLD}${CHIP}${RESET} | ${CORES} Core CPU | ${RAM_GB} GB Unified Memory (UMA)"
+echo -e "${BLUE}🔍 Detected Hardware:${RESET} ${BOLD}${CHIP}${RESET} | ${CORES} CPU Cores | ${RAM_GB} GB Unified Memory (UMA)"
 
 # Set environment optimizations for Metal 4 & UMA
 export H3_PROFILE=1
@@ -53,20 +53,20 @@ if [ -d "$DEFAULT_MODEL_DIR/FL2VA" ] || [ -d "$DEFAULT_MODEL_DIR" ]; then
 elif [ -d "$ALT_MODEL_DIR" ]; then
   MODEL_DIR="$ALT_MODEL_DIR"
 else
-  echo -e "${YELLOW}⚠️ Modello MiniMax-H3 non trovato nel percorso predefinito ($DEFAULT_MODEL_DIR).${RESET}"
-  read -p "Vuoi scaricare automaticamente i pesi del modello ora (~61 GB FL2VA)? (s/n): " CONSENT
-  if [[ "$CONSENT" =~ ^[SsYy]$ ]]; then
+  echo -e "${YELLOW}⚠️ MiniMax-H3 model weights not found at default location ($DEFAULT_MODEL_DIR).${RESET}"
+  read -p "Would you like to automatically download model weights now (~61 GB FL2VA)? (y/n): " CONSENT
+  if [[ "$CONSENT" =~ ^[Yy]$ ]]; then
     mkdir -p "$DEFAULT_MODEL_DIR"
-    echo -e "${GREEN}⬇️ Avvio download guidato del modello con ripresa automatica...${RESET}"
+    echo -e "${GREEN}⬇️ Starting guided model download with auto-resume...${RESET}"
     python3 "$(dirname "$0")/h3-lora-lab/scripts/download_model.py" --dir "$DEFAULT_MODEL_DIR" || true
     MODEL_DIR="$DEFAULT_MODEL_DIR"
   else
-    echo -e "${RED}❌ Esecuzione annullata: percorso modello mancante.${RESET}"
+    echo -e "${RED}❌ Execution cancelled: model path missing.${RESET}"
     exit 1
   fi
 fi
 
-echo -e "${GREEN}✓ Modello attivo:${RESET} ${MODEL_DIR}"
+echo -e "${GREEN}✓ Active Model:${RESET} ${MODEL_DIR}"
 
 # 3. PRESET SELECTOR & CONFIGURATION
 PRESET="${1:-champion}"
@@ -106,7 +106,7 @@ case "$PRESET" in
     LABEL="👑 Full Oracle Ground-Truth (50-Step / 50L / BF16)"
     ;;
   *)
-    echo -e "${YELLOW}Preset non riconosciuto, uso default: Champion${RESET}"
+    echo -e "${YELLOW}Unknown preset '$PRESET', falling back to default: Champion${RESET}"
     STEPS=8; LAYERS=50; REUSE=1; USE_INT8=1; VSHIFT=12.0; ASHIFT=3.0
     LABEL="🏆 Fast Master Champion"
     ;;
@@ -123,9 +123,9 @@ MASTER_OUT="$OUT_DIR/master_${PRESET}_${FRAMES}f_${TIMESTAMP}.mp4"
 
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════${RESET}"
-echo -e "${BOLD}⚙️  Configurazione Attiva:${RESET} ${GREEN}${LABEL}${RESET}"
-echo -e "📐 Risoluzione: ${BOLD}${WIDTH}x${HEIGHT}${RESET} | 🎞️ Frame: ${BOLD}${FRAMES}${RESET} (~$((FRAMES / 24))s @ 24fps)"
-echo -e "⚡ Architettura: ${GREEN}Metal 4 NAX + INT8-FC2 Quantization (50 Full Layers, 100% Spatial Tokens)${RESET}"
+echo -e "${BOLD}⚙️  Active Configuration:${RESET} ${GREEN}${LABEL}${RESET}"
+echo -e "📐 Resolution: ${BOLD}${WIDTH}x${HEIGHT}${RESET} | 🎞️ Frames: ${BOLD}${FRAMES}${RESET} (~$((FRAMES / 24))s @ 24fps)"
+echo -e "⚡ Architecture: ${GREEN}Metal 4 NAX + INT8-FC2 Quantization (50 Full Layers, 100% Spatial Tokens)${RESET}"
 echo -e "📝 Prompt: \"${PROMPT}\""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════${RESET}"
 echo ""
@@ -158,7 +158,7 @@ TOTAL_LATENCY=$((END_TIME - START_TIME))
 
 # 5. AUTOMATED MASTERING PIPELINE
 echo ""
-echo -e "${CYAN}🎛️  [MASTERING] Applicazione Lanczos Cinema Grading + EBU R128 (-14 LUFS)...${RESET}"
+echo -e "${CYAN}🎛️  [MASTERING] Applying Lanczos Cinema Grading + EBU R128 (-14 LUFS)...${RESET}"
 ffmpeg -y -i "$RAW_OUT" \
   -vf "unsharp=5:5:0.6:5:5:0.0,eq=contrast=1.06:brightness=0.01:saturation=1.08" \
   -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart \
@@ -167,6 +167,6 @@ ffmpeg -y -i "$RAW_OUT" \
 
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════════════${RESET}"
-echo -e "${BOLD}${GREEN}✅ GENERAZIONE E MASTERING COMPLETATI IN ${TOTAL_LATENCY} SECONDI!${RESET}"
-echo -e "📁 Video Master Nativo: ${CYAN}${MASTER_OUT}${RESET}"
+echo -e "${BOLD}${GREEN}✅ GENERATION AND MASTERING COMPLETED IN ${TOTAL_LATENCY} SECONDS!${RESET}"
+echo -e "📁 Native Master Video: ${CYAN}${MASTER_OUT}${RESET}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════════════${RESET}"
