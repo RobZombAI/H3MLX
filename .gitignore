@@ -16,7 +16,8 @@ outputs_*/
 *.ppm
 
 # Keep documentation assets
-!assets/*
+!assets/
+!assets/**
 
 # Model weights and checkpoints
 *.safetensors

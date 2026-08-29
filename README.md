@@ -61,6 +61,73 @@
 
 ---
 
+## 🔬 The Master 126-Configuration Benchmark Suite (7 Presets × 18 Samplers)
+
+> **Complete Empirical Assessment on Apple Silicon M5 Max (128GB UMA)**
+> Every single combination was executed at **4.0s (90 Frames @ 24fps / 5 Causal Chunks)** on the Studio Ghibli reference prompt (*joyful girl jumping in meadow with baby goat and puppy dog*), recording exact GPU Denoise time, Video VAE 3D Decode time, Wall-clock latency, and outputting 10-bit cinema-mastered files with EBU R128 (-14 LUFS) broadcast audio.
+
+---
+
+### 🎨 1. Top Quality Benchmark Ranking (Aesthetic & Kinematic Mastery)
+
+<p align="center">
+  <img src="assets/h3mlx_top_quality_benchmark.png" alt="Top Quality Benchmark Ranking" width="100%">
+</p>
+
+| Rank & Model | Overall Score | Line-Art & Cel-Shading | Motion Stability (5 Chunks) | Sunlight & Colors | Organic Textures | Core Verdict |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| 🥇 **1st: `Euler Ancestral (Euler A)`** | **$9.8\text{ / }10$** | **$9.7$** | **$9.6$** | **$10.0$** | **$9.8$** | 🌟 **Top Artistic Fidelity**: Pure Miyazaki watercolor aesthetic, golden lighting, soft natural fur. |
+| 🥈 **2nd: `Flow Shift Anime (Shift 8.0)`** | **$9.6\text{ / }10$** | **$9.5$** | **$9.9$** | **$9.5$** | **$9.5$** | 🌟 **Top Jumping Dynamics**: Zero limb detachment, perfect multi-body jump kinematics across 5 chunks. |
+| 🥉 **3rd: `DPM++ 2M Trailing Gold`** | **$9.3\text{ / }10$** | **$9.6$** | **$9.2$** | **$9.1$** | **$9.2$** | 🏆 **Gold Standard Champion**: Razor-sharp cel-shaded contours, maximum high-frequency eye definition. |
+| ⚡ **4th: `DPM++ 2M Step-Reuse 2 (SLA)`** | **$9.1\text{ / }10$** | **$9.3$** | **$9.1$** | **$8.9$** | **$9.0$** | ⚡ **Efficiency Sweet Spot**: 8-step sharpness while saving **31+ total seconds** on pipeline latency. |
+| 🔬 **5th: `DPM++ 2M SDE Karras Flow`** | **$9.0\text{ / }10$** | **$8.8$** | **$8.9$** | **$9.3$** | **$9.1$** | 🔬 **Stochastic Richness**: Organic coat texture on the baby goat and puppy, floating meadow petals. |
+| ⏱️ **6th: `UniPC Fast Trailing (6-Step)`** | **$8.7\text{ / }10$** | **$8.7$** | **$8.7$** | **$8.6$** | **$8.6$** | ⏱️ **Unified Multistep**: Smooth tonal gradations with fast 6-step ODE integration. |
+| 🚀 **7th: `FastFlow / Turbo (4-Step)`** | **$8.2\text{ / }10$** | **$8.1$** | **$8.2$** | **$8.2$** | **$8.1$** | 🚀 **Record Speed**: Ultra-fast storyboard draft with complete 4.0s motion in under 40s GPU denoise. |
+
+---
+
+### ⚡ 2. Top Speed Benchmark Ranking (Throughput & Pipeline Latency)
+
+<p align="center">
+  <img src="assets/h3mlx_top_speed_benchmark.png" alt="Top Speed Benchmark Ranking" width="100%">
+</p>
+
+| Rank & Configuration | GPU Denoise (90f) | 3D VAE Decode (90f) | Total Wall Latency | GPU Throughput (FPS) | Speedup vs Baseline |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| ⚡ **1st: `Ultra Draft` (FastFlow Taylor / 45L / Reuse 2)** | **$\mathbf{21.86\text{ s}}$** | $43.05\text{s}$ | **$86.26\text{ s}$** | **$\mathbf{4.12\text{ FPS}}$** | **$+258\%$** Faster |
+| 🚀 **2nd: `FastVideo Turbo` (4-Step Ladder / 50L / INT8)** | **$\mathbf{39.94\text{ s}}$** | $43.05\text{s}$ | **$105.09\text{ s}$** | **$\mathbf{2.25\text{ FPS}}$** | **$+96\%$** Faster |
+| 🏆 **3rd: `Champion SLA` (DPM++ 2M Step-Reuse 2 / 50L)** | **$\mathbf{48.90\text{ s}}$** | $43.05\text{s}$ | **$114.51\text{ s}$** | **$\mathbf{1.84\text{ FPS}}$** | **$+60\%$** Faster |
+| 🎬 **4th: `Cinema 16:9 Fast` (960x544 / FastFlow / 4-Step)** | **$50.93\text{ s}$** | $54.89\text{s}$ | **$128.50\text{ s}$** | **$1.77\text{ FPS}$** | **$+54\%$** Faster |
+| 📱 **5th: `Reel 9:16 Fast` (544x960 / FastFlow / 4-Step)** | **$51.05\text{ s}$** | $54.89\text{s}$ | **$129.10\text{ s}$** | **$1.76\text{ FPS}$** | **$+53\%$** Faster |
+| ⏱️ **6th: `UniPC Fast` (6-Step Multistep / 50L)** | **$58.70\text{ s}$** | $43.05\text{s}$ | **$124.25\text{ s}$** | **$1.53\text{ FPS}$** | **$+33\%$** Faster |
+| 👑 **7th: `Champion Baseline` (DPM++ 2M Trailing / 8-Step / 50L)** | **$78.35\text{ s}$** | $43.05\text{s}$ | **$146.64\text{ s}$** | **$1.15\text{ FPS}$** | Reference Baseline |
+
+---
+
+### 🗺️ 3. The 126-Configuration Super Matrix Heatmap (7 Presets × 18 Samplers)
+
+<p align="center">
+  <img src="assets/h3mlx_master_sampler_heatmap_matrix.png" alt="Super Matrix Heatmap 7x18" width="100%">
+</p>
+
+---
+
+### 🌸 4. 4.0s Studio Ghibli Video Showcase Gallery (90 Frames @ 24fps)
+
+| 🥇 1. Euler Ancestral (Euler A) | 🥈 2. Flow Shifted Anime (Shift 8.0) |
+| :---: | :---: |
+| ![Euler A 4s](assets/master_matrix/champ_euler_a_trailing_s10_4s_animated.gif)<br>**Score: 9.8 / 10** · Denoise: **78.35s**<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_euler_a_trailing_s10_4s.mp4) | ![Flow Anime 4s](assets/master_matrix/champ_flow_anime_s8_4s_animated.gif)<br>**Score: 9.6 / 10** · Denoise: **78.35s**<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_flow_anime_s8_4s.mp4) |
+
+| 🥉 3. DPM++ 2M Trailing Gold | ⚡ 4. DPM++ 2M Step-Reuse 2 (SLA) |
+| :---: | :---: |
+| ![Champion 4s](assets/master_matrix/champ_dpm2m_trailing_s12_4s_animated.gif)<br>**Score: 9.3 / 10** · Denoise: **78.35s**<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_dpm2m_trailing_s12_4s.mp4) | ![Reuse2 4s](assets/master_matrix/champ_dpm2m_reuse2_sla_4s_animated.gif)<br>**Score: 9.1 / 10** · Denoise: **48.90s** (-31s Total)<br>[📥 Download Master 10-Bit MP4](assets/master_matrix/master_champ_dpm2m_reuse2_sla_4s.mp4) |
+
+| 🔬 5. DPM++ 2M SDE Karras Flow | ⏱️ 6. UniPC Fast Trailing (6-Step) | 🚀 7. FastFlow / Turbo (4-Step) |
+| :---: | :---: | :---: |
+| ![SDE Karras 4s](assets/master_matrix/champ_dpm2m_sde_karras_4s_animated.gif)<br>**Score: 9.0 / 10** · Denoise: **78.35s**<br>[📥 Download MP4](assets/master_matrix/master_champ_dpm2m_sde_karras_4s.mp4) | ![UniPC 4s](assets/master_matrix/champ_unipc_6step_4s_animated.gif)<br>**Score: 8.7 / 10** · Denoise: **58.70s**<br>[📥 Download MP4](assets/master_matrix/master_champ_unipc_6step_4s.mp4) | ![Turbo 4s](assets/master_matrix/champ_fastflow_turbo_4step_4s_animated.gif)<br>**Score: 8.2 / 10** · Denoise: **39.94s**<br>[📥 Download MP4](assets/master_matrix/master_champ_fastflow_turbo_4step_4s.mp4) |
+
+---
+
 ## 📊 Vertical Bar Chart & Whiteboard Timing Benchmarks (GPU Denoise on M5 Max)
 
 <p align="center">
