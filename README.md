@@ -159,6 +159,10 @@ graph TD
 
 ## 📊 Matrice dei Benchmark Empirici (Apple Silicon M5 Max 128GB)
 
+<p align="center">
+  <img src="assets/h3mlx_empirical_matrix_table.png" alt="H3MLX Empirical Benchmark Matrix Table" width="100%">
+</p>
+
 | Preset Name | Risoluzione | Step & Layer | Denoise 1s (22f) | Denoise 2s (39f) | Denoise 4s (90f) | Throughput GPU | VAE Decode (1s) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **`draft`** *(Ultra Draft)* | $640 \times 640$ | 4 Step / 45L / Reuse 2 | **$\mathbf{3.29\text{ s}}$** | **$\mathbf{6.43\text{ s}}$** | **$\mathbf{23.21\text{ s}}$** | **$6.69\text{ fps}$** | $8.82\text{ s}$ |
