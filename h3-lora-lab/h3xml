@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec python3 /Users/robzomb/Documents/antigravity/cool-hopper/h3-lora-lab/h3xml_cli.py ""
