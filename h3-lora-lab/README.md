@@ -18,9 +18,33 @@
 
 ---
 
-## ⚡ Benchmark Showdown: H3XML v0.1 vs antirez/h3.c
+## 🎬 Benchmark Visual Showcase: The 9 CLI Production Tiers
 
-Empirical telemetry measured across identical seeds, prompts, and aspect ratios on **Apple Silicon M5 Max** (18 CPU cores, 40 GPU cores, 128GB Unified Memory):
+Here are the live video renderings generated across all 9 production tiers:
+
+### 🌟 Top 6 Golden Cinema Tiers (4.0s Video Masters)
+
+| 🥇 [1] 768x512 Balanced Widescreen (3:2) | 🥈 [2] 864x480 Standard Wide Master (16:9) | 🥉 [3] 864x480 Standard Wide Balanced (16:9) |
+| :---: | :---: | :---: |
+| ![768x512 Balanced](assets/demo_videos/01_768x512_balanced_4s.gif)<br>**20st · R2 · 45L** (Denoise: 41.4s · Quality: 9.85/10)<br>[📥 Download 4s MP4](assets/demo_videos/01_768x512_balanced_4s.mp4) | ![864x480 Master](assets/demo_videos/02_864x480_master_4s.gif)<br>**40st · R6 · 50L** (Denoise: 34.0s · Quality: 9.90/10)<br>[📥 Download 4s MP4](assets/demo_videos/02_864x480_master_4s.mp4) | ![864x480 Balanced](assets/demo_videos/03_864x480_balanced_4s.gif)<br>**20st · R2 · 45L** (Denoise: 43.7s · Quality: 9.85/10)<br>[📥 Download 4s MP4](assets/demo_videos/03_864x480_balanced_4s.mp4) |
+
+| 👑 [4] 512x512 Master Cinema Portrait (1:1) | 💎 [5] 512x512 Balanced Portrait (1:1) | 🏛️ [6] 768x768 High-Res Square Master (1:1) |
+| :---: | :---: | :---: |
+| ![512x512 Master](assets/demo_videos/04_512x512_master_4s.gif)<br>**40st · R6 · 50L** (Denoise: 21.5s · Quality: 9.95/10)<br>[📥 Download 4s MP4](assets/demo_videos/04_512x512_master_4s.mp4) | ![512x512 Balanced](assets/demo_videos/05_512x512_balanced_4s.gif)<br>**20st · R2 · 45L** (Denoise: 27.6s · Quality: 9.90/10)<br>[📥 Download 4s MP4](assets/demo_videos/05_512x512_balanced_4s.mp4) | ![768x768 Balanced](assets/demo_videos/06_768x768_balanced_4s.gif)<br>**20st · R2 · 45L** (Denoise: 62.1s · Quality: 9.95/10)<br>[📥 Download 4s MP4](assets/demo_videos/06_768x768_balanced_4s.mp4) |
+
+---
+
+### ⚡ Top 2 Fast Qualitative Modes & Text-to-Image Masterpiece
+
+| ⚡ [7] Fast 1: 512x512 Instant (1:1) | ⚡ [8] Fast 2: 768x512 Widescreen (3:2) | 🖼️ [9] Text-to-Image (T2I Snapshot) |
+| :---: | :---: | :---: |
+| ![512x512 Fast](assets/demo_videos/07_512x512_fast_1s.gif)<br>**20st · R2 · 45L** (⚡ Denoise: 7.2s · Tot: 14.0s)<br>[📥 Download 1s MP4](assets/demo_videos/07_512x512_fast_1s.mp4) | ![768x512 Fast](assets/demo_videos/08_768x512_fast_1s.gif)<br>**40st · R6 · 50L** (⚡ Denoise: 8.3s · Tot: 15.6s)<br>[📥 Download 1s MP4](assets/demo_videos/08_768x512_fast_1s.mp4) | ![T2I Snapshot](assets/demo_videos/09_768x512_t2i_snapshot.jpg)<br>**20st · R2 · 45L** (🖼️ 1 Frame Master · Tot: 18.0s)<br>[📥 View Full-Res JPG](assets/demo_videos/09_768x512_t2i_snapshot.jpg) |
+
+---
+
+## ⚡ Empirical Hardware Benchmarks: H3XML v0.1 vs antirez/h3.c
+
+Performance measured across identical seeds, prompts, and aspect ratios on **Apple Silicon M5 Max** (18 CPU cores, 40 GPU cores, 128GB Unified Memory):
 
 ![H3XML Speedup Comparison](assets/benchmark_speedup_bar_chart.png)
 
@@ -38,21 +62,21 @@ Empirical telemetry measured across identical seeds, prompts, and aspect ratios 
 
 ---
 
-## 🏆 The 9 Selected Production Tiers in H3XML Studio
+## 🏆 Quality vs Speed Matrix across the 9 CLI Presets
 
 ![Quality vs Speed Chart](assets/benchmark_quality_vs_speed_chart.png)
 
-| Tier & Aspect Ratio | Configuration | GPU Passes | GPU Denoise Time (4s) | ⏱️ Total Pure Time (Daemon) | Visual Quality ($/10$) | Video Demo Asset |
+| Tier & Aspect Ratio | Configuration | GPU Passes | GPU Denoise Time (4s) | ⏱️ Total Pure Time (Daemon) | Visual Quality ($/10$) | Video Preview |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **[1] 768x512 (3:2)** | **Balanced Cinema (20st R2 45L)** | 10 passes | **`41.4 s`** | **`54.8 s`** | `9.85 / 10` | [🎬 01_768x512_balanced_4s.mp4](assets/demo_videos/01_768x512_balanced_4s.mp4) |
-| **[2] 864x480 (16:9)** | **Panavision Master (40st R6 50L)** | 7 passes | **`34.0 s`** ⚡ | **`47.7 s`** | `9.90 / 10` | [🎬 02_864x480_master_4s.mp4](assets/demo_videos/02_864x480_master_4s.mp4) |
-| **[3] 864x480 (16:9)** | **Balanced Production (20st R2 45L)** | 10 passes | **`43.7 s`** | **`57.4 s`** | `9.85 / 10` | [🎬 03_864x480_balanced_4s.mp4](assets/demo_videos/03_864x480_balanced_4s.mp4) |
-| **[4] 512x512 (1:1)** | **Master Cinema Portrait (40st R6 50L)** | 7 passes | **`21.5 s`** ⚡ | **`33.2 s`** 🏆 | `9.95 / 10` | [🎬 04_512x512_master_4s.mp4](assets/demo_videos/04_512x512_master_4s.mp4) |
-| **[5] 512x512 (1:1)** | **Balanced Portrait (20st R2 45L)** | 10 passes | **`27.6 s`** | **`39.3 s`** | `9.90 / 10` | [🎬 05_512x512_balanced_4s.mp4](assets/demo_videos/05_512x512_balanced_4s.mp4) |
-| **[6] 768x768 (1:1)** | **High-Res Square Master (20st R2 45L)** | 10 passes | **`62.1 s`** | **`77.7 s`** | `9.95 / 10` | [🎬 06_768x768_balanced_4s.mp4](assets/demo_videos/06_768x768_balanced_4s.mp4) |
-| **[7] 512x512 (1:1)** | **Fast Sweet Spot 1s (20st R2 45L)** | 10 passes | **`7.2 s`** ⚡ | **`14.0 s`** 🚀 | `9.85 / 10` | [🎬 07_512x512_fast_1s.mp4](assets/demo_videos/07_512x512_fast_1s.mp4) |
-| **[8] 768x512 (3:2)** | **Fast Widescreen 1s (40st R6 50L)** | 7 passes | **`8.3 s`** ⚡ | **`15.6 s`** 🚀 | `9.90 / 10` | [🎬 08_768x512_fast_1s.mp4](assets/demo_videos/08_768x512_fast_1s.mp4) |
-| **[9] 768x512 (3:2)** | **Text-to-Image Snapshot (20st R2 45L)** | 10 passes | **`10.7 s`** | **`18.0 s`** 🖼️ | `10.0 / 10` | [🖼️ 09_768x512_t2i_snapshot.jpg](assets/demo_videos/09_768x512_t2i_snapshot.jpg) |
+| **[1] 768x512 (3:2)** | **Balanced Cinema (20st R2 45L)** | 10 passes | **`41.4 s`** | **`54.8 s`** | `9.85 / 10` | [🎬 Preview](assets/demo_videos/01_768x512_balanced_4s.gif) |
+| **[2] 864x480 (16:9)** | **Panavision Master (40st R6 50L)** | 7 passes | **`34.0 s`** ⚡ | **`47.7 s`** | `9.90 / 10` | [🎬 Preview](assets/demo_videos/02_864x480_master_4s.gif) |
+| **[3] 864x480 (16:9)** | **Balanced Production (20st R2 45L)** | 10 passes | **`43.7 s`** | **`57.4 s`** | `9.85 / 10` | [🎬 Preview](assets/demo_videos/03_864x480_balanced_4s.gif) |
+| **[4] 512x512 (1:1)** | **Master Cinema Portrait (40st R6 50L)** | 7 passes | **`21.5 s`** ⚡ | **`33.2 s`** 🏆 | `9.95 / 10` | [🎬 Preview](assets/demo_videos/04_512x512_master_4s.gif) |
+| **[5] 512x512 (1:1)** | **Balanced Portrait (20st R2 45L)** | 10 passes | **`27.6 s`** | **`39.3 s`** | `9.90 / 10` | [🎬 Preview](assets/demo_videos/05_512x512_balanced_4s.gif) |
+| **[6] 768x768 (1:1)** | **High-Res Square Master (20st R2 45L)** | 10 passes | **`62.1 s`** | **`77.7 s`** | `9.95 / 10` | [🎬 Preview](assets/demo_videos/06_768x768_balanced_4s.gif) |
+| **[7] 512x512 (1:1)** | **Fast Sweet Spot 1s (20st R2 45L)** | 10 passes | **`7.2 s`** ⚡ | **`14.0 s`** 🚀 | `9.85 / 10` | [🎬 Preview](assets/demo_videos/07_512x512_fast_1s.gif) |
+| **[8] 768x512 (3:2)** | **Fast Widescreen 1s (40st R6 50L)** | 7 passes | **`8.3 s`** ⚡ | **`15.6 s`** 🚀 | `9.90 / 10` | [🎬 Preview](assets/demo_videos/08_768x512_fast_1s.gif) |
+| **[9] 768x512 (3:2)** | **Text-to-Image Snapshot (20st R2 45L)** | 10 passes | **`10.7 s`** | **`18.0 s`** 🖼️ | `10.0 / 10` | [🖼️ View Image](assets/demo_videos/09_768x512_t2i_snapshot.jpg) |
 
 ---
 
@@ -141,7 +165,6 @@ make -j8
 ## 📜 License
 
 H3XML is released under the **BSD 2-Clause License**, completely free and open for personal, academic, and commercial use, respecting the original license and terms of `antirez/h3.c`.
-
 
 ---
 
