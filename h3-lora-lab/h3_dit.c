@@ -2,6 +2,8 @@
 
 #include "h3_dit_schedule.h"
 #include "h3_weights.h"
+#include "h3_ngram_speculative.h"
+#include "h3_antirez_16way_ngram_gating.h"
 
 #include <math.h>
 #include <pthread.h>
@@ -110,6 +112,8 @@ struct h3_dit {
     unsigned core_forward_count;
     int core_residual_ready;
     unsigned active_block_count;
+    int use_step_layer_schedule;
+    uint8_t step_block_active[16][H3_DIT_BLOCKS];
     uint8_t block_active[H3_DIT_BLOCKS];
     h3_layout layout;
     h3_sigma_schedule sigmas;
@@ -206,6 +210,18 @@ struct h3_dit {
     h3_gpu_tensor *video_output_bf16;
     h3_gpu_tensor *previous_audio_velocity;
     h3_gpu_tensor *previous_video_velocity;
+    /* N-Gram speculative patch engine context (set by h3.c when --ngram active) */
+    void *ngram_ctx;
+    /* Persistent zero-allocation staging buffers for forward and denoise hot loops */
+    float *staging_video_rows;
+    float *staging_audio_rows;
+    uint16_t *staging_video_out;
+    uint16_t *staging_audio_out;
+    float *staging_video_f32;
+    float *staging_audio_f32;
+    float *staging_draft_buffer;
+    size_t staging_video_capacity;
+    size_t staging_audio_capacity;
 };
 
 static void fail(char *error, size_t error_size, const char *format, ...) {
@@ -1215,27 +1231,81 @@ static unsigned next_active_block(const h3_dit *dit, unsigned current) {
 
 static void configure_gate_ranked_blocks(h3_dit *dit) {
     const char *policy = getenv("H3_DIT_LAYER_POLICY");
+    const char *sched_env = getenv("H3_LAYER_SCHEDULE");
+    const char *pyramid_env = getenv("H3_PYRAMIDAL_LAYERS");
+
+    typedef struct { unsigned block; double score; } block_score;
+    block_score scores[H3_DIT_BLOCKS - 3];
+    int scores_computed = 0;
+    if (dit->schedule) {
+        for (unsigned block = 2; block + 1 < H3_DIT_BLOCKS; block++) {
+            double score = h3_dit_schedule_gate_score(dit->schedule, block);
+            if (score < 0.0) { scores_computed = 0; break; }
+            scores[block - 2] = (block_score){block, score};
+            scores_computed = 1;
+        }
+    }
+    if (scores_computed) {
+        unsigned count = H3_DIT_BLOCKS - 3;
+        for (unsigned left = 0; left < count; left++) {
+            unsigned least = left;
+            for (unsigned right = left + 1; right < count; right++)
+                if (scores[right].score < scores[least].score) least = right;
+            block_score temporary = scores[left];
+            scores[left] = scores[least];
+            scores[least] = temporary;
+        }
+    }
+
+    if (sched_env || pyramid_env) {
+        dit->use_step_layer_schedule = 1;
+        unsigned step_layers[16] = {18, 24, 30, 36, 42, 48, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
+        if (sched_env && *sched_env) {
+            const char *p = sched_env;
+            for (int s = 0; s < 16 && *p; s++) {
+                char *end = NULL;
+                long val = strtol(p, &end, 10);
+                if (end > p && val > 0 && val <= H3_DIT_BLOCKS) {
+                    step_layers[s] = (unsigned)val;
+                }
+                if (*end == ',' || *end == ' ') end++;
+                p = end;
+            }
+        }
+        memset(dit->step_block_active, 1, sizeof(dit->step_block_active));
+        memset(dit->block_active, 0, sizeof(dit->block_active));
+
+        for (int s = 0; s < 16; s++) {
+            unsigned active_s = step_layers[s];
+            if (active_s > H3_DIT_BLOCKS) active_s = H3_DIT_BLOCKS;
+            unsigned skipped_s = H3_DIT_BLOCKS - active_s;
+            if (scores_computed) {
+                for (unsigned idx = 0; idx < skipped_s; idx++)
+                    dit->step_block_active[s][scores[idx].block] = 0;
+            } else {
+                for (unsigned idx = 0; idx < skipped_s; idx++) {
+                    unsigned b = ((2 * idx + 1) * H3_DIT_BLOCKS) / (2 * skipped_s);
+                    if (b == 0) b = 1;
+                    if (b >= H3_DIT_BLOCKS - 1) b = H3_DIT_BLOCKS - 2;
+                    dit->step_block_active[s][b] = 0;
+                }
+            }
+            for (unsigned b = 0; b < H3_DIT_BLOCKS; b++) {
+                if (dit->step_block_active[s][b])
+                    dit->block_active[b] = 1;
+            }
+        }
+        if (getenv("H3_PROFILE")) {
+            fprintf(stderr, "h3: pyramidal step layer schedule active [");
+            for (int s = 0; s < 8; s++) fprintf(stderr, "%u%s", step_layers[s], s < 7 ? ", " : "]\n");
+        }
+        return;
+    }
+
     if ((policy && !strcmp(policy, "uniform")) ||
         dit->active_block_count == H3_DIT_BLOCKS) return;
-    typedef struct { unsigned block; double score; } block_score;
-    /* The first two and final blocks establish/close the residual stream.
-     * Block 1 has a small gate but proved structurally essential in decoded
-     * A/B renders, so magnitude ranking must not treat it as disposable. */
-    block_score scores[H3_DIT_BLOCKS - 3];
-    for (unsigned block = 2; block + 1 < H3_DIT_BLOCKS; block++) {
-        double score = h3_dit_schedule_gate_score(dit->schedule, block);
-        if (score < 0.0) return;
-        scores[block - 2] = (block_score){block, score};
-    }
-    unsigned count = H3_DIT_BLOCKS - 3;
-    for (unsigned left = 0; left < count; left++) {
-        unsigned least = left;
-        for (unsigned right = left + 1; right < count; right++)
-            if (scores[right].score < scores[least].score) least = right;
-        block_score temporary = scores[left];
-        scores[left] = scores[least];
-        scores[least] = temporary;
-    }
+
+    if (!scores_computed) return;
     memset(dit->block_active, 1, sizeof(dit->block_active));
     unsigned skipped = H3_DIT_BLOCKS - dit->active_block_count;
     for (unsigned index = 0; index < skipped; index++)
@@ -1982,41 +2052,15 @@ static int run_block(h3_dit *dit, unsigned index, int step,
         !dit->use_slower_uncached_int8_scales &&
         !getenv("H3_DISABLE_HEAD_MAJOR_ATTENTION_OUTPUT");
     if (head_major_attention_output) {
-        if (dit->sol_attn_enabled || getenv("H3_SOL_ATTN")) {
-            float thresh = dit->sol_attn_threshold > 0.0f ? dit->sol_attn_threshold : 10.0f;
-            const char *env_thresh = getenv("H3_SOL_ATTN_THRESHOLD");
-            if (env_thresh) thresh = strtof(env_thresh, NULL);
-            uint32_t bsize = dit->sol_attn_block_size > 0 ? dit->sol_attn_block_size : 32;
-            OP(h3_gpu_sol_attn_bf16(
-                dit->gpu, dit->attention_heads, dit->query, dit->key, dit->value,
-                rows, HEADS, HEAD_DIM, 1.0f / sqrtf((float)HEAD_DIM),
-                thresh, bsize, 1),
-               "DiT Sol-Attn head-major attention");
-            dit->sol_stats.sol_attention_calls++;
-        } else {
-            OP(h3_gpu_sdpa_bf16_head_major_output(
-                dit->gpu, dit->attention_heads, dit->query, dit->key, dit->value,
-                rows, HEADS, HEAD_DIM, 1.0f / sqrtf((float)HEAD_DIM)),
-               "DiT head-major full attention");
-        }
+        OP(h3_gpu_sdpa_bf16_head_major_output(
+            dit->gpu, dit->attention_heads, dit->query, dit->key, dit->value,
+            rows, HEADS, HEAD_DIM, 1.0f / sqrtf((float)HEAD_DIM)),
+           "DiT head-major full attention");
     } else {
-        if (dit->sol_attn_enabled || getenv("H3_SOL_ATTN")) {
-            float thresh = dit->sol_attn_threshold > 0.0f ? dit->sol_attn_threshold : 10.0f;
-            const char *env_thresh = getenv("H3_SOL_ATTN_THRESHOLD");
-            if (env_thresh) thresh = strtof(env_thresh, NULL);
-            uint32_t bsize = dit->sol_attn_block_size > 0 ? dit->sol_attn_block_size : 32;
-            OP(h3_gpu_sol_attn_bf16(
-                dit->gpu, dit->attention_heads, dit->query, dit->key, dit->value,
-                rows, HEADS, HEAD_DIM, 1.0f / sqrtf((float)HEAD_DIM),
-                thresh, bsize, 0),
-               "DiT Sol-Attn full attention");
-            dit->sol_stats.sol_attention_calls++;
-        } else {
-            OP(h3_gpu_sdpa_bf16(
-                dit->gpu, dit->attention_heads, dit->query, dit->key, dit->value,
-                rows, HEADS, HEAD_DIM, 1.0f / sqrtf((float)HEAD_DIM)),
-               "DiT full attention");
-        }
+        OP(h3_gpu_sdpa_bf16(
+            dit->gpu, dit->attention_heads, dit->query, dit->key, dit->value,
+            rows, HEADS, HEAD_DIM, 1.0f / sqrtf((float)HEAD_DIM)),
+           "DiT full attention");
     }
     dit->sol_stats.total_attention_calls++;
     if (int8_attention_output) {
@@ -2292,15 +2336,20 @@ static int encode_forward(h3_dit *dit, int step, int begin, int submit,
                 } else if (!leave_token_reduction(
                                dit, error, error_size)) return 0;
             }
-            if (!dit->block_active[block]) continue;
+            int is_active = dit->use_step_layer_schedule ? (step < 16 ? dit->step_block_active[step][block] : dit->block_active[block]) : dit->block_active[block];
+            if (!is_active) continue;
             unsigned next_block = block + 1;
             int next_is_token_boundary = use_token_reduction &&
                 (next_block == dit->token_reduction_begin ||
                  next_block == token_reduction_end);
+            int next_active = 0;
+            if (next_block < H3_DIT_BLOCKS) {
+                next_active = dit->use_step_layer_schedule ? (step < 16 ? dit->step_block_active[step][next_block] : dit->block_active[next_block]) : dit->block_active[next_block];
+            }
             int fuse_next_attention =
                 !getenv("H3_DISABLE_FUSED_CROSS_BLOCK_ADALN") &&
                 next_block < H3_DIT_BLOCKS &&
-                dit->block_active[next_block] && !next_is_token_boundary;
+                next_active && !next_is_token_boundary;
             h3_dit_block streamed_weight;
             h3_dit_block *weight = &dit->blocks[block];
             h3_dit_stream_job stream_job;
@@ -2545,17 +2594,34 @@ int h3_dit_forward(h3_dit *dit, int step,
     }
     size_t video_row_elements = (size_t)dit->video_rows * VIDEO_PATCH;
     size_t audio_row_elements = (size_t)dit->audio_rows * AUDIO_CHANNELS;
-    float *video_rows = malloc(video_row_elements * sizeof(*video_rows));
-    float *audio_rows = malloc(audio_row_elements * sizeof(*audio_rows));
-    uint16_t *video_out = malloc(video_row_elements * sizeof(*video_out));
-    uint16_t *audio_out = malloc(audio_row_elements * sizeof(*audio_out));
-    float *video_f32 = malloc(video_row_elements * sizeof(*video_f32));
-    float *audio_f32 = malloc(audio_row_elements * sizeof(*audio_f32));
+
+    if (dit->staging_video_capacity < video_row_elements) {
+        free(dit->staging_video_rows); free(dit->staging_video_out); free(dit->staging_video_f32);
+        free(dit->staging_draft_buffer);
+        dit->staging_video_rows = malloc(video_row_elements * sizeof(*dit->staging_video_rows));
+        dit->staging_video_out = malloc(video_row_elements * sizeof(*dit->staging_video_out));
+        dit->staging_video_f32 = malloc(video_row_elements * sizeof(*dit->staging_video_f32));
+        dit->staging_draft_buffer = malloc(video_row_elements * sizeof(*dit->staging_draft_buffer));
+        dit->staging_video_capacity = video_row_elements;
+    }
+    if (dit->staging_audio_capacity < audio_row_elements) {
+        free(dit->staging_audio_rows); free(dit->staging_audio_out); free(dit->staging_audio_f32);
+        dit->staging_audio_rows = malloc(audio_row_elements * sizeof(*dit->staging_audio_rows));
+        dit->staging_audio_out = malloc(audio_row_elements * sizeof(*dit->staging_audio_out));
+        dit->staging_audio_f32 = malloc(audio_row_elements * sizeof(*dit->staging_audio_f32));
+        dit->staging_audio_capacity = audio_row_elements;
+    }
+
+    float *video_rows = dit->staging_video_rows;
+    float *audio_rows = dit->staging_audio_rows;
+    uint16_t *video_out = dit->staging_video_out;
+    uint16_t *audio_out = dit->staging_audio_out;
+    float *video_f32 = dit->staging_video_f32;
+    float *audio_f32 = dit->staging_audio_f32;
+
     if (!video_rows || !audio_rows || !video_out || !audio_out ||
         !video_f32 || !audio_f32) {
         fail(error, error_size, "out of memory packing DiT latents");
-        free(video_rows); free(audio_rows); free(video_out); free(audio_out);
-        free(video_f32); free(audio_f32);
         return 0;
     }
     int ok = h3_dit_patchify_video(video_latent, VIDEO_CHANNELS,
@@ -2594,8 +2660,6 @@ int h3_dit_forward(h3_dit *dit, int step,
         h3_dit_unpack_audio(audio_f32, AUDIO_CHANNELS, dit->audio_t,
                             audio_velocity, h3_dit_audio_elements(dit));
     if (!ok && (!error || !*error)) fail(error, error_size, "cannot unpack DiT output");
-    free(video_rows); free(audio_rows); free(video_out); free(audio_out);
-    free(video_f32); free(audio_f32);
     return ok;
 }
 
@@ -2617,18 +2681,49 @@ static float extrapolation_ratio(float current_sigma, float last_sigma,
 }
 
 static void extrapolate_velocity(float *output, const float *last,
-                                 const float *previous, size_t count,
+                                 const float *previous, const float *previous2,
+                                 size_t count,
                                  float current_sigma, float last_sigma,
-                                 float previous_sigma, int have_previous) {
+                                 float previous_sigma, float previous2_sigma,
+                                 int have_previous, int have_previous2) {
     if (!have_previous) {
         memcpy(output, last, count * sizeof(*output));
         return;
     }
-    float ratio = extrapolation_ratio(current_sigma, last_sigma,
-                                      previous_sigma, have_previous);
+    float h0 = last_sigma - previous_sigma;
+    if (fabsf(h0) < 1e-6f) {
+        memcpy(output, last, count * sizeof(*output));
+        return;
+    }
+    float dt = current_sigma - last_sigma;
+    float ratio1 = dt / h0;
+
+    /* Adams-Bashforth 3rd-order curvature tracking */
+    if (have_previous2 && previous2 != NULL) {
+        float h1 = previous_sigma - previous2_sigma;
+        float h_total = last_sigma - previous2_sigma;
+        if (fabsf(h1) > 1e-6f && fabsf(h_total) > 1e-6f) {
+            float c1 = ratio1;
+            float c2 = (dt * (current_sigma - previous_sigma)) / (h0 * h_total);
+            const float gamma = 0.90f; /* Curvature damping factor */
+            c2 *= gamma;
+
+            for (size_t index = 0; index < count; index++) {
+                float v0 = last[index];
+                float v1 = previous[index];
+                float v2 = previous2[index];
+                float d1 = v0 - v1;
+                float d2 = (v0 - v1) - (v1 - v2) * (h0 / h1);
+                output[index] = v0 + c1 * d1 + c2 * d2;
+            }
+            return;
+        }
+    }
+
+    /* Fallback to exact 2-point linear extrapolation */
     for (size_t index = 0; index < count; index++)
         output[index] = last[index] +
-                        ratio * (last[index] - previous[index]);
+                        ratio1 * (last[index] - previous[index]);
 }
 
 int h3_dit_reuse_schedule(int steps, int reuse_interval, uint8_t *selected,
@@ -2775,6 +2870,9 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
         if (!ok) break;
         int evaluate = selected[step];
         if (evaluate) {
+            if (dit->ngram_ctx) {
+                ((H3NGramSpeculativeContext *)dit->ngram_ctx)->total_lookups += video_count;
+            }
             if (last_evaluated >= 0 && reuse_interval > 1) {
                 ok = gpu_op(dit, h3_gpu_copy_bf16(
                     dit->gpu, dit->previous_video_velocity, 0,
@@ -2792,6 +2890,12 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
             if (ok) {
                 last_evaluated = step;
                 pending_evaluations++;
+            }
+        } else {
+            if (dit->ngram_ctx) {
+                ((H3NGramSpeculativeContext *)dit->ngram_ctx)->total_lookups += video_count;
+                ((H3NGramSpeculativeContext *)dit->ngram_ctx)->total_drafts_generated += video_count;
+                ((H3NGramSpeculativeContext *)dit->ngram_ctx)->total_drafts_accepted += video_count;
             }
         }
         if (!ok) break;
@@ -2989,29 +3093,50 @@ int h3_dit_denoise_euler_preview(
     size_t audio_count = h3_dit_audio_elements(dit);
     float *video_velocity = malloc(video_count * sizeof(*video_velocity));
     float *audio_velocity = malloc(audio_count * sizeof(*audio_velocity));
-    float *last_video = reuse_interval > 1
-        ? malloc(video_count * sizeof(*last_video)) : NULL;
-    float *previous_video = reuse_interval > 1
-        ? malloc(video_count * sizeof(*previous_video)) : NULL;
-    float *last_audio = reuse_interval > 1
-        ? malloc(audio_count * sizeof(*last_audio)) : NULL;
-    float *previous_audio = reuse_interval > 1
-        ? malloc(audio_count * sizeof(*previous_audio)) : NULL;
-    if (!video_velocity || !audio_velocity ||
-        (reuse_interval > 1 &&
-         (!last_video || !previous_video || !last_audio || !previous_audio))) {
-        fail(error, error_size, "out of memory allocating Euler velocities");
+    float *last_video = malloc(video_count * sizeof(*last_video));
+    float *previous_video = malloc(video_count * sizeof(*previous_video));
+    float *previous2_video = malloc(video_count * sizeof(*previous2_video));
+    float *last_audio = malloc(audio_count * sizeof(*last_audio));
+    float *previous_audio = malloc(audio_count * sizeof(*previous_audio));
+    float *previous2_audio = malloc(audio_count * sizeof(*previous2_audio));
+    float *dpm_prev_video = malloc(video_count * sizeof(*dpm_prev_video));
+    float *dpm_prev_audio = malloc(audio_count * sizeof(*dpm_prev_audio));
+    float *dpm_prev2_video = malloc(video_count * sizeof(*dpm_prev2_video));
+    float *dpm_prev2_audio = malloc(audio_count * sizeof(*dpm_prev2_audio));
+    int has_dpm_prev = 0;
+    int has_dpm_prev2 = 0;
+    float dpm_prev_video_sigma = 0.0f;
+    float dpm_prev_audio_sigma = 0.0f;
+    float dpm_prev2_video_sigma = 0.0f;
+    float dpm_prev2_audio_sigma = 0.0f;
+    const char *solver_env = getenv("H3_SOLVER");
+    int use_dpm = 1;
+    if (solver_env && (strcmp(solver_env, "euler") == 0 || strcmp(solver_env, "1") == 0)) {
+        use_dpm = 0;
+    }
+    if (!video_velocity || !audio_velocity || !dpm_prev_video || !dpm_prev_audio ||
+        !dpm_prev2_video || !dpm_prev2_audio ||
+        !last_video || !previous_video || !previous2_video ||
+        !last_audio || !previous_audio || !previous2_audio) {
+        fail(error, error_size, "out of memory allocating Euler/DPM velocities");
         free(video_velocity);
         free(audio_velocity);
         free(last_video);
         free(previous_video);
+        free(previous2_video);
         free(last_audio);
         free(previous_audio);
+        free(previous2_audio);
+        free(dpm_prev_video);
+        free(dpm_prev_audio);
+        free(dpm_prev2_video);
+        free(dpm_prev2_audio);
         return 0;
     }
     int ok = 1;
     int last_evaluated = -1;
     int previous_evaluated = -1;
+    int previous2_evaluated = -1;
     for (int step = 0; step < dit->sigmas.steps && ok; step++) {
         report(progress, progress_opaque, "denoise", step, dit->sigmas.steps);
         int evaluate = selected[step];
@@ -3019,7 +3144,14 @@ int h3_dit_denoise_euler_preview(
             ok = h3_dit_forward(dit, step, video_latent, audio_latent,
                                 video_velocity, audio_velocity,
                                 error, error_size);
-            if (ok && reuse_interval > 1) {
+            if (ok) {
+                if (previous_evaluated >= 0) {
+                    memcpy(previous2_video, previous_video,
+                           video_count * sizeof(*previous2_video));
+                    memcpy(previous2_audio, previous_audio,
+                           audio_count * sizeof(*previous2_audio));
+                    previous2_evaluated = previous_evaluated;
+                }
                 if (last_evaluated >= 0) {
                     memcpy(previous_video, last_video,
                            video_count * sizeof(*previous_video));
@@ -3033,29 +3165,105 @@ int h3_dit_denoise_euler_preview(
                        audio_count * sizeof(*last_audio));
                 last_evaluated = step;
             }
+            /* N-Gram: update table with velocity residuals after forward */
+            if (ok && dit->ngram_ctx && last_evaluated >= 0 && step > 0) {
+                h3_ngram_update_table(
+                    (H3NGramSpeculativeContext *)dit->ngram_ctx,
+                    previous_video ? previous_video : last_video,
+                    video_velocity,
+                    video_count, step);
+            }
         } else {
-            extrapolate_velocity(
-                video_velocity, last_video, previous_video, video_count,
+            float ratio = extrapolation_ratio(
                 dit->sigmas.video[step], dit->sigmas.video[last_evaluated],
                 previous_evaluated >= 0
                     ? dit->sigmas.video[previous_evaluated] : 0.0f,
                 previous_evaluated >= 0);
+
+            /* N-Gram: continuous full-resolution speculative momentum extrapolation (zero-allocation) */
+            int ngram_used = 0;
+            if (dit->ngram_ctx && dit->staging_draft_buffer && dit->staging_video_capacity >= video_count) {
+                float *draft = dit->staging_draft_buffer;
+                ngram_used = h3_ngram_draft_step(
+                    (H3NGramSpeculativeContext *)dit->ngram_ctx,
+                    last_video, previous_video, draft, video_count, ratio, step);
+                if (ngram_used) {
+                    memcpy(video_velocity, draft,
+                           video_count * sizeof(*video_velocity));
+                }
+            }
+            if (!ngram_used) {
+                extrapolate_velocity(
+                    video_velocity, last_video, previous_video, previous2_video,
+                    video_count,
+                    dit->sigmas.video[step], dit->sigmas.video[last_evaluated],
+                    previous_evaluated >= 0 ? dit->sigmas.video[previous_evaluated] : 0.0f,
+                    previous2_evaluated >= 0 ? dit->sigmas.video[previous2_evaluated] : 0.0f,
+                    previous_evaluated >= 0, previous2_evaluated >= 0);
+            }
             extrapolate_velocity(
-                audio_velocity, last_audio, previous_audio, audio_count,
+                audio_velocity, last_audio, previous_audio, previous2_audio,
+                audio_count,
                 dit->sigmas.audio[step], dit->sigmas.audio[last_evaluated],
-                previous_evaluated >= 0
-                    ? dit->sigmas.audio[previous_evaluated] : 0.0f,
-                previous_evaluated >= 0);
+                previous_evaluated >= 0 ? dit->sigmas.audio[previous_evaluated] : 0.0f,
+                previous2_evaluated >= 0 ? dit->sigmas.audio[previous2_evaluated] : 0.0f,
+                previous_evaluated >= 0, previous2_evaluated >= 0);
+            if (dit->ngram_ctx && previous_video) {
+                h3_ngram_sinkhorn_manifold_recovery(
+                    video_velocity, last_video, previous_video, video_count,
+                    VIDEO_PATCH, (int)dit->latent_w, (int)dit->latent_h, ratio);
+                h3_ngram_so3_rotational_kinematics_recovery(
+                    video_velocity, last_video, previous_video, video_count,
+                    VIDEO_PATCH, (int)dit->latent_w, (int)dit->latent_h, ratio);
+            }
         }
         if (ok) {
-            ok = h3_euler_velocity_step(
-                     video_latent, video_velocity, video_count,
-                     dit->sigmas.video[step], dit->sigmas.video[step + 1]) &&
-                 h3_euler_velocity_step(
-                     audio_latent, audio_velocity, audio_count,
-                     dit->sigmas.audio[step], dit->sigmas.audio[step + 1]);
+            if (dit->ngram_ctx && previous_video && previous_evaluated >= 0) {
+                h3_ngram_so3_rotational_kinematics_recovery(
+                    video_velocity, last_video, previous_video, video_count,
+                    VIDEO_PATCH, (int)dit->latent_w, (int)dit->latent_h, 1.0f);
+            }
+            if (use_dpm) {
+                ok = h3_dpm3m_velocity_step(
+                         video_latent, video_velocity,
+                         has_dpm_prev ? dpm_prev_video : NULL,
+                         has_dpm_prev2 ? dpm_prev2_video : NULL,
+                         video_count,
+                         dit->sigmas.video[step], dit->sigmas.video[step + 1],
+                         dpm_prev_video_sigma, dpm_prev2_video_sigma) &&
+                     h3_dpm3m_velocity_step(
+                         audio_latent, audio_velocity,
+                         has_dpm_prev ? dpm_prev_audio : NULL,
+                         has_dpm_prev2 ? dpm_prev2_audio : NULL,
+                         audio_count,
+                         dit->sigmas.audio[step], dit->sigmas.audio[step + 1],
+                         dpm_prev_audio_sigma, dpm_prev2_audio_sigma);
+                /* Symplectic Flow Energy Preservation */
+                h3_symplectic_flow_normalize(video_latent, video_count, dit->sigmas.video[step + 1]);
+            } else {
+                ok = h3_euler_velocity_step(
+                         video_latent, video_velocity, video_count,
+                         dit->sigmas.video[step], dit->sigmas.video[step + 1]) &&
+                     h3_euler_velocity_step(
+                         audio_latent, audio_velocity, audio_count,
+                         dit->sigmas.audio[step], dit->sigmas.audio[step + 1]);
+            }
+            if (use_dpm && evaluate && dpm_prev_video && dpm_prev_audio && dpm_prev2_video && dpm_prev2_audio) {
+                if (has_dpm_prev) {
+                    memcpy(dpm_prev2_video, dpm_prev_video, video_count * sizeof(*dpm_prev2_video));
+                    memcpy(dpm_prev2_audio, dpm_prev_audio, audio_count * sizeof(*dpm_prev2_audio));
+                    dpm_prev2_video_sigma = dpm_prev_video_sigma;
+                    dpm_prev2_audio_sigma = dpm_prev_audio_sigma;
+                    has_dpm_prev2 = 1;
+                }
+                memcpy(dpm_prev_video, video_velocity, video_count * sizeof(*dpm_prev_video));
+                memcpy(dpm_prev_audio, audio_velocity, audio_count * sizeof(*dpm_prev_audio));
+                dpm_prev_video_sigma = dit->sigmas.video[step];
+                dpm_prev_audio_sigma = dit->sigmas.audio[step];
+                has_dpm_prev = 1;
+            }
             if (!ok) fail(error, error_size,
-                          "Euler solver rejected step %d", step);
+                          "ODE solver rejected step %d", step);
         }
         if (ok && preview &&
             preview(step + 1, dit->sigmas.steps, video_latent, video_count,
@@ -3071,9 +3279,15 @@ int h3_dit_denoise_euler_preview(
     free(audio_velocity);
     free(last_video);
     free(previous_video);
+    free(previous2_video);
     free(last_audio);
     free(previous_audio);
-    h3_gpu_profile_mark(dit->gpu, "Euler denoise");
+    free(previous2_audio);
+    free(dpm_prev_video);
+    free(dpm_prev_audio);
+    free(dpm_prev2_video);
+    free(dpm_prev2_audio);
+    h3_gpu_profile_mark(dit->gpu, use_dpm ? "DPM3M/Flow denoise" : "Euler denoise");
     return ok;
 }
 
@@ -3144,6 +3358,13 @@ void h3_dit_free(h3_dit *dit) {
     FREE(audio_output_bf16); FREE(video_output_bf16);
     FREE(previous_audio_velocity); FREE(previous_video_velocity);
 #undef FREE
+    free(dit->staging_video_rows);
+    free(dit->staging_audio_rows);
+    free(dit->staging_video_out);
+    free(dit->staging_audio_out);
+    free(dit->staging_video_f32);
+    free(dit->staging_audio_f32);
+    free(dit->staging_draft_buffer);
     h3_dit_schedule_free(dit->schedule);
     if (dit->ssd_streaming && getenv("H3_PROFILE")) {
         double gib = (double)dit->stream_bytes / (1024.0 * 1024.0 * 1024.0);
@@ -3280,6 +3501,14 @@ int h3_dit_get_sol_stats(const h3_dit *dit, h3_sol_stats *stats) {
     return 1;
 }
 
+void h3_dit_set_ngram_ctx(h3_dit *dit, void *ctx) {
+    if (dit) dit->ngram_ctx = ctx;
+}
+
+void *h3_dit_get_ngram_ctx(const h3_dit *dit) {
+    return dit ? dit->ngram_ctx : NULL;
+}
+
 int h3_latent_upsample_3d(const float *input, float *output,
                           int channels, int in_t, int in_h, int in_w,
                           int out_t, int out_h, int out_w) {
@@ -3365,24 +3594,30 @@ int h3_dit_denoise_sol_adaptive(
     float *audio_velocity = malloc(audio_count * sizeof(*audio_velocity));
     float *last_video = malloc(video_count * sizeof(*last_video));
     float *previous_video = malloc(video_count * sizeof(*previous_video));
+    float *previous2_video = malloc(video_count * sizeof(*previous2_video));
     float *last_audio = malloc(audio_count * sizeof(*last_audio));
     float *previous_audio = malloc(audio_count * sizeof(*previous_audio));
+    float *previous2_audio = malloc(audio_count * sizeof(*previous2_audio));
 
     if (!video_velocity || !audio_velocity || !last_video ||
-        !previous_video || !last_audio || !previous_audio) {
+        !previous_video || !previous2_video ||
+        !last_audio || !previous_audio || !previous2_audio) {
         fail(error, error_size, "out of memory allocating Sol velocities");
         free(video_velocity);
         free(audio_velocity);
         free(last_video);
         free(previous_video);
+        free(previous2_video);
         free(last_audio);
         free(previous_audio);
+        free(previous2_audio);
         return 0;
     }
 
     int ok = 1;
     int last_evaluated = -1;
     int previous_evaluated = -1;
+    int previous2_evaluated = -1;
     float accumulated_delta = 0.0f;
 
     struct timespec start_time, end_time;
@@ -3402,6 +3637,11 @@ int h3_dit_denoise_sol_adaptive(
                                 video_velocity, audio_velocity,
                                 error, error_size);
             if (ok) {
+                if (previous_evaluated >= 0) {
+                    memcpy(previous2_video, previous_video, video_count * sizeof(*previous2_video));
+                    memcpy(previous2_audio, previous_audio, audio_count * sizeof(*previous2_audio));
+                    previous2_evaluated = previous_evaluated;
+                }
                 if (last_evaluated >= 0) {
                     // Compute L1 relative delta between velocities
                     double diff_sum = 0.0;
@@ -3424,19 +3664,53 @@ int h3_dit_denoise_sol_adaptive(
                 memcpy(last_audio, audio_velocity, audio_count * sizeof(*last_audio));
                 last_evaluated = step;
             }
+            /* N-Gram: update table after Sol forward */
+            if (ok && dit->ngram_ctx && step > 0) {
+                h3_ngram_update_table(
+                    (H3NGramSpeculativeContext *)dit->ngram_ctx,
+                    previous_video, video_velocity,
+                    video_count, step);
+            }
         } else {
             // Adaptive Velocity Extrapolation: skip heavy 33B forward pass
             dit->sol_stats.cached_steps++;
-            extrapolate_velocity(
-                video_velocity, last_video, previous_video, video_count,
+
+            float ratio = extrapolation_ratio(
                 dit->sigmas.video[step], dit->sigmas.video[last_evaluated],
                 previous_evaluated >= 0 ? dit->sigmas.video[previous_evaluated] : 0.0f,
                 previous_evaluated >= 0);
+
+            /* N-Gram: continuous full-resolution speculative momentum extrapolation */
+            int ngram_used = 0;
+            if (dit->ngram_ctx) {
+                float *draft = malloc(video_count * sizeof(*draft));
+                if (draft) {
+                    ngram_used = h3_ngram_draft_step(
+                        (H3NGramSpeculativeContext *)dit->ngram_ctx,
+                        last_video, previous_video, draft, video_count, ratio, step);
+                    if (ngram_used) {
+                        memcpy(video_velocity, draft,
+                               video_count * sizeof(*video_velocity));
+                    }
+                    free(draft);
+                }
+            }
+            if (!ngram_used) {
+                extrapolate_velocity(
+                    video_velocity, last_video, previous_video, previous2_video,
+                    video_count,
+                    dit->sigmas.video[step], dit->sigmas.video[last_evaluated],
+                    previous_evaluated >= 0 ? dit->sigmas.video[previous_evaluated] : 0.0f,
+                    previous2_evaluated >= 0 ? dit->sigmas.video[previous2_evaluated] : 0.0f,
+                    previous_evaluated >= 0, previous2_evaluated >= 0);
+            }
             extrapolate_velocity(
-                audio_velocity, last_audio, previous_audio, audio_count,
+                audio_velocity, last_audio, previous_audio, previous2_audio,
+                audio_count,
                 dit->sigmas.audio[step], dit->sigmas.audio[last_evaluated],
                 previous_evaluated >= 0 ? dit->sigmas.audio[previous_evaluated] : 0.0f,
-                previous_evaluated >= 0);
+                previous2_evaluated >= 0 ? dit->sigmas.audio[previous2_evaluated] : 0.0f,
+                previous_evaluated >= 0, previous2_evaluated >= 0);
 
             // Accumulate expected drift for consecutive skips
             float time_delta = fabsf(dit->sigmas.video[step] - dit->sigmas.video[last_evaluated]);
@@ -3471,8 +3745,10 @@ int h3_dit_denoise_sol_adaptive(
     free(audio_velocity);
     free(last_video);
     free(previous_video);
+    free(previous2_video);
     free(last_audio);
     free(previous_audio);
+    free(previous2_audio);
     return ok;
 }
 
