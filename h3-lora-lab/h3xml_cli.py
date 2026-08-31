@@ -218,6 +218,7 @@ def print_welcome_screen():
         f"{GOLD}{BOLD} |  _  |___) / /  \\| |  | | |___ {RESET}",
         f"{GOLD}{BOLD} |_| |_|____/_/\\_\\_|  |_|_____|{RESET}",
         f"{BRIGHT_GOLD}   MINIMAX H3 METAL 4 NAX SUITE (v0.1) {RESET}",
+        f"{GOLD}   Crafted with ⚡ by RobZomb           {RESET}",
         f"{AMBER}   Gustav Klimt - Hygieia Masterpiece  {RESET}",
         f"{CYAN}───────────────────────────────────────{RESET}",
         f"{WHITE}⚡ Host: {CHIP_MODEL} ({NUM_CORES} Core / {MEM_GB}GB RAM){RESET}",
