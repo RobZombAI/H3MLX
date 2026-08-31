@@ -141,3 +141,11 @@ make -j8
 ## 📜 License
 
 H3XML is released under the **BSD 2-Clause License**, completely free and open for personal, academic, and commercial use, respecting the original license and terms of `antirez/h3.c`.
+
+
+---
+
+## ✍️ Author & Maintainer
+
+**H3XML Engine & Interactive Studio** was crafted with ⚡ by **RobZomb ([@RobZombAI](https://github.com/RobZombAI))**.
+Dedicated to high-performance AI generative engineering and artistic exploration on Apple Silicon.
