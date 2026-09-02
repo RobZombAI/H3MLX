@@ -32,13 +32,15 @@ In H3MLX v3.0, ogni generazione da CLI o da Studio genera e conserva **entrambi 
 
 ---
 
-## 🧠 3. Smart Mastering Filter Engine Open Source
+## 🧠 3. Smart Mastering Filter Engine & X-MinimaxH3 Innovations
 
-Integrazione nativa delle migliori tecnologie di post-produzione open-source:
-1. **AMD FidelityFX CAS (Contrast Adaptive Sharpening)**: GPUOpen MIT. Aumenta la nitidezza locale in base al contrasto senza creare artefatti o aloni bianchi (zero ringing / haloing).
-2. **Bilateral De-Gridding Edge-Preserving**: Dissolve le giunzioni dei blocchi $16\times16$ del VAE sulle campiture continue (viso, pelle, cielo), mantenendo ciglia, occhi e capelli nitidissimi.
-3. **F3KDB / Libplacebo Debander**: Elimina qualsiasi scalettatura di colore nei gradienti.
-4. **Content-Aware Heuristic**: Seleziona automaticamente il filtro ideale leggendo il prompt (`portrait`, `cinema`, `anime`, `action`, `macro`).
+Integrazione nativa delle migliori tecnologie di post-produzione open-source e della suite algoritmica di **X-MinimaxH3**:
+1. **Wavelet Bayesian Denoising (`vaguedenoiser`)**: Scomposizione su 7 piani wavelet con soglia bayesiana Garrote. Elimina completamente il rumore di quantizzazione e la grana del VAE su cieli, pelle e sfondi sfocati.
+2. **AMD FidelityFX CAS (Contrast Adaptive Sharpening 0.25)**: GPUOpen MIT. Aumenta la nitidezza locale e il micro-contrasto sub-pixel (iridi, pori, singoli fili d'erba e peli di barba) senza artefatti o aloni bianchi (zero ringing / haloing).
+3. **Apple VideoToolbox Hardware 10-Bit (`hevc_videotoolbox` Main 10 `p010le`)**: Mastering 4K a 10-bit con oltre 1.07 miliardi di colori in appena **~3 secondi** grazie ai Media Engine hardware di Apple Silicon, con normalizzazione broadcast EBU R128 a 48 kHz.
+4. **Terminal Latent Guard (`h3_terminal_latent_guard.py`)**: Algoritmo statistico MAD (Median Absolute Deviation) per prevenire il collasso energetico nella metà inferiore degli ultimi fotogrammi, tipico della periodicità temporale a 5 fasi del VAE.
+5. **Native Latent 3D Upscaler (`h3_latent_upscaler_3d.py`)**: Architettura neurale 3D ResNet/TemporalConv calibrata sui 24 canali latenti di MiniMax H3 per scalare i latenti prima del second sampling DiT.
+6. **Structured Prompting Engine (MiMo / Qwen3-VL Protocol)**: Supporto completo nel TUI Studio a dialoghi delimitati `<d>[Lang]...</d>`, speaker IDs `(S1)`, lip-sync safeguards per eliminare movimenti labiali fuori battuta e isolamento `overall_soundscape:`.
 
 ---
 
