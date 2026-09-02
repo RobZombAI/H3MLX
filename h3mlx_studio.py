@@ -200,8 +200,34 @@ def main():
 
     print(f"\n{C_GREEN}✓ Selezionato: {selected['title']}{C_RESET}\n")
     
-    # 1. Prompt customization
-    prompt = interactive_prompt(selected["default_prompt"], "Inserisci il Prompt di generazione")
+    # 1. Prompt customization (Standard vs Structured MiMo protocol)
+    print(f"{C_CYAN}?{C_RESET} {C_BOLD}Modalità Prompt:{C_RESET}")
+    print(f"  {C_CYAN}[1]{C_RESET} Prompt Standard (Testo Libero)")
+    print(f"  {C_CYAN}[2]{C_RESET} Prompt Strutturato MiMo/Qwen3-VL (Dialoghi <d>, Lip-Sync Safeguards, Soundscape)")
+    p_mode = input(f"{C_CYAN}?{C_RESET} {C_BOLD}Scegli modalità [1-2, default: 1]:{C_RESET} ").strip()
+    
+    if p_mode == "2":
+        print(f"\n{C_MAGENTA}{C_BOLD}🎙️ COMPOSIZIONE PROMPT STRUTTURATO (MiMo / Qwen3-VL Protocol):{C_RESET}")
+        vis = interactive_prompt(selected["default_prompt"], "Descrizione visiva e movimento della scena")
+        dial = interactive_prompt("", "Battuta di dialogo parlata (opzionale, premi Invio se assente)")
+        
+        prompt_parts = [f"integrated_multimodal_description: [Shot 1] {vis}"]
+        if dial:
+            lang = interactive_prompt("Italian", "Lingua del dialogo")
+            spk = interactive_prompt("S1", "ID Speaker (es. S1, S2)")
+            act = interactive_prompt("on-screen, speaking clearly, lips remain completely closed afterwards", "Azione e stato labiale del personaggio")
+            prompt_parts[0] += f" ({spk}) [{act}] <d>[{lang}] {dial} </d>"
+            
+        sound = interactive_prompt("Natural realistic environment soundscape, subtle ambient foley", "Overall Soundscape (rumori diegetici d'ambiente)")
+        prompt_parts.append(f"\noverall_soundscape: {sound}")
+        
+        bgm = interactive_prompt("N/A", "Musica extradiegetica (N/A consigliato per evitare allucinazioni vocali)")
+        prompt_parts.append(f"\nnon_diegetic_music: {bgm}")
+        
+        prompt = "".join(prompt_parts)
+        print(f"\n{C_GREEN}✓ Prompt Strutturato compilato con successo:{C_RESET}\n{C_DIM}{prompt}{C_RESET}\n")
+    else:
+        prompt = interactive_prompt(selected["default_prompt"], "Inserisci il Prompt di generazione")
     
     # 2. Duration seconds
     sec_str = interactive_prompt(str(selected["default_seconds"]), "Durata in Secondi")
@@ -224,16 +250,25 @@ def main():
     height = selected.get("height", 512)
     frames = calculate_canonical_frames(seconds, width, height)
     steps = selected["default_steps"]
-    upscale_4k = selected.get("upscale_4k", False)
+    
+    # 6. Advanced Mastering Profile
+    print(f"\n{C_CYAN}?{C_RESET} {C_BOLD}Profilo Mastering & Intraframe Detail Restoration:{C_RESET}")
+    print(f"  {C_CYAN}[1]{C_RESET} 4K Cinema Master (Wavelet Bayes + CAS + VideoToolbox 10-bit)")
+    print(f"  {C_CYAN}[2]{C_RESET} 1080p Cinema Master (Wavelet Bayes + CAS + VideoToolbox 10-bit)")
+    print(f"  {C_CYAN}[3]{C_RESET} Raw Output Nativo (Nessun post-processing)")
+    m_choice = input(f"{C_CYAN}?{C_RESET} {C_BOLD}Scegli profilo [1-3, default: 1]:{C_RESET} ").strip()
+    upscale_4k = (m_choice != "3")
+    master_profile = "4k" if m_choice in ["", "1"] else ("1080p" if m_choice == "2" else "none")
     
     # Summary Card before launch
     print("\n" + C_CYAN + "─" * 70 + C_RESET)
     print(f"{C_BOLD}{C_WHITE}🚀 RIEPILOGO PIANO DI GENERAZIONE ALTA DEFINIZIONE:{C_RESET}")
     print(f"  • {C_BOLD}Preset:{C_RESET}       {selected['title']}")
     print(f"  • {C_BOLD}Motore:{C_RESET}       {C_GREEN if mode_str=='boosted' else C_YELLOW}{mode_str.upper()}{C_RESET} (Metal 4 NAX: {'ON' if mode_str=='boosted' else 'OFF'})")
-    print(f"  • {C_BOLD}Risoluzione:{C_RESET}  {width}x{height} {'-> 4K UHD' if upscale_4k else ''}")
+    print(f"  • {C_BOLD}Risoluzione:{C_RESET}  {width}x{height} {'-> Mastering ' + master_profile.upper() if master_profile != 'none' else ''}")
     print(f"  • {C_BOLD}Filtri:{C_RESET}       50 Layer Densi (Token Reduction: OFF · Reuse: 1)")
     print(f"  • {C_BOLD}Durata:{C_RESET}       {frames} frames ({frames/24:.2f}s @ 24fps) | Step DiT: {steps}")
+    print(f"  • {C_BOLD}Mastering:{C_RESET}    {'Wavelet Bayes + CAS 0.25 (Main10)' if master_profile != 'none' else 'Raw Pass-through'}")
     print(f"  • {C_BOLD}Tempo Stimato:{C_RESET}{C_GREEN}{C_BOLD}{selected['est_time_m5']}{C_RESET}")
     print(f"  • {C_BOLD}Output File:{C_RESET}  {out_path}")
     print(f"  • {C_BOLD}Prompt:{C_RESET}       \"{prompt[:80]}...\"")

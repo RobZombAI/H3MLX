@@ -214,32 +214,27 @@ def execute_h3_generation(
                 except Exception:
                     pass
 
-    # Level 5 Smart Cinema Mastering & 48kHz Audio Foley (Content-Aware / AMD FidelityFX CAS / Bilateral)
+    # Level 5 Smart Cinema Mastering & 48kHz Audio Foley (Wavelet Bayes + CAS + VideoToolbox)
     final_output_path = str(out_file)
+    master_path_str = None
     if proc.returncode == 0 and out_file.exists() and upscale_4k:
         four_k_path = out_file.parent / f"{out_file.stem}_4k.mp4"
-        filter_str, profile_key, profile_name = build_smart_video_filter(
-            profile=smart_filter,
-            prompt=prompt,
-            scale_factor=4
-        )
-        print(f"🎬 Avvio Mastering 4K Cinema Master: {out_file.name} -> {four_k_path.name}")
-        print(f"✨ Smart Filter attivo: {profile_name}")
-        cmd_4k = [
-            "ffmpeg", "-y", "-i", str(out_file),
-            "-af", "stereowiden=crossfeed=0.4:feedback=0.3:drymix=0.8,bass=g=6.0:f=80:w=0.6,treble=g=5.0:f=10000:w=0.7,dynaudnorm=p=0.95:m=10.0:r=0.9:b=1",
-            "-vf", filter_str,
-            "-c:v", "libx264", "-preset", "slow", "-crf", "14",
-            "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
-            str(four_k_path)
-        ]
-        sub_4k = subprocess.run(cmd_4k, capture_output=True)
-        master_path_str = None
-        if sub_4k.returncode == 0 and four_k_path.exists():
-            size_mb = four_k_path.stat().st_size / (1024 * 1024)
-            print(f"✅ Mastering 4K ({profile_name}) completato: {four_k_path.name} ({size_mb:.2f} MB)")
-            final_output_path = str(four_k_path)
-            master_path_str = str(four_k_path)
+        try:
+            from h3_cinema_upscaler import upscale_video
+            print(f"🎬 Avvio Mastering 4K Cinema Master (Wavelet Bayes + CAS): {out_file.name} -> {four_k_path.name}")
+            result_path = upscale_video(
+                input_path=str(out_file),
+                output_path=str(four_k_path),
+                target_width=3840,
+                target_height=2160,
+                enable_denoise=True,
+                cas_strength=0.25,
+                use_videotoolbox=True
+            )
+            final_output_path = result_path
+            master_path_str = result_path
+        except Exception as e:
+            print(f"⚠️ Mastering avanzato fallito ({e}), mantenimento raw output.")
             
     success = (proc.returncode == 0 and out_file.exists())
     return H3EngineResult(
