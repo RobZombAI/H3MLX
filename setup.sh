@@ -17,7 +17,15 @@ if [ "$ARCH" != "arm64" ]; then
 fi
 echo "✓ Architettura Apple Silicon (arm64) rilevata."
 
-# 2. Setup Virtual Environment via uv or python3
+# 2. Compile Native C/Metal Engine
+if [ ! -f "h3-lora-lab/h3" ]; then
+    echo "🔨 Compilazione binario nativo Metal C (h3)..."
+    NCPU=$(sysctl -n hw.ncpu 2>/dev/null || echo 8)
+    make -C h3-lora-lab -j"$NCPU"
+fi
+echo "✓ Binario nativo h3 compilato e verificato."
+
+# 3. Setup Virtual Environment via uv or python3
 if command -v uv >/dev/null 2>&1; then
     echo "✓ Utilizzo di 'uv' per la configurazione rapida dell'ambiente..."
     if [ ! -d ".venv" ]; then
@@ -32,7 +40,7 @@ else
     .venv/bin/pip install --upgrade pip numpy matplotlib pillow
 fi
 
-# 3. Check Shaders & Binary
+# 4. Check Shaders & Binary
 if [ ! -f "h3_shaders.metal" ]; then
     ln -sf h3-lora-lab/h3_shaders.metal h3_shaders.metal
 fi
@@ -41,7 +49,7 @@ if [ ! -f "h3_shaders.metallib" ]; then
 fi
 chmod +x h3mlx h3mlx-studio bin/h3mlx bin/h3mlx-studio 2>/dev/null || true
 
-# 4. Check Model Weights
+# 5. Check Model Weights
 echo "🔍 Verifica directory pesi modello MiniMax H3..."
 if [ -d "/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step" ] || [ -d "/Users/robzomb/h3-models/MiniMax-H3" ]; then
     echo "✓ Modello MiniMax H3 presente e validato."
