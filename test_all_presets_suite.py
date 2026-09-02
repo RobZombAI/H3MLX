@@ -55,7 +55,7 @@ def main():
             layers=cfg.get("layers", 50),
             token_reduction=False,
             int8=cfg.get("int8", True),
-            upscale_4k=False,
+            upscale_4k=cfg.get("upscale_4k", False),
             profile=True
         )
         t1 = time.perf_counter()
@@ -64,9 +64,10 @@ def main():
         # Verify video file exists and probe with ffprobe
         valid = False
         meta = {}
-        if res.success and out_file.exists():
+        check_file = Path(res.output_path)
+        if res.success and check_file.exists():
             probe = subprocess.run(
-                ["ffprobe", "-v", "error", "-show_entries", "stream=width,height,nb_frames,codec_name", "-of", "default=noprint_wrappers=1", str(out_file)],
+                ["ffprobe", "-v", "error", "-show_entries", "stream=width,height,nb_frames,codec_name", "-of", "default=noprint_wrappers=1", str(check_file)],
                 capture_output=True, text=True
             )
             if probe.returncode == 0 and "width=" in probe.stdout:
@@ -78,21 +79,22 @@ def main():
                         
                 # Extract sample frame for visual inspection
                 frame_jpg = Path(f"/tmp/suite_{pid}.jpg")
-                subprocess.run(["ffmpeg", "-y", "-i", str(out_file), "-vframes", "1", "-ss", "00:00:00.5", str(frame_jpg)], capture_output=True)
+                subprocess.run(["ffmpeg", "-y", "-i", str(check_file), "-vframes", "1", "-ss", "00:00:00.5", str(frame_jpg)], capture_output=True)
                 
+        actual_res = f"{meta.get('width', cfg['width'])}x{meta.get('height', cfg['height'])}"
         results.append({
             "id": pid,
             "name": cfg["name"],
-            "resolution": f"{cfg['width']}x{cfg['height']}",
+            "resolution": actual_res,
             "frames": test_frames,
             "wall_sec": dur,
             "fps": test_frames / dur if dur > 0 else 0,
             "success": valid,
-            "output": str(out_file)
+            "output": str(check_file)
         })
         
         status_sym = "✅ PASS" if valid else "❌ FAIL"
-        print(f"    {status_sym} in {dur:.2f}s | Speed: {test_frames/dur:.2f} FPS | Output: {out_file.name}\n")
+        print(f"    {status_sym} in {dur:.2f}s | Output Res: {actual_res} | Output: {check_file.name}\n")
         
     print("=" * 80)
     print("📊 SUITE VALIDATION SUMMARY REPORT")

@@ -38,6 +38,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
+        "upscale_4k": True,
         "prompt": "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed"
     },
 
@@ -75,6 +76,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
+        "upscale_4k": True,
         "prompt": "A sleek red sports car driving through a scenic mountain road in autumn, realistic, 4k"
     },
 
@@ -93,6 +95,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
+        "upscale_4k": True,
         "prompt": "Fashion model walking confidently down a Paris street, natural daylight, cinematic"
     },
 
@@ -111,6 +114,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
+        "upscale_4k": True,
         "prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
     },
 

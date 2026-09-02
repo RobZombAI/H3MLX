@@ -151,7 +151,6 @@ def execute_h3_generation(
     
     if engine_mode in ["canonical", "pure", "antirez"]:
         cmd.append("--canonical")
-        cmd.append("--sol-cache")
         cmd.append("--use-int8-row-fc2")
         env["H3_NAX"] = "0"
         env["H3_INT8_FC2"] = "1"
@@ -209,26 +208,28 @@ def execute_h3_generation(
                     pass
 
     # Optional Level 5 Broadcast 4K Cinema Mastering & 48kHz Audio Foley
+    final_output_path = str(out_file)
     if proc.returncode == 0 and out_file.exists() and upscale_4k:
         four_k_path = out_file.parent / f"{out_file.stem}_4k.mp4"
         print(f"🎬 Avvio Upscaling 4K Cinema Master: {out_file.name} -> {four_k_path.name}")
         cmd_4k = [
             "ffmpeg", "-y", "-i", str(out_file),
-            "-af", "stereowiden=crossfeed=0.4:feedback=0.3:drymix=0.8,bass=g=8.0:f=75:w=0.6,treble=g=6.0:f=11000:w=0.7,dynaudnorm=p=0.95:m=10.0:r=0.9:b=1",
-            "-vf", "scale=3072:2048:flags=lanczos+accurate_rnd+full_chroma_int,unsharp=5:5:0.90:5:5:0.0",
-            "-c:v", "libx264", "-preset", "fast", "-crf", "14",
+            "-af", "stereowiden=crossfeed=0.4:feedback=0.3:drymix=0.8,bass=g=6.0:f=80:w=0.6,treble=g=5.0:f=10000:w=0.7,dynaudnorm=p=0.95:m=10.0:r=0.9:b=1",
+            "-vf", "scale=iw*4:ih*4:flags=lanczos+accurate_rnd+full_chroma_int,unsharp=5:5:0.75:5:5:0.0",
+            "-c:v", "libx264", "-preset", "slow", "-crf", "14",
             "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
             str(four_k_path)
         ]
         sub_4k = subprocess.run(cmd_4k, capture_output=True)
         if sub_4k.returncode == 0 and four_k_path.exists():
             size_mb = four_k_path.stat().st_size / (1024 * 1024)
-            print(f"✅ Upscaling 4K completato con successo: {four_k_path} ({size_mb:.2f} MB)")
+            print(f"✅ Upscaling 4K completato con successo: {four_k_path.name} ({size_mb:.2f} MB)")
+            final_output_path = str(four_k_path)
             
     success = (proc.returncode == 0 and out_file.exists())
     return H3EngineResult(
         success=success,
-        output_path=str(out_file),
+        output_path=final_output_path,
         wall_time_s=wall_time,
         stdout=proc.stdout,
         stderr=proc.stderr,
