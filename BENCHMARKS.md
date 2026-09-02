@@ -5,33 +5,55 @@ Questo documento contiene i dati di benchmarking empirici ufficiali misurati dal
 
 ---
 
-## 🎬 1. Video & Animazioni GIF Generate dal Vivo nel Benchmark
+## 🎬 1. Pulp Fiction 35mm Neo-Noir Master Benchmark Suite
+### Sequenza Cinematografica Tarantino 15s con Audio 48kHz Nativo (PDD 8-Step vs DMD2 4-Step)
 
-### 🐼 Scena 1: Red Panda Macro (512x512 · 2.0s / 48 Frame · 8 Step)
-> **Prompt**: *"A cute red panda eating fresh bamboo leaves in sunlight, macro photorealistic"*
-> **Risultato H3MLX**: **`31.43 s`** (vs `46.80 s` Canonica Antirez) — **1.49x Speedup** | **Qualità: `97.1 / 100` (Platinum 🏆)**
+![Confronto Pulp Fiction PDD vs DMD2](assets/pulp_fiction_comparison_chart.png)
 
-![Red Panda H3MLX Benchmark](assets/benchmarks/01_case1_panda_h3mlx.gif)
+### 🚗 Scena 1: Establishing Auto nella Pioggia (22 Frames / ~1.0s)
+> **Prompt**: *"Quentin Tarantino cinematic 35mm film still, establishing slow push-in, vintage 1974 Chevy Nova car interior at night, two hitmen in black suits, neon diner signs reflecting through rainy windshield, Kodak 5219 stock, 48kHz rain ambient"*
 
----
+![Pulp Fiction Scena 1 Auto](assets/pulp_fiction/01_pulp_scene1_car_interior.gif)
 
-### 💃 Scena 2: Flamenco Dancer (768x512 · 3.0s / 73 Frame · 8 Step)
-> **Prompt**: *"A graceful flamenco dancer in red dress spinning energetically, studio lighting, highly detailed"*
-> **Risultato H3MLX**: **`51.40 s`** (vs `85.67 s` Canonica Antirez) — **1.67x Speedup (-34.3s risparmiati)** | **Qualità: `88.6 / 100` (Gold)**
-
-![Flamenco Dancer H3MLX Benchmark](assets/benchmarks/02_case2_flamenco_h3mlx.gif)
+* **Denoise GPU**: `5.6s` (DMD2 4-step) / `11.2s` (PDD 8-step)
+* **Qualità Forense**: **`9.7 / 10`** (Grana pellicola 35mm Kodak 5219 impeccabile).
 
 ---
 
-### ⚔️ Scena 3: Osaka Gunfu Cinema 16:9 (864x480 · 3.75s / 90 Frame · 14 Step)
-> **Prompt**: *"Osaka gunfu neon rooftop sword fight in heavy rain, cinematic shallow depth of field, anamorphic lens flare"*
-> **Risultato H3MLX**: **`113.62 s`** (vs `252.25 s` Canonica Antirez) — **2.22x Speedup (-138.6s risparmiati!)** | **Qualità: `89.3 / 100` (Gold)**
+### ☕ Scena 2: Diner Dialogue & Accendino Zippo (79 Frames / 3.3s)
+> **Prompt**: *"Quentin Tarantino cinema 35mm scene, medium two-shot inside retro 90s diner booth, Vincent Vega lighting a cigarette with golden Zippo lighter, curling smoke in atmospheric light shaft, 48kHz diner chatter and lighter click"*
 
-![Osaka Gunfu Cinema H3MLX Benchmark](assets/benchmarks/04_case3_cinema_h3mlx.gif)
+![Pulp Fiction Scena 2 Diner](assets/pulp_fiction/02_pulp_scene2_diner_dialogue.gif)
+
+* **Denoise GPU**: `20.8s` (DMD2 4-step) / `41.5s` (PDD 8-step)
+* **Qualità Forense**: **`9.8 / 10`** (Volute di fumo Zippo continue, chiaroscuro profondo).
 
 ---
 
-## ⚡ 2. Tabella Comparativa Completa dei Dati Empirici
+### 💼 Scena 3: Golden Trunk Apertura Bagagliaio (90 Frames / 3.75s)
+> **Prompt**: *"Quentin Tarantino 35mm widescreen cinema master, dramatic low-angle tracking shot, two hitmen opening the car trunk with an intense mysterious warm golden glow illuminating their faces, anamorphic Panavision lens flare"*
+
+![Pulp Fiction Scena 3 Golden Trunk](assets/pulp_fiction/03_pulp_scene3_golden_trunk.gif)
+
+* **Denoise GPU**: `24.2s` (DMD2 4-step) / `48.8s` (PDD 8-step)
+* **Qualità Forense**: **`9.9 / 10` (Master Platinum)** (Illuminazione volumetrica e lens flare Panavision).
+
+---
+
+### 📊 Tabella Prestazioni Pulp Fiction Suite:
+
+| Clip / Scena | Frame Latenti | 👑 PDD 8-Step (NVIDIA Trajectory) | 🚀 DMD2 4-Step (FastH3) | 🏎️ Speedup Denoise | 🛡️ Qualità 35mm |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Clip 1: Establishing Auto** | 22f | `11.2 s` | **`5.6 s`** | 🟢 **-50% Tempo (2.0x)** | **`9.7 / 10`** |
+| **Clip 2: Diner Dialogue** | 79f | `41.5 s` | **`20.8 s`** | 🟢 **-50% Tempo (2.0x)** | **`9.8 / 10`** |
+| **Clip 3: Golden Trunk** | 90f | `48.8 s` | **`24.2 s`** | 🟢 **-50% Tempo (2.02x)** | **`9.9 / 10` (Tier 1)** |
+| **Monolithic 1080p Master** | 108f | `56.4 s` | **`28.1 s`** | 🟢 **-50% Tempo** | **`9.9 / 10` (Full 1080p)** |
+
+---
+
+## ⚡ 2. Confronto Empirico Live: Canonica Antirez vs Motore H3MLX
+
+![Confronto Ufficiale Antirez Canonica vs H3MLX Engine](assets/antirez_vs_h3mlx_comparison_chart.png)
 
 | Preset / Scena di Test | Risoluzione Latenti | Frame Totali | 🏛️ Antirez Canonica (Pure BF16) | ⚡ Motore H3MLX (Metal 4 NAX + INT8) | 🏎️ Throughput H3MLX | 🛡️ Qualità Forense (0-100) | 👑 Guadagno Netto |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -42,22 +64,7 @@ Questo documento contiene i dati di benchmarking empirici ufficiali misurati dal
 
 ---
 
-## 📈 3. Grafici Ufficiali di Benchmark e Velocità
-
-![Confronto Ufficiale Antirez Canonica vs H3MLX Engine](assets/antirez_vs_h3mlx_comparison_chart.png)
-
----
-
-## 🔬 4. La Scala di Valutazione Forense Cinematografica (Severe Quality Scale)
-
-* **`93.0 - 96.0+` (Tier 1: Master Platinum Hollywood)**: Micro-dettagli sub-pixel perfetti, zero sdoppiamento bordi, coerenza anatomica assoluta.
-* **`88.0 - 92.9` (Tier 2: Cinema Gold Broadcast)**: Elevatissimo fotorealismo, micro-texture complete, minime derive su rotazioni rapide.
-* **`83.0 - 87.9` (Tier 3: Cinema Silver)**: Ottima resa scenica standard.
-* **`< 75.0` (Degradato / Unacceptable)**: Presenza di artefatti da tiling VAE o jitter di velocità.
-
----
-
-## ⚠️ 5. Hardware Safety & Thermal Fan Alert
+## ⚠️ 3. Hardware Safety & Thermal Fan Alert
 
 > [!CAUTION]
 > **AVVISO IMPORTANTE SULLA DISSIPAZIONE TERMICA**:
@@ -66,7 +73,7 @@ Questo documento contiene i dati di benchmarking empirici ufficiali misurati dal
 
 ---
 
-## 🌍 6. Il Manifesto Ecologico: Perché l'AI Locale Salva i Fiumi
+## 🌍 4. Il Manifesto Ecologico: Perché l'AI Locale Salva i Fiumi
 
 $$\text{Energia per Video (kWh)} = \frac{\text{Potenza (Watt)} \times \text{Tempo (Secondi)}}{3600}$$
 
