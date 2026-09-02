@@ -26,7 +26,7 @@ def main():
     
     # 1. Antirez Model & IO Options
     parser.add_argument("-d", "--model-dir", type=str, default="", help="Path to MiniMax H3 checkpoint directory")
-    parser.add_argument("-p", "--prompt", type=str, default="A graceful flamenco dancer in red dress spinning energetically, studio lighting, highly detailed", help="Text generation prompt")
+    parser.add_argument("-p", "--prompt", type=str, default="", help="Text generation prompt (defaults to preset prompt if --preset is provided)")
     parser.add_argument("-o", "--output", type=str, default="outputs/h3mlx_output.mp4", help="Output MP4 file path")
     parser.add_argument("--preset", type=str, default="", choices=list(PRESETS.keys()), help="Load a pre-configured video preset")
     parser.add_argument("--frontier", "--level", dest="frontier_level", type=str, default="",
