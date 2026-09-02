@@ -50,7 +50,7 @@ STUDIO_PRESETS = [
         "est_fps": "2.25 FPS",
         "quality_tier": "Tier 1 Platinum Hollywood (98.5/100)",
         "description": "Massima fedeltà assoluta: 50 layer densi al 100%, senza potature spaziali, iride e pori sub-pixel.",
-        "default_prompt": "Masterpiece award-winning cinematic close-up portrait of Brad Pitt with sharp detailed blue eyes with iris reflections, natural weathered skin texture with authentic pores, golden hour rim lighting, shot on Arri Alexa with Cooke Anamorphic lens, 4k master"
+        "default_prompt": "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed"
     },
     {
         "id": "h3mlx_cinema_16x9",
@@ -70,12 +70,12 @@ STUDIO_PRESETS = [
         "est_time_m5": "49.5s",
         "est_fps": "1.82 FPS",
         "quality_tier": "Tier 1 Platinum Cinema (98.0/100)",
-        "description": "Formato panoramico widescreen 16:9 (960x544) con ottica Cooke S4/i e coerenza di fase ottica.",
-        "default_prompt": "Cinematic wide anamorphic shot of a futuristic neon metropolis in heavy rain, reflections in wet asphalt, steam rising from grates, 35mm film grain, 4k 24fps master"
+        "description": "Formato panoramico widescreen 16:9 (960x544) con coerenza ottica e spaziale.",
+        "default_prompt": "Cinematic wide shot of a futuristic neon city at sunset with rain reflections, highly detailed"
     },
     {
         "id": "h3mlx_macro_square",
-        "title": "💎 H3MLX Macro High-Density (1:1 640x640)",
+        "title": "💎 H3MLX Square High-Density (1:1 640x640)",
         "resolution": "640x640 (1:1 High-Density)",
         "width": 640,
         "height": 640,
@@ -90,8 +90,8 @@ STUDIO_PRESETS = [
         "est_time_m5": "44.0s",
         "est_fps": "2.05 FPS",
         "quality_tier": "Tier 1 Macro Forensic (99.0/100)",
-        "description": "Quadrato ad altissima densità (1600 token) per macro ottiche, gioielli, orologi e dettagli estremi.",
-        "default_prompt": "Intricate macro close-up of a luxury mechanical tourbillon watch movement, polished steel gears and ruby bearings in motion, dramatic side studio lighting, 8k uhd photorealistic"
+        "description": "Quadrato ad altissima densità (1600 token) per dettagli estremi e composizioni 1:1.",
+        "default_prompt": "A sleek red sports car driving through a scenic mountain road in autumn, realistic, 4k"
     },
     {
         "id": "h3mlx_vertical_reel",
@@ -111,7 +111,7 @@ STUDIO_PRESETS = [
         "est_fps": "1.82 FPS",
         "quality_tier": "Tier 1 Vertical Cinema (97.5/100)",
         "description": "Cinematografia verticale ad altissima definizione (544x960) per reel e ritratti a figura intera.",
-        "default_prompt": "Editorial fashion runway full body shot of a graceful model walking confidently in flowing silk haute couture gown, dramatic spotlight, slow motion 24fps master"
+        "default_prompt": "Fashion model walking confidently down a Paris street, natural daylight, cinematic"
     },
     {
         "id": "h3mlx_ghibli_master",
@@ -131,7 +131,7 @@ STUDIO_PRESETS = [
         "est_fps": "2.25 FPS",
         "quality_tier": "Tier 1 Anime Master (97.0/100)",
         "description": "Estetica Hayao Miyazaki con dinamica del vento, texture ad acquerello soffici e cieli dipinti a mano.",
-        "default_prompt": "Studio Ghibli style lush green rolling hills with blooming colorful wildflowers, giant wind turbine spinning gently under fluffy summer cumulus clouds, hand-painted watercolor aesthetic"
+        "default_prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
     },
     {
         "id": "antirez_canonical_bf16",
@@ -151,7 +151,7 @@ STUDIO_PRESETS = [
         "est_fps": "1.42 FPS",
         "quality_tier": "Tier 2 Gold Broadcast (90.0/100)",
         "description": "Configurazione 1:1 originale di Salvatore Sanfilippo (antirez) in pura virgola mobile BF16 senza quantizzazione.",
-        "default_prompt": "A graceful flamenco dancer in vibrant red dress spinning energetically, dramatic studio spotlighting, highly detailed fabric texture"
+        "default_prompt": "A graceful flamenco dancer in red dress spinning energetically, dramatic studio lighting"
     }
 ]
 

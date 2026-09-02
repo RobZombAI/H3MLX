@@ -38,13 +38,13 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
-        "prompt": "Masterpiece award-winning cinematic close-up portrait of Brad Pitt with sharp detailed blue eyes with iris reflections, natural weathered skin texture with authentic pores, golden hour rim lighting, shot on Arri Alexa with Cooke Anamorphic lens, 4k master"
+        "prompt": "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed"
     },
 
     # 2. Cinema Anamorphic Widescreen (16:9 Hollywood format)
     "h3mlx_cinema_16x9": {
         "name": "🎬 H3MLX Cinema Anamorphic (16:9)",
-        "description": "Formato panoramico widescreen 16:9 (960x544) con ottica Cooke S4/i e coerenza di fase ottica.",
+        "description": "Formato panoramico widescreen 16:9 (960x544) con coerenza ottica e spaziale.",
         "width": 960,
         "height": 544,
         "seconds": 3.75,
@@ -57,13 +57,13 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Cinematic wide anamorphic shot of a futuristic neon metropolis in heavy rain, reflections in wet asphalt, steam rising from grates, 35mm film grain, 4k 24fps master"
+        "prompt": "Cinematic wide shot of a futuristic neon city at sunset with rain reflections, highly detailed"
     },
 
     # 3. Macro High-Density Square (1:1 640x640 - replaces blurry 512x512)
     "h3mlx_macro_square": {
-        "name": "💎 H3MLX Macro High-Density (1:1 640x640)",
-        "description": "Quadrato ad altissima densità (1600 token) ottimizzato per macro ottiche, gioielli, orologi e dettagli estremi.",
+        "name": "💎 H3MLX Square High-Density (1:1 640x640)",
+        "description": "Quadrato ad altissima densità (1600 token) per dettagli estremi e composizioni 1:1.",
         "width": 640,
         "height": 640,
         "seconds": 3.75,
@@ -75,7 +75,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
-        "prompt": "Intricate macro close-up of a luxury mechanical tourbillon watch movement, polished steel gears and ruby bearings in motion, dramatic side studio lighting, 8k uhd photorealistic"
+        "prompt": "A sleek red sports car driving through a scenic mountain road in autumn, realistic, 4k"
     },
 
     # 4. Vertical Cinema Reel (9:16 High Definition)
@@ -93,7 +93,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
-        "prompt": "Editorial fashion runway full body shot of a graceful model walking confidently in flowing silk haute couture gown, dramatic spotlight, slow motion 24fps master"
+        "prompt": "Fashion model walking confidently down a Paris street, natural daylight, cinematic"
     },
 
     # 5. Studio Ghibli Aesthetic Master
@@ -111,7 +111,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "dpm3m",
         "token_reduction": False,
         "int8": True,
-        "prompt": "Studio Ghibli style lush green rolling hills with blooming colorful wildflowers, giant wind turbine spinning gently under fluffy summer cumulus clouds, hand-painted watercolor aesthetic"
+        "prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
     },
 
     # 6. Antirez Canonical Pure Baseline (BF16 Reference)
@@ -129,7 +129,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "euler",
         "token_reduction": False,
         "int8": False,
-        "prompt": "A graceful flamenco dancer in vibrant red dress spinning energetically, dramatic studio spotlighting, highly detailed fabric texture"
+        "prompt": "A graceful flamenco dancer in red dress spinning energetically, dramatic studio lighting"
     }
 }
 
