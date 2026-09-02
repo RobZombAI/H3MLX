@@ -17,7 +17,8 @@ CANONICAL_RESOLUTIONS: Dict[str, Tuple[int, int]] = {
     "16:9_cinema": (960, 544),        # Anamorphic Widescreen (2040 latent tokens)
     "16:9_standard": (864, 480),      # Standard Widescreen (1620 latent tokens)
     "1:1_high_density": (640, 640),   # High-Density Square (1600 latent tokens, fine macro/faces)
-    "9:16_portrait": (544, 960),      # Vertical Cinema Reel (2040 latent tokens)
+    "9:16_reel_fhd": (576, 1024),      # Exact 9:16 Mathematical Vertical (2304 latent tokens)
+    "9:16_portrait": (576, 1024),      # Vertical Cinema Reel (2304 latent tokens)
     "21:9_ultrawide": (1008, 432)     # Epic Anamorphic Ultra-Widescreen (1701 latent tokens)
 }
 
@@ -80,12 +81,12 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "prompt": "A sleek red sports car driving through a scenic mountain road in autumn, realistic, 4k"
     },
 
-    # 4. Vertical Cinema Reel (9:16 High Definition)
+    # 4. Vertical Cinema Reel (9:16 High Definition FHD)
     "h3mlx_vertical_reel": {
-        "name": "📱 H3MLX Vertical Cinema Reel (9:16)",
-        "description": "Cinematografia verticale ad altissima definizione (544x960) per reel e ritratti a figura intera.",
-        "width": 544,
-        "height": 960,
+        "name": "📱 H3MLX Vertical Cinema Reel (9:16 FHD)",
+        "description": "Rapporto esatto 9:16 FHD (576x1024, 2304 token) ottimizzato per Reel, Shorts e ritratti verticali cinematografici.",
+        "width": 576,
+        "height": 1024,
         "seconds": 3.75,
         "frames": 90,
         "steps": 8,
@@ -96,7 +97,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Fashion model walking confidently down a Paris street, natural daylight, cinematic"
+        "prompt": "Cinematic vertical portrait of a beautiful woman with wavy hair in Paris, soft golden hour sunlight, expressive eyes and warm smile, highly detailed"
     },
 
     # 5. Studio Ghibli Aesthetic Master

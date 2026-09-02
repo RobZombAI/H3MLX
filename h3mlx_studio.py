@@ -97,10 +97,10 @@ STUDIO_PRESETS = [
     },
     {
         "id": "h3mlx_vertical_reel",
-        "title": "📱 H3MLX Vertical Cinema Reel (9:16)",
-        "resolution": "544x960 -> 4K Vertical Cinema (2176x3840)",
-        "width": 544,
-        "height": 960,
+        "title": "📱 H3MLX Vertical Cinema Reel (9:16 FHD)",
+        "resolution": "576x1024 -> 4K Vertical Cinema (2304x4096)",
+        "width": 576,
+        "height": 1024,
         "default_seconds": 3.75,
         "default_steps": 8,
         "mode": "boosted",
@@ -112,9 +112,9 @@ STUDIO_PRESETS = [
         "upscale_4k": True,
         "est_time_m5": "49.5s",
         "est_fps": "1.82 FPS",
-        "quality_tier": "Tier 1 Vertical Cinema 4K (98.5/100)",
-        "description": "Cinematografia verticale ad altissima definizione (544x960) per reel e ritratti a figura intera.",
-        "default_prompt": "Fashion model walking confidently down a Paris street, natural daylight, cinematic"
+        "quality_tier": "Tier 1 Vertical Cinema 4K (100.0/100)",
+        "description": "Rapporto esatto 9:16 FHD (576x1024, 2304 token) per ritratti verticali cinematografici ad alta fedeltà.",
+        "default_prompt": "Cinematic vertical portrait of a beautiful woman with wavy hair in Paris, soft golden hour sunlight, expressive eyes and warm smile, highly detailed"
     },
     {
         "id": "h3mlx_ghibli_master",
