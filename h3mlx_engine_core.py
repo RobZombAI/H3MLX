@@ -37,18 +37,34 @@ class H3EngineResult:
         self.profile_data = profile_data or {}
 
 def resolve_model_path(model_dir: Optional[str] = None, steps: int = 14) -> Path:
-    """Resolve model path with fallback to PDD or Full model."""
+    """Resolve model path with fallback to PDD or Full model across standard Mac directories."""
     if model_dir:
-        p = Path(model_dir)
+        p = Path(model_dir).expanduser().resolve()
         if p.exists():
             return p
-    if steps <= 16 and DEFAULT_PDD_MODEL.exists():
-        return DEFAULT_PDD_MODEL
-    if DEFAULT_FULL_MODEL.exists():
-        return DEFAULT_FULL_MODEL
-    if DEFAULT_PDD_MODEL.exists():
-        return DEFAULT_PDD_MODEL
-    raise FileNotFoundError("MiniMax H3 model directory not found in default paths or user argument.")
+
+    candidates = [
+        Path.home() / "h3-models" / "MiniMax-H3-PDD-8Step",
+        Path.home() / "h3-models" / "MiniMax-H3",
+        Path("/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step"),
+        Path("/Users/robzomb/h3-models/MiniMax-H3"),
+        Path.home() / "Desktop" / "H3" / "MiniMax-H3",
+        BASE_DIR / "models" / "MiniMax-H3-PDD-8Step",
+        BASE_DIR / "models" / "MiniMax-H3"
+    ]
+
+    for c in candidates:
+        if c.exists() and (c / "FL2VA").exists() or (c / "model.safetensors").exists() or any(c.glob("*.safetensors")):
+            return c
+        if c.exists():
+            return c
+
+    raise FileNotFoundError(
+        "❌ Nessun modello MiniMax H3 trovato nei percorsi standard.\n"
+        "💡 Per scaricare automaticamente i pesi su questo Mac, esegui:\n"
+        "   ./download_models.sh\n"
+        "Oppure specifica il percorso con l'opzione -d / --model-dir <percorso>."
+    )
 
 def execute_h3_generation(
     prompt: str,
