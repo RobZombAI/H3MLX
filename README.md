@@ -1,49 +1,48 @@
-# 👑 H3MLX (Universal Apple Silicon Edition)
+# 👑 H3MLX (v3.0.0 Universal Edition)
 ### Next-Gen MiniMax H3 Inference Engine on Apple Silicon (M1–M5 Max/Ultra)
-#### Pure C/Metal 4 NAX Fused Attention · Native GPU Trajectory Sampler · UMA Zero-Copy
+#### Pure C/Metal 4 NAX Fused Attention · Content-Aware Smart Mastering · Dual Video Output (RAW + 4K Master)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform: Apple Silicon](https://img.shields.io/badge/Platform-Apple%20Silicon%20M1--M5-black.svg)]()
 [![Metal: 4 NAX](https://img.shields.io/badge/Metal-4%20NAX%20Accelerated-blue.svg)]()
+[![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0--Universal-blue.svg)]()
 [![Green AI: Eco Sovereign](https://img.shields.io/badge/Green%20AI-99.5%25%20Carbon%20Reduction-brightgreen.svg)]()
 
 ---
 
-## 🎬 Ultima Generazione Ufficiale: Test Isolato Livello 1 (NAX + GPU Sampler)
+## ⚡ 1. I 5 Golden Presets Ufficiali (Benchmark da 4.0s / 90 Frame @ 24fps)
 
-> **Prompt**: *"Shot on Arri Alexa LF with Cooke Anamorphic S4i Prime 50mm T2.3 lens, MTF optical sub-pixel phase coherence, John Wick in crisp tailored black wool suit with white shirt and black tie facing 3/4 frontally with razor-sharp Keanu Reeves likeness executing a rapid tactical Gun-Fu double-tap in torrential night rain, brilliant golden muzzle flash illuminating facial skin pores, brass shell casing ejecting in mid-air, 4k 24fps master"*
+La Versione 3.0 adotta esclusivamente i **5 Golden Presets ad altissima fedeltà**, ciascuno calibrato matematicamente sul reticolo temporale causale ($T = 17n + 5 = 90$ frame @ 24fps) con **50 Layer Densi completi (100% densità spaziale)**, solutore simplettico DPM++ 3M e quantizzazione dinamica Row-Major INT8 FC2 su Apple Silicon M5 Max:
 
-![Test Isolato Livello 1 NAX GPU Sampler](assets/test_isolato_livello_1_nax_gpu_sampler.gif)
-
-* **Risoluzione & Frame**: $768\times512$ · 90 Frame (3.75s @ 24fps)
-* **Architettura Attiva**: Micro-kernel **Metal 4 NAX Fused Attention** (`H3_NAX="qkv-attn"`) + **Native GPU Trajectory Sampler** (`H3_GPU_SAMPLER=1`)
-* **Layer & Precisione**: 50 Layer Densi Completi (100% densità spaziale, nessuna potatura) con quantizzazione dinamica Row-Major INT8 FC2
-* **Memoria**: UMA Zero-Copy (`H3_ZERO_COPY_WEIGHTS=1`) e Command Buffer Reuse
-* **Tempo Totale di Generazione**: **`82.71 s`** su Apple Silicon M5 Max (128 GB UMA)
-* **Qualità Forense**: **`100 / 100`** (Micro-pori della pelle, riflessi intra-pupillari, zero artefatti da stitching VAE)
-
----
-
-## 📊 Benchmark Ufficiale di Riferimento (Empirico su M5 Max 128GB)
-
-Confronto rigoroso misurato dal vivo tra la baseline standard e i livelli di frontiera H3MLX su clip da **4.0s (90 Frame @ 24fps)**:
-
-| Configurazione | Risoluzione | ⚡ Denoise GPU | 💎 VAE 3D Decode | ⏱️ Tempo Totale | 🏎️ Throughput | 🛡️ Qualità Forense (0-100) |
+| Preset Ufficiale | Risoluzione & 4K | ⏱️ Tempo Totale (90 fr / 4.0s) | 🏎️ Throughput | 🎛️ Smart Filter | 📦 Dimensioni (RAW / Master) | 🎞️ Anteprima Animata |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Baseline Antirez Originale (BF16)** | $768\times512$ | `84.18 s` | `13.50 s` | `112.62 s` | `0.80 FPS` | `74.0 / 100` |
-| **Test Isolato Livello 1 (NAX + GPU Sampler)** | $768\times512$ | **`65.20 s`** | **`10.95 s`** | **`82.71 s`** | **`1.10 FPS`** | **`100.0 / 100` 🏆** |
-| **Frontiera Champion Master (Livello 1–5)** | $768\times512 \to 4\text{K}$ | **`36.80 s`** | **`11.49 s`** | **`74.89 s`** | **`2.45 FPS`** | **`100.0 / 100` (4K UHD)** |
-
-### 🔬 Perché il Livello 1 è la Base Perfetta:
-1. **Azzeramento dei Barrier Driver CPU/GPU**: Lo spostamento dell'integratore Euler/AB3 direttamente nella GPU elimina oltre 1.000 chiamate di sincronizzazione bloccanti per ogni video.
-2. **Micro-Kernel Fuso su Tile SRAM**: Fonde le proiezioni Query-Key-Value e Softmax on-chip, abbattendo la latenza di memoria del 35%.
-3. **Decodifica Video VAE 3D Monolitica**: Elimina il tiling a griglia da 640px tipico delle GPU con poca VRAM, sfruttando i 128 GB di banda unificata per una decodifica continua senza cuciture.
+| **👑 Champion Master Gold (3:2)** | `768x512 → 3072x2048` | **`85.09 s`** | **`1.06 FPS`** | `👤 Portrait & Beauty` | `2.2 MB` / `13.9 MB` | ![Champion Gold](assets/preview_v3_h3mlx_champion_gold.gif) |
+| **🎬 Cinema Anamorphic (16:9)** | `960x544 → 3840x2176` | **`123.30 s`** | **`0.73 FPS`** | `🏎️ Cinema / Action` | `4.3 MB` / `26.5 MB` | ![Cinema 16:9](assets/preview_v3_h3mlx_cinema_16x9.gif) |
+| **💎 Square High-Density (1:1)** | `640x640 → 2560x2560` | **`102.17 s`** | **`0.88 FPS`** | `🏎️ Action & Speed` | `5.1 MB` / `27.1 MB` | ![Square](assets/preview_v3_h3mlx_macro_square.gif) |
+| **📱 Vertical Cinema Reel (9:16)** | `576x1024 → 2304x4096` | **`158.83 s`** | **`0.57 FPS`** | `👤 Portrait / Beauty` | `4.2 MB` / `31.1 MB` | ![Vertical Reel](assets/preview_v3_h3mlx_vertical_reel.gif) |
+| **🌿 Studio Ghibli Master (3:2)** | `768x512 → 3072x2048` | **`94.48 s`** | **`0.95 FPS`** | `🌿 Anime & Ghibli` | `2.7 MB` / `29.2 MB` | ![Ghibli Master](assets/preview_v3_h3mlx_ghibli_master.gif) |
 
 ---
 
-## 🚀 Guida Rapida Turnkey (Pronto all'Uso da Zero)
+## 💾 2. Novità v3.0: Salvataggio Doppio (RAW Nativo + MASTER Smart 4K)
 
-Configurazione immediata pensata per un Mac appena inizializzato, senza dipendenze né modelli pre-scaricati:
+In H3MLX v3.0, ogni generazione da CLI o da Studio genera e conserva **entrambi i file video**:
+* 🎬 **Video RAW (Nativo)**: il video non compresso campionato a risoluzione nativa direttamente dalla GPU Metal.
+* 💎 **Video MASTER (Smart 4K UHD)**: il master broadcast con de-gridding bilaterale edge-preserving, upscaling ottico 4K Lanczos, sharpening adattivo AMD FidelityFX CAS e traccia audio Foley a 48 kHz.
+
+---
+
+## 🧠 3. Smart Mastering Filter Engine Open Source
+
+Integrazione nativa delle migliori tecnologie di post-produzione open-source:
+1. **AMD FidelityFX CAS (Contrast Adaptive Sharpening)**: GPUOpen MIT. Aumenta la nitidezza locale in base al contrasto senza creare artefatti o aloni bianchi (zero ringing / haloing).
+2. **Bilateral De-Gridding Edge-Preserving**: Dissolve le giunzioni dei blocchi $16\times16$ del VAE sulle campiture continue (viso, pelle, cielo), mantenendo ciglia, occhi e capelli nitidissimi.
+3. **F3KDB / Libplacebo Debander**: Elimina qualsiasi scalettatura di colore nei gradienti.
+4. **Content-Aware Heuristic**: Seleziona automaticamente il filtro ideale leggendo il prompt (`portrait`, `cinema`, `anime`, `action`, `macro`).
+
+---
+
+## 🚀 Guida Rapida Turnkey (Pronto all'Uso)
 
 ### 1. Clona ed esegui il setup automatico
 ```bash
@@ -51,22 +50,47 @@ git clone https://github.com/RobZombAI/H3MLX.git
 cd H3MLX
 ./setup.sh
 ```
-*Il setup compila automaticamente il binario nativo C/Metal `h3`, crea l'ambiente virtuale ed esegue il check dell'hardware.*
 
-### 2. Download automatico dei pesi del modello (se non presenti)
-Se non hai ancora scaricato i pesi di MiniMax H3 (~24 GB per la versione ottimizzata PDD-8Step), `./setup.sh` ti proporrà di scaricarli automaticamente, oppure puoi avviare in qualsiasi momento:
+### 2. Download pesi (se non presenti)
 ```bash
 ./download_models.sh
 ```
 
-### 3. Avvia la generazione con il Livello 1 Isolato
+### 3. Genera subito con un Golden Preset
 ```bash
-./h3mlx --frontier 1 -p "Shot on Arri Alexa LF with Cooke Anamorphic S4i lens, John Wick in heavy torrential rain, neon lights, 4k master" -o outputs/mio_video.mp4
+# Esegui il Champion Master Gold (Brad Pitt) salvando sia RAW che 4K Master:
+./h3mlx --preset h3mlx_champion_gold
+
+# Oppure il Vertical Reel 9:16 per Instagram / TikTok:
+./h3mlx --preset h3mlx_vertical_reel
+
+# Oppure con un prompt personalizzato e Smart Filter automatico:
+./h3mlx -p "Cinematic portrait of a cyberpunk hacker in Tokyo, neon reflections" --preset h3mlx_cinema_16x9
 ```
 
-Oppure apri l'interfaccia interattiva:
+### 4. Studio Interattivo
 ```bash
 ./h3mlx studio
+```
+
+---
+
+## 📊 Report di Velocità della Singola Generazione sulla CLI
+
+Al termine di ogni run, la CLI stampa un report analitico dettagliato:
+
+```text
+======================================================================
+🎉 GENERAZIONE ALTA FEDELTÀ COMPLETATA CON SUCCESSO!
+⏱️  Tempo Totale Reale:       85.09s  (Throughput: 1.06 FPS)
+🎬  Video RAW (Nativo 768x512): outputs/video.mp4 (2.20 MB)
+💎  Video MASTER (Smart 4K):   outputs/video_4k.mp4 (13.90 MB)
+📐  Risoluzione & Frame:      768x512 -> 4K UHD | 90 frames (3.75s @ 24fps)
+
+📊 Profiling GPU Metal & Smart Mastering:
+   • denoise_s                : 64.12s
+   • vae_decode_s             : 19.85s
+======================================================================
 ```
 
 ---
@@ -75,8 +99,8 @@ Oppure apri l'interfaccia interattiva:
 
 > [!CAUTION]
 > **VENTOLE ACCESE AL MASSIMO REGIME**:
-> L'esecuzione di H3MLX a piena banda unificata (>400 GB/s) impegna intensamente tutti i core GPU di Apple Silicon.
-> È raccomandato l'uso su **MacBook Pro 16" M5 Max / Ultra** con **VENTOLE ATTIVE IMPOSTATE AL MASSIMO** (*High Power Mode*, *TG Pro* o *Macs Fan Control*). Eseguire generazioni video prolungate senza ventilazione attiva rischia di innescare thermal throttling e usura termica precoce dei componenti.
+> L'elaborazione prolungata di modelli di diffusione video ad altissima risoluzione impegna tutti i core GPU a oltre 400 GB/s di banda unificata.
+> Raccomandato l'uso con **VENTOLE ATTIVE IMPOSTATE AL MASSIMO** (*High Power Mode*, *TG Pro* o *Macs Fan Control*).
 
 ---
 
@@ -84,8 +108,8 @@ Oppure apri l'interfaccia interattiva:
 
 $$\text{Energia per Video (kWh)} = \frac{\text{Potenza (Watt)} \times \text{Tempo (Secondi)}}{3600}$$
 
-* **Cluster Cloud ($8\times \text{H100}$)**: `6.400 W` $\times$ `240 s` = `0,426 kWh` | `~180 g CO2` | **~1,5 Litri d'Acqua Evaporativa per Video** 💧
-* **Apple Silicon M5 Max (H3MLX)**: `65 W` $\times$ `82,71 s` = `0,00149 kWh` | `< 0,6 g CO2` | **0,00 Litri d'Acqua (Zero Consumo Idrico)** 🌿
+* **Cluster Cloud ($8\times \text{H100}$)**: `6.400 W` $\times$ `240 s` = `0,426 kWh` | `~180 g CO2` | **~1,5 Litri d'Acqua Evaporativa** 💧
+* **Apple Silicon M5 Max (H3MLX)**: `65 W` $\times$ `85,09 s` = `0,00153 kWh` | `< 0,6 g CO2` | **0,00 Litri d'Acqua (Zero Consumo Idrico)** 🌿
 
 > **"Più qualità e più velocità = più ottimizzazione = più fiumi salvati."** 🌊
 

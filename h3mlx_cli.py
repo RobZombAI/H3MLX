@@ -127,13 +127,18 @@ def main():
             args.height = preset_cfg.get("height", args.height)
             args.seconds = preset_cfg.get("seconds", args.seconds)
             args.steps = preset_cfg.get("steps", args.steps)
-            args.engine_mode = preset_cfg.get("engine_mode", args.engine_mode)
+            args.engine_mode = preset_cfg.get("mode", preset_cfg.get("engine_mode", args.engine_mode))
             args.solver = preset_cfg.get("solver", args.solver)
             args.int8 = preset_cfg.get("int8", args.int8)
             args.token_reduction = preset_cfg.get("token_reduction", args.token_reduction)
             args.upscale_4k = preset_cfg.get("upscale_4k", args.upscale_4k)
             args.layers = preset_cfg.get("layers", args.layers)
             args.reuse = preset_cfg.get("reuse", args.reuse)
+            if not args.prompt and "prompt" in preset_cfg:
+                args.prompt = preset_cfg["prompt"]
+
+    if not args.prompt:
+        args.prompt = "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed"
 
     # Resolution override if canonical
     if args.canonical:
@@ -183,11 +188,19 @@ def main():
     )
 
     if res.success:
+        wall_time = res.wall_time_s
+        fps = total_frames / wall_time if wall_time > 0 else 0
+        raw_mb = Path(res.raw_output_path).stat().st_size / (1024 * 1024) if Path(res.raw_output_path).exists() else 0.0
         print("\n" + "=" * 70)
-        print(f"✅ Generazione completata con successo in {res.wall_time_s:.2f}s!")
-        print(f"🎥 Video finale salvato in: {res.output_path}")
+        print("🎉 GENERAZIONE ALTA FEDELTÀ COMPLETATA CON SUCCESSO!")
+        print(f"⏱️  Tempo Totale Reale:       {wall_time:.2f}s  (Throughput: {fps:.2f} FPS)")
+        print(f"🎬  Video RAW (Nativo {args.width}x{args.height}): {res.raw_output_path} ({raw_mb:.2f} MB)")
+        if res.master_output_path:
+            master_mb = Path(res.master_output_path).stat().st_size / (1024 * 1024) if Path(res.master_output_path).exists() else 0.0
+            print(f"💎  Video MASTER (Smart 4K):   {res.master_output_path} ({master_mb:.2f} MB)")
+        print(f"📐  Risoluzione & Frame:      {args.width}x{args.height} {'-> 4K UHD' if args.upscale_4k else ''} | {total_frames} frames ({total_frames/24:.2f}s @ 24fps)")
         if res.profile_data:
-            print("📊 Profiling Fasi:")
+            print("\n📊 Profiling GPU Metal & Smart Mastering:")
             for k, v in res.profile_data.items():
                 print(f"   • {k:<25}: {v:.2f}s")
         print("=" * 70 + "\n")

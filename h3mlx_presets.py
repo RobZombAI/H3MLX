@@ -117,24 +117,6 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "int8": True,
         "upscale_4k": True,
         "prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
-    },
-
-    # 6. Antirez Canonical Pure Baseline (BF16 Reference)
-    "antirez_canonical_bf16": {
-        "name": "💃 Antirez Canonical 1:1 Pure (BF16)",
-        "description": "Configurazione 1:1 originale di Salvatore Sanfilippo (antirez) in pura virgola mobile BF16 senza quantizzazione.",
-        "width": 768,
-        "height": 512,
-        "seconds": 3.0,
-        "frames": 73,
-        "steps": 8,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "canonical",
-        "solver": "euler",
-        "token_reduction": False,
-        "int8": False,
-        "prompt": "A graceful flamenco dancer in red dress spinning energetically, dramatic studio lighting"
     }
 }
 
@@ -143,7 +125,6 @@ PRESETS["h3mlx_champion_4s"] = PRESETS["h3mlx_champion_gold"]
 PRESETS["h3mlx_livello1"] = PRESETS["h3mlx_champion_gold"]
 PRESETS["h3mlx_cinema_4k_master"] = PRESETS["h3mlx_cinema_16x9"]
 PRESETS["h3mlx_ghibli_watercolor_4s"] = PRESETS["h3mlx_ghibli_master"]
-PRESETS["antirez_canonical_8step"] = PRESETS["antirez_canonical_bf16"]
 
 def calculate_canonical_frames(seconds: float, width: int = 768, height: int = 512, *args, **kwargs) -> int:
     """

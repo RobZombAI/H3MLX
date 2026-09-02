@@ -136,26 +136,6 @@ STUDIO_PRESETS = [
         "quality_tier": "Tier 1 Anime Master 4K (98.0/100)",
         "description": "Estetica Hayao Miyazaki con dinamica del vento, texture ad acquerello soffici e upscaling 4K.",
         "default_prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
-    },
-    {
-        "id": "antirez_canonical_bf16",
-        "title": "💃 Antirez Canonical 1:1 Pure (BF16)",
-        "resolution": "768x512 (3:2 Standard)",
-        "width": 768,
-        "height": 512,
-        "default_seconds": 3.0,
-        "default_steps": 8,
-        "mode": "canonical",
-        "solver": "euler",
-        "reuse": 1,
-        "layers": 50,
-        "token_reduction": False,
-        "int8": False,
-        "est_time_m5": "51.4s",
-        "est_fps": "1.42 FPS",
-        "quality_tier": "Tier 2 Gold Broadcast (90.0/100)",
-        "description": "Configurazione 1:1 originale di Salvatore Sanfilippo (antirez) in pura virgola mobile BF16 senza quantizzazione.",
-        "default_prompt": "A graceful flamenco dancer in red dress spinning energetically, dramatic studio lighting"
     }
 ]
 

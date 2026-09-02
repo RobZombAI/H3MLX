@@ -28,13 +28,17 @@ class H3EngineResult:
                  wall_time_s: float,
                  stdout: str,
                  stderr: str,
-                 profile_data: Optional[Dict[str, float]] = None):
+                 profile_data: Optional[Dict[str, float]] = None,
+                 raw_output_path: str = "",
+                 master_output_path: Optional[str] = None):
         self.success = success
         self.output_path = output_path
         self.wall_time_s = wall_time_s
         self.stdout = stdout
         self.stderr = stderr
         self.profile_data = profile_data or {}
+        self.raw_output_path = raw_output_path or output_path
+        self.master_output_path = master_output_path
 
 def resolve_model_path(model_dir: Optional[str] = None, steps: int = 14) -> Path:
     """Resolve model path with fallback to PDD or Full model across standard Mac directories."""
@@ -230,10 +234,12 @@ def execute_h3_generation(
             str(four_k_path)
         ]
         sub_4k = subprocess.run(cmd_4k, capture_output=True)
+        master_path_str = None
         if sub_4k.returncode == 0 and four_k_path.exists():
             size_mb = four_k_path.stat().st_size / (1024 * 1024)
             print(f"✅ Mastering 4K ({profile_name}) completato: {four_k_path.name} ({size_mb:.2f} MB)")
             final_output_path = str(four_k_path)
+            master_path_str = str(four_k_path)
             
     success = (proc.returncode == 0 and out_file.exists())
     return H3EngineResult(
@@ -242,5 +248,7 @@ def execute_h3_generation(
         wall_time_s=wall_time,
         stdout=proc.stdout,
         stderr=proc.stderr,
-        profile_data=profile_data
+        profile_data=profile_data,
+        raw_output_path=str(out_file),
+        master_output_path=master_path_str
     )

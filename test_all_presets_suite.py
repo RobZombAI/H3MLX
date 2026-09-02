@@ -17,8 +17,7 @@ PRESET_LIST = [
     "h3mlx_cinema_16x9",
     "h3mlx_macro_square",
     "h3mlx_vertical_reel",
-    "h3mlx_ghibli_master",
-    "antirez_canonical_bf16"
+    "h3mlx_ghibli_master"
 ]
 
 def main():
