@@ -1,32 +1,123 @@
 #!/usr/bin/env python3
 """
-🎬 H3MLX Presets & Aspect Ratio Catalog
-Co-designed for Salvatore Sanfilippo (antirez) h3.c full compatibility
-and H3MLX Metal 4 NAX accelerated engine.
+🎬 H3MLX Systematic High-Quality Presets & Mathematical Lattice Catalog
+Exclusively calibrated for Apple Silicon (M1-M5 Max/Ultra) and MiniMax H3.
+Systematic Architecture Guarantees:
+  - 100% Dense Spatial Sampling (50 Full DiT Blocks, Token Reduction: OFF)
+  - Zero-Loss Step Trajectories (Reuse: 1, Exact Neural Flow)
+  - Causal Temporal Lattice Invariance: T = 17n + 5 (n >= 1) at 24 fps
+  - High-Token Spatial Canvas (All canvas resolutions >= 1500 latent tokens)
 """
 
 from typing import Dict, Any, Tuple
 
-# Canonical Antirez Canvas & Latent Definitions
+# Canonical Antirez Canvas & High-Token Latent Definitions (No sub-1500 token canvas)
 CANONICAL_RESOLUTIONS: Dict[str, Tuple[int, int]] = {
-    "16:9_cinema": (864, 480),     # Default canonical antirez resolution
-    "16:9_sd": (768, 432),
-    "16:9_hd": (1024, 576),
-    "16:9_720p": (1280, 720),
-    "3:2_standard": (768, 512),    # Most balanced token layout (384 tokens)
-    "1:1_square": (512, 512),      # Fast square canvas (256 tokens)
-    "1:1_large": (640, 640),       # High-density square (400 tokens)
-    "9:16_portrait": (480, 864),   # Vertical mobile format
-    "9:16_short": (512, 768),      # Portrait 2:3
-    "21:9_anamorphic": (1008, 432) # Ultra-widescreen cinematic
+    "3:2_standard": (768, 512),       # Gold Standard: 1536 latent tokens (Balanced portrait/cinema)
+    "16:9_cinema": (960, 544),        # Anamorphic Widescreen (2040 latent tokens)
+    "16:9_standard": (864, 480),      # Standard Widescreen (1620 latent tokens)
+    "1:1_high_density": (640, 640),   # High-Density Square (1600 latent tokens, fine macro/faces)
+    "9:16_portrait": (544, 960),      # Vertical Cinema Reel (2040 latent tokens)
+    "21:9_ultrawide": (1008, 432)     # Epic Anamorphic Ultra-Widescreen (1701 latent tokens)
 }
 
-# Standard Antirez & H3MLX Video Presets
+# Systematic Studio-Quality Video Presets (All Tier 1 Platinum / Forensic Grade)
 PRESETS: Dict[str, Dict[str, Any]] = {
-    # 1. Antirez Canonical Presets (Pure 1:1 baseline)
-    "antirez_canonical_8step": {
-        "name": "Antirez Canonical 8-Step",
-        "description": "Salvatore Sanfilippo (antirez) official 8-step baseline setting",
+    # 1. Champion Master Gold (The absolute benchmark for realistic portraits and Hollywood cinema)
+    "h3mlx_champion_gold": {
+        "name": "👑 H3MLX Champion Master Gold (3:2)",
+        "description": "Massima fedeltà assoluta: 50 layer densi al 100%, senza potature spaziali, iride e pori sub-pixel.",
+        "width": 768,
+        "height": 512,
+        "seconds": 3.75,
+        "frames": 90,
+        "steps": 8,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "dpm3m",
+        "token_reduction": False,
+        "int8": True,
+        "prompt": "Masterpiece award-winning cinematic close-up portrait of Brad Pitt with sharp detailed blue eyes with iris reflections, natural weathered skin texture with authentic pores, golden hour rim lighting, shot on Arri Alexa with Cooke Anamorphic lens, 4k master"
+    },
+
+    # 2. Cinema Anamorphic Widescreen (16:9 Hollywood format)
+    "h3mlx_cinema_16x9": {
+        "name": "🎬 H3MLX Cinema Anamorphic (16:9)",
+        "description": "Formato panoramico widescreen 16:9 (960x544) con ottica Cooke S4/i e coerenza di fase ottica.",
+        "width": 960,
+        "height": 544,
+        "seconds": 3.75,
+        "frames": 90,
+        "steps": 8,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "dpm3m",
+        "token_reduction": False,
+        "int8": True,
+        "upscale_4k": True,
+        "prompt": "Cinematic wide anamorphic shot of a futuristic neon metropolis in heavy rain, reflections in wet asphalt, steam rising from grates, 35mm film grain, 4k 24fps master"
+    },
+
+    # 3. Macro High-Density Square (1:1 640x640 - replaces blurry 512x512)
+    "h3mlx_macro_square": {
+        "name": "💎 H3MLX Macro High-Density (1:1 640x640)",
+        "description": "Quadrato ad altissima densità (1600 token) ottimizzato per macro ottiche, gioielli, orologi e dettagli estremi.",
+        "width": 640,
+        "height": 640,
+        "seconds": 3.75,
+        "frames": 90,
+        "steps": 8,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "dpm3m",
+        "token_reduction": False,
+        "int8": True,
+        "prompt": "Intricate macro close-up of a luxury mechanical tourbillon watch movement, polished steel gears and ruby bearings in motion, dramatic side studio lighting, 8k uhd photorealistic"
+    },
+
+    # 4. Vertical Cinema Reel (9:16 High Definition)
+    "h3mlx_vertical_reel": {
+        "name": "📱 H3MLX Vertical Cinema Reel (9:16)",
+        "description": "Cinematografia verticale ad altissima definizione (544x960) per reel e ritratti a figura intera.",
+        "width": 544,
+        "height": 960,
+        "seconds": 3.75,
+        "frames": 90,
+        "steps": 8,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "dpm3m",
+        "token_reduction": False,
+        "int8": True,
+        "prompt": "Editorial fashion runway full body shot of a graceful model walking confidently in flowing silk haute couture gown, dramatic spotlight, slow motion 24fps master"
+    },
+
+    # 5. Studio Ghibli Aesthetic Master
+    "h3mlx_ghibli_master": {
+        "name": "🌿 H3MLX Studio Ghibli Master (3:2)",
+        "description": "Estetica Hayao Miyazaki con dinamica del vento, texture ad acquerello soffici e cieli dipinti a mano.",
+        "width": 768,
+        "height": 512,
+        "seconds": 3.75,
+        "frames": 90,
+        "steps": 8,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "dpm3m",
+        "token_reduction": False,
+        "int8": True,
+        "prompt": "Studio Ghibli style lush green rolling hills with blooming colorful wildflowers, giant wind turbine spinning gently under fluffy summer cumulus clouds, hand-painted watercolor aesthetic"
+    },
+
+    # 6. Antirez Canonical Pure Baseline (BF16 Reference)
+    "antirez_canonical_bf16": {
+        "name": "💃 Antirez Canonical 1:1 Pure (BF16)",
+        "description": "Configurazione 1:1 originale di Salvatore Sanfilippo (antirez) in pura virgola mobile BF16 senza quantizzazione.",
         "width": 768,
         "height": 512,
         "seconds": 3.0,
@@ -38,145 +129,29 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "solver": "euler",
         "token_reduction": False,
         "int8": False,
-        "prompt": "A graceful flamenco dancer in red dress spinning energetically, studio lighting, highly detailed"
-    },
-    "antirez_cinema_standard_20step": {
-        "name": "Antirez Cinema Standard 20-Step",
-        "description": "Standard 20-step canonical full flow setting",
-        "width": 864,
-        "height": 480,
-        "seconds": 4.0,
-        "frames": 90,
-        "steps": 20,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "canonical",
-        "solver": "euler",
-        "token_reduction": False,
-        "int8": False,
-        "prompt": "Cinematic wide shot of an epic medieval battle on a misty morning, 35mm film grain"
-    },
-    "antirez_fast_square_2s": {
-        "name": "Antirez Fast Square 2s",
-        "description": "Quick draft 2.0s 512x512 video generation",
-        "width": 512,
-        "height": 512,
-        "seconds": 2.0,
-        "frames": 48,
-        "steps": 8,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "canonical",
-        "solver": "euler",
-        "token_reduction": False,
-        "int8": False,
-        "prompt": "A cute red panda eating fresh bamboo leaves, macro photography, natural lighting"
-    },
-
-    # 2. H3MLX Engine Boosted Presets (Accelerated with NAX, INT8 & Monolithic VAE)
-    "h3mlx_champion_4s": {
-        "name": "H3MLX Champion 4s (Master Gold)",
-        "description": "14-step PDD optimal trajectory with Metal 4 NAX fused kernels & Monolithic 3D VAE",
-        "width": 768,
-        "height": 512,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 14,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "boosted",
-        "solver": "dpm3m",
-        "token_reduction": True,
-        "int8": True,
-        "prompt": "Osaka gunfu neon rooftop sword fight in heavy rain, cinematic shallow depth of field, anamorphic lens flare"
-    },
-    "h3mlx_livello1": {
-        "name": "H3MLX Livello 1 (NAX + GPU Sampler)",
-        "description": "50 full dense layers (100% spatial density, pure sampling) with Metal 4 NAX & Native GPU Sampler",
-        "width": 768,
-        "height": 512,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 14,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "boosted",
-        "solver": "euler",
-        "token_reduction": False,
-        "int8": True,
-        "prompt": "Shot on Arri Alexa LF with Cooke Anamorphic S4i Prime 50mm T2.3 lens, MTF optical sub-pixel phase coherence, John Wick in crisp tailored black wool suit with white shirt and black tie facing 3/4 frontally with razor-sharp Keanu Reeves likeness executing a rapid tactical Gun-Fu double-tap in torrential night rain, brilliant golden muzzle flash illuminating facial skin pores, brass shell casing ejecting in mid-air, 4k 24fps master"
-    },
-    "h3mlx_turbo_fast_2s": {
-        "name": "H3MLX Turbo Fast 2s",
-        "description": "Sub-15s ultra fast preview with row-major INT8 and predictive step reuse",
-        "width": 512,
-        "height": 512,
-        "seconds": 2.0,
-        "frames": 48,
-        "steps": 8,
-        "reuse": 2,
-        "layers": 45,
-        "mode": "boosted",
-        "solver": "euler",
-        "token_reduction": True,
-        "int8": True,
-        "prompt": "Cyberpunk high-speed motorcycle pursuit through glowing neon highway, motion blur, sharp focus"
-    },
-    "h3mlx_cinema_4k_master": {
-        "name": "H3MLX Cinema 4K Master",
-        "description": "Full 50 layers with Cooke S4/i MTF prompt conditioning and 4K detailer upscaling",
-        "width": 864,
-        "height": 480,
-        "seconds": 4.0,
-        "frames": 90,
-        "steps": 14,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "boosted",
-        "solver": "dpm3m",
-        "token_reduction": True,
-        "int8": True,
-        "upscale_4k": True,
-        "prompt": "Intricate macro close-up of a human eye with galaxy reflections in the iris, 8k uhd photorealistic"
-    },
-    "h3mlx_ghibli_watercolor_4s": {
-        "name": "H3MLX Ghibli Watercolor 4s",
-        "description": "Studio Ghibli aesthetic with soft watercolor textures and wind dynamics",
-        "width": 768,
-        "height": 512,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 14,
-        "reuse": 1,
-        "layers": 50,
-        "mode": "boosted",
-        "solver": "dpm3m",
-        "token_reduction": True,
-        "int8": True,
-        "prompt": "Studio Ghibli style lush green valley with blooming flowers and wind turbine under fluffy summer clouds"
+        "prompt": "A graceful flamenco dancer in vibrant red dress spinning energetically, dramatic studio spotlighting, highly detailed fabric texture"
     }
 }
 
+# Aliases for backwards compatibility with previous preset names
+PRESETS["h3mlx_champion_4s"] = PRESETS["h3mlx_champion_gold"]
+PRESETS["h3mlx_livello1"] = PRESETS["h3mlx_champion_gold"]
+PRESETS["h3mlx_cinema_4k_master"] = PRESETS["h3mlx_cinema_16x9"]
+PRESETS["h3mlx_ghibli_watercolor_4s"] = PRESETS["h3mlx_ghibli_master"]
+PRESETS["antirez_canonical_8step"] = PRESETS["antirez_canonical_bf16"]
+
 def calculate_canonical_frames(seconds: float, width: int = 768, height: int = 512, *args, **kwargs) -> int:
-    """Calculate the canonical frame count using antirez lattice rounding (24 fps)."""
-    raw_frames = int(round(seconds * 24))
-    if raw_frames <= 22:
-        return 22
-    elif raw_frames <= 39:
-        return 39
-    elif raw_frames <= 48:
-        return 48
-    elif raw_frames <= 73:
-        return 73
-    elif raw_frames <= 90:
-        return 90
-    elif raw_frames <= 96:
-        return 96
-    return raw_frames
+    """
+    Calculate the exact causal temporal lattice frame count: T = 17*n + 5 (n >= 1) at 24 fps.
+    Guarantees 100% mathematical temporal synchronization with MiniMax H3 3D VAE.
+    """
+    raw_frames = max(22, int(round(seconds * 24)))
+    n = max(1, int(round((raw_frames - 5) / 17.0)))
+    return 17 * n + 5
 
 def get_preset(preset_id: str) -> Dict[str, Any]:
     """Retrieve a preset configuration or raise ValueError if not found."""
     if preset_id not in PRESETS:
-        available = ", ".join(PRESETS.keys())
-        raise ValueError(f"Unknown preset '{preset_id}'. Available presets: {available}")
+        available = ", ".join(list(PRESETS.keys())[:6])
+        raise ValueError(f"Unknown preset '{preset_id}'. High-quality presets available: {available}")
     return PRESETS[preset_id].copy()
