@@ -140,5 +140,15 @@ int h3_res_step(float *output, const float *sample, const float *denoised,
                 const float *sigmas, int step, int total_steps);
 int h3_euler_velocity_step(float *sample, const float *velocity, size_t count,
                            float sigma, float sigma_next);
+int h3_ab3_assc_velocity_step(float *sample, const float *velocity,
+                              const float *prev_velocity, const float *prev2_velocity,
+                              size_t count, float sigma, float sigma_next);
+int h3_dpm2m_velocity_step(float *sample, const float *velocity, const float *prev_velocity,
+                           size_t count, float sigma, float sigma_next, float sigma_prev);
+int h3_dpm3m_velocity_step(float *sample, const float *velocity,
+                           const float *prev_velocity, const float *prev2_velocity,
+                           size_t count, float sigma, float sigma_next,
+                           float sigma_prev, float sigma_prev2);
+int h3_symplectic_flow_normalize(float *latent, size_t count, float sigma_next);
 
 #endif

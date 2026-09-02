@@ -648,6 +648,10 @@ static int decode_output(audio_context *audio, h3_audio_waveform *output,
     output->channels = STEREO;
     output->samples = (int)audio->length;
     output->sample_rate = SAMPLE_RATE;
+    /* Analog tape saturation / Soft tanh limiter to eliminate harmonic clipping */
+    for (size_t i = 0; i < waveform_elements; i++) {
+        output->pcm[i] = tanhf(output->pcm[i]);
+    }
 
 done:
     h3_gpu_tensor_free(activated);

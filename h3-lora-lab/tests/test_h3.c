@@ -323,6 +323,28 @@ static void test_rng_and_solver(void) {
     CHECK(h3_euler_velocity_step(euler, velocity, 2, 0.75f, 0.25f));
     CHECK(euler[0] == 2.0f && euler[1] == 1.0f);
     CHECK(!h3_euler_velocity_step(euler, velocity, 2, 0.25f, 0.25f));
+
+    /* DPM-Solver++ 2M variable step validation */
+    float dpm[2] = {1.0f, 3.0f};
+    float prev_vel[2] = {1.0f, -2.0f};
+    /* First step (no prev velocity) matches Euler: delta = 0.5 -> 1.0 + 0.5*2 = 2.0, 3.0 + 0.5*(-4) = 1.0 */
+    CHECK(h3_dpm2m_velocity_step(dpm, velocity, NULL, 2, 0.75f, 0.25f, 0.0f));
+    CHECK(dpm[0] == 2.0f && dpm[1] == 1.0f);
+    /* Second step with prev velocity (h_curr = 0.25, h_prev = 0.5 -> r = 0.5, b1 = 1.25, b2 = 0.25) */
+    /* dpm[0] += 0.25 * (1.25 * 2.0 - 0.25 * 1.0) = 0.25 * 2.25 = 0.5625 -> 2.5625 */
+    CHECK(h3_dpm2m_velocity_step(dpm, velocity, prev_vel, 2, 0.25f, 0.0f, 0.75f));
+    CHECK(close_enough(dpm[0], 2.5625f, 1e-5));
+
+    /* DPM-Solver++ 3M 3-step validation */
+    float dpm3[2] = {1.0f, 3.0f};
+    float prev2_vel[2] = {0.5f, -1.0f};
+    CHECK(h3_dpm3m_velocity_step(dpm3, velocity, prev_vel, prev2_vel, 2, 0.25f, 0.0f, 0.50f, 0.75f));
+    CHECK(isfinite(dpm3[0]) && isfinite(dpm3[1]));
+
+    /* Symplectic Flow normalization test */
+    float latent_test[4] = { 1.0f, -1.0f, 1.0f, -1.0f };
+    CHECK(h3_symplectic_flow_normalize(latent_test, 4, 0.0f));
+    CHECK(isfinite(latent_test[0]));
 }
 
 static void test_rgb_resize(void) {

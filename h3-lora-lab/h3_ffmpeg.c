@@ -664,6 +664,8 @@ int h3_ffmpeg_write_av_rgb24_f32(const char *path, const uint8_t *frames,
     snprintf(audio_rate, sizeof(audio_rate), "%d", sample_rate);
     snprintf(audio_channels, sizeof(audio_channels), "%d", channels);
     snprintf(audio_input, sizeof(audio_input), "pipe:%d", audio_target);
+    const char *crf_env = getenv("H3_CRF");
+    const char *crf_str = (crf_env && *crf_env) ? crf_env : "14";
     char *arguments[] = {
         "ffmpeg", "-y", "-loglevel", "error",
         "-f", "rawvideo", "-pixel_format", "rgb24",
@@ -673,8 +675,9 @@ int h3_ffmpeg_write_av_rgb24_f32(const char *path, const uint8_t *frames,
         "-i", audio_input,
         "-map", "0:v:0", "-map", "1:a:0",
         "-af", "aresample=48000,loudnorm=I=-14:TP=-1.0:LRA=11",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-        "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
+        "-c:v", "libx264", "-preset", "fast", "-crf", (char *)crf_str,
+        "-tune", "grain", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
         "-movflags", "+faststart", (char *)path, NULL
     };
     posix_spawn_file_actions_t actions;

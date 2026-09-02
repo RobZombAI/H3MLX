@@ -9,10 +9,10 @@ FRAMEWORKS := -framework Foundation -framework Metal \
 LDLIBS := $(FRAMEWORKS) -licucore -lm
 
 LIB_C := h3.c h3_host.c h3_safetensors.c h3_weights.c h3_text_encoder.c \
-	h3_dit_schedule.c h3_dit.c
+	h3_dit_schedule.c h3_dit.c h3_ngram_speculative.c h3_vae_ngram_speculative.c h3_holistic_ngram.c h3_ngram_super_detail.c h3_ngram_octree_flow_tree.c h3_antirez_16way_ngram_gating.c
 
 LIB_C += h3_video_vae.c h3_video_encoder.c h3_audio_vae.c h3_ffmpeg.c \
-	h3_terminal.c h3_vision_encoder.c h3_multimodal.c
+	h3_terminal.c h3_vision_encoder.c h3_multimodal.c h3_daemon.c
 LIB_M := h3_metal.m h3_gpu.m h3_tokenizer.m
 LIB_OBJ := $(LIB_C:.c=.o) $(LIB_M:.m=.o)
 CLI_OBJ := main.o h3_cli.o linenoise.o

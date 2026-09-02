@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         params.denoise_reuse = atoi(reuse_str) > 0 ? atoi(reuse_str) : 1;
         params.core_reuse = 1;
         params.use_int8_row_fc2 = 1;
-        params.token_reduction = 0;
+        params.token_reduction = getenv("H3_TOKEN_REDUCTION") ? atoi(getenv("H3_TOKEN_REDUCTION")) : 1;
         params.seed = (uint64_t)strtoull(seed_str, NULL, 10);
         if (params.seed == 0) params.seed = (uint64_t)time(NULL);
         params.output_path = output_path;

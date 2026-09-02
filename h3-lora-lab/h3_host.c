@@ -145,8 +145,25 @@ float h3_get_audio_shift(void) {
 }
 
 static float h3_shifted_sigma(int index, int steps, float shift) {
-    int base_index = (index * 1000) / steps;
-    float base = (float)(1000 - base_index) / 1000.0f;
+    if (steps <= 0) return 0.0f;
+    float u = (float)index / (float)steps;
+    const char *warp_env = getenv("H3_WARP_GAMMA");
+    const char *facial_env = getenv("H3_FACIAL_WARP");
+    float gamma = (warp_env && *warp_env) ? (float)atof(warp_env) : (1.20f + 0.15f * (1.0f - u));
+    int facial_warp = (facial_env && (*facial_env == '1' || *facial_env == 'y' || *facial_env == 't'));
+    float base;
+    if ((gamma > 0.01f && fabsf(gamma - 1.0f) > 0.001f) || facial_warp) {
+        /* Curvature-Aware Cosine-Power schedule warping with Facial Transition Window Retardation */
+        float u_warped = (gamma > 0.01f && fabsf(gamma - 1.0f) > 0.001f) ? powf(u, gamma) : u;
+        /* Gaussian retardation kernel around critical facial semantic boundary (u ~ 0.50) */
+        float retardation = 0.08f * sinf((float)M_PI * 2.0f * u) * expf(-powf(u - 0.50f, 2.0f) / (2.0f * 0.16f * 0.16f));
+        float u_focal = fmaxf(0.0f, fminf(1.0f, u_warped - retardation));
+        base = cosf((float)M_PI * 0.5f * u_focal);
+        base = fmaxf(0.0f, fminf(1.0f, base));
+    } else {
+        int base_index = (index * 1000) / steps;
+        base = (float)(1000 - base_index) / 1000.0f;
+    }
     return shift * base / (1.0f + (shift - 1.0f) * base);
 }
 
@@ -159,6 +176,14 @@ int h3_schedule_build(int steps, h3_sigma_schedule *schedule) {
     for (int index = 0; index < steps; index++) {
         schedule->video[index] = h3_shifted_sigma(index, steps, vshift);
         schedule->audio[index] = h3_shifted_sigma(index, steps, ashift);
+        if (index > 0) {
+            if (schedule->video[index] >= schedule->video[index - 1]) {
+                schedule->video[index] = schedule->video[index - 1] * 0.999f;
+            }
+            if (schedule->audio[index] >= schedule->audio[index - 1]) {
+                schedule->audio[index] = schedule->audio[index - 1] * 0.999f;
+            }
+        }
     }
     schedule->video[steps] = 0.0f;
     schedule->audio[steps] = 0.0f;
@@ -169,13 +194,19 @@ int h3_serving_schedule_build(int evaluations, h3_sigma_schedule *schedule) {
     if (!schedule || evaluations < 2 || evaluations > H3_MAX_STEPS) return 0;
     memset(schedule, 0, sizeof(*schedule));
     schedule->steps = evaluations;
-    float denominator = (float)evaluations;
     float vshift = h3_get_video_shift();
     float ashift = h3_get_audio_shift();
     for (int index = 0; index <= evaluations; index++) {
-        float base = 1.0f - (float)index / denominator;
-        schedule->video[index] = vshift * base / (1.0f + (vshift - 1.0f) * base);
-        schedule->audio[index] = ashift * base / (1.0f + (ashift - 1.0f) * base);
+        schedule->video[index] = h3_shifted_sigma(index, evaluations, vshift);
+        schedule->audio[index] = h3_shifted_sigma(index, evaluations, ashift);
+        if (index > 0) {
+            if (schedule->video[index] >= schedule->video[index - 1]) {
+                schedule->video[index] = schedule->video[index - 1] * 0.999f;
+            }
+            if (schedule->audio[index] >= schedule->audio[index - 1]) {
+                schedule->audio[index] = schedule->audio[index - 1] * 0.999f;
+            }
+        }
     }
     schedule->video[evaluations] = 0.0f;
     schedule->audio[evaluations] = 0.0f;
@@ -663,3 +694,123 @@ int h3_euler_velocity_step(float *sample, const float *velocity, size_t count,
         sample[index] += delta * velocity[index];
     return 1;
 }
+
+int h3_ab3_assc_velocity_step(float *sample, const float *velocity,
+                              const float *prev_velocity, const float *prev2_velocity,
+                              size_t count, float sigma, float sigma_next) {
+    if (!sample || !velocity || !isfinite(sigma) || !isfinite(sigma_next) ||
+        !(sigma > sigma_next) || sigma_next < 0.0f) return 0;
+    float delta = sigma - sigma_next;
+    if (!prev_velocity || !prev2_velocity) {
+        for (size_t index = 0; index < count; index++)
+            sample[index] += delta * velocity[index];
+        return 1;
+    }
+    const float c0 = (23.0f / 12.0f) * 0.985f;
+    const float c1 = (16.0f / 12.0f) * 0.985f;
+    const float c2 = (5.0f / 12.0f) * 0.985f;
+    for (size_t index = 0; index < count; index++) {
+        float v_eff = c0 * velocity[index] - c1 * prev_velocity[index] + c2 * prev2_velocity[index];
+        sample[index] += delta * v_eff;
+    }
+    return 1;
+}
+
+int h3_dpm2m_velocity_step(float *sample, const float *velocity, const float *prev_velocity,
+                           size_t count, float sigma, float sigma_next, float sigma_prev) {
+    if (!sample || !velocity || !isfinite(sigma) || !isfinite(sigma_next) ||
+        !(sigma > sigma_next) || sigma_next < 0.0f) return 0;
+    float delta = sigma - sigma_next;
+    if (!prev_velocity || !isfinite(sigma_prev) || !(sigma_prev > sigma)) {
+        /* Exact 1st-order Euler fallback for step 0 or when no previous velocity is available */
+        for (size_t index = 0; index < count; index++)
+            sample[index] += delta * velocity[index];
+        return 1;
+    }
+    /* DPM-Solver++ 2M: Generalized variable-step Adams-Bashforth 2nd order */
+    float h_curr = delta;
+    float h_prev = sigma_prev - sigma;
+    float r = (h_prev > 1e-7f) ? (h_curr / h_prev) : 1.0f;
+    float b1 = 1.0f + 0.5f * r;
+    float b2 = 0.5f * r;
+    for (size_t index = 0; index < count; index++) {
+        sample[index] += h_curr * (b1 * velocity[index] - b2 * prev_velocity[index]);
+    }
+    return 1;
+}
+
+int h3_dpm3m_velocity_step(float *sample, const float *velocity,
+                           const float *prev_velocity, const float *prev2_velocity,
+                           size_t count, float sigma, float sigma_next,
+                           float sigma_prev, float sigma_prev2) {
+    if (!sample || !velocity || !isfinite(sigma) || !isfinite(sigma_next) ||
+        !(sigma > sigma_next) || sigma_next < 0.0f) return 0;
+    float h_k = sigma - sigma_next;
+    if (!prev_velocity || !isfinite(sigma_prev) || !(sigma_prev > sigma)) {
+        /* Order 1: Euler fallback for step 0 */
+        for (size_t index = 0; index < count; index++)
+            sample[index] += h_k * velocity[index];
+        return 1;
+    }
+    float h_prev1 = sigma_prev - sigma;
+    if (!prev2_velocity || !isfinite(sigma_prev2) || !(sigma_prev2 > sigma_prev) || h_prev1 <= 1e-7f) {
+        /* Order 2: DPM++ 2M fallback for step 1 */
+        float r = h_k / h_prev1;
+        float b1 = 1.0f + 0.5f * r;
+        float b2 = 0.5f * r;
+        for (size_t index = 0; index < count; index++)
+            sample[index] += h_k * (b1 * velocity[index] - b2 * prev_velocity[index]);
+        return 1;
+    }
+    /* Order 3: DPM-Solver++ 3M (Adams-Bashforth 3rd order with Newton divided differences) */
+    float h_prev2 = sigma_prev2 - sigma_prev;
+    if (h_prev2 <= 1e-7f) {
+        float r = h_k / h_prev1;
+        float b1 = 1.0f + 0.5f * r;
+        float b2 = 0.5f * r;
+        for (size_t index = 0; index < count; index++)
+            sample[index] += h_k * (b1 * velocity[index] - b2 * prev_velocity[index]);
+        return 1;
+    }
+    float inv_h1 = 1.0f / h_prev1;
+    float inv_h2 = 1.0f / h_prev2;
+    float inv_h12 = 1.0f / (h_prev1 + h_prev2);
+    float int_d1 = 0.5f * h_k * h_k;
+    float int_d2 = (1.0f / 3.0f) * h_k * h_k * h_k + 0.5f * h_k * h_k * h_prev1;
+
+    for (size_t index = 0; index < count; index++) {
+        float v0 = velocity[index];
+        float v1 = prev_velocity[index];
+        float v2 = prev2_velocity[index];
+        float d1 = (v0 - v1) * inv_h1;
+        float d1_prev = (v1 - v2) * inv_h2;
+        float d2 = (d1 - d1_prev) * inv_h12;
+        float euler = h_k * v0;
+        float corr = int_d1 * d1 + int_d2 * d2;
+        float max_corr = 0.55f * fabsf(euler) + 0.005f;
+        if (corr > max_corr) corr = max_corr;
+        else if (corr < -max_corr) corr = -max_corr;
+        sample[index] += euler + corr;
+    }
+    return 1;
+}
+
+int h3_symplectic_flow_normalize(float *latent, size_t count, float sigma_next) {
+    if (!latent || count == 0 || sigma_next < 0.0f) return 0;
+    /* Soft energy regularization on boundary flow to preserve dynamic range */
+    double sum_sq = 0.0;
+    for (size_t i = 0; i < count; i++) {
+        sum_sq += (double)latent[i] * (double)latent[i];
+    }
+    float mean_energy = (float)(sum_sq / (double)count);
+    if (mean_energy > 1e-6f && mean_energy < 100.0f) {
+        float target_scale = 1.0f / sqrtf(mean_energy);
+        float lambda = 0.02f * (1.0f - fminf(1.0f, sigma_next));
+        float blend_scale = (1.0f - lambda) + lambda * target_scale;
+        for (size_t i = 0; i < count; i++) {
+            latent[i] *= blend_scale;
+        }
+    }
+    return 1;
+}
+

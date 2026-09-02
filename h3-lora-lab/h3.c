@@ -11,6 +11,12 @@
 #include "h3_video_encoder.h"
 #include "h3_video_vae.h"
 #include "h3_vision_encoder.h"
+#include "h3_ngram_speculative.h"
+#include "h3_vae_ngram_speculative.h"
+#include "h3_holistic_ngram.h"
+#include "h3_ngram_super_detail.h"
+#include "h3_antirez_16way_ngram_gating.h"
+#include "h3_ngram_octree_flow_tree.h"
 
 #include <errno.h>
 #include <math.h>
@@ -19,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <dispatch/dispatch.h>
 
 static char h3_global_error[512];
 
@@ -519,8 +526,8 @@ static int h3_valid_params(h3_ctx *ctx, const h3_params *params) {
         h3_set_error(ctx, "denoising steps must be in [2, 1000]");
         return 0;
     }
-    if (params->denoise_reuse < 1 || params->denoise_reuse > 3) {
-        h3_set_error(ctx, "denoise reuse must be in [1, 3]");
+    if (params->denoise_reuse < 1 || params->denoise_reuse > 32) {
+        h3_set_error(ctx, "denoise reuse must be in [1, 32]");
         return 0;
     }
     if (params->dit_layers < H3_MIN_DIT_LAYERS ||
@@ -670,7 +677,7 @@ static void h3_preview_vae_progress_bridge(int completed, int total,
     h3_progress_emit(opaque, "preview VAE load", completed, total);
 }
 
-static void h3_audio_vae_progress_bridge(int completed, int total,
+static void __attribute__((unused)) h3_audio_vae_progress_bridge(int completed, int total,
                                          void *opaque) {
     h3_progress_emit(opaque, "audio VAE", completed, total);
 }
@@ -907,8 +914,11 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
     float *video = NULL, *audio = NULL;
     h3_video_frames frames;
     memset(&frames, 0, sizeof(frames));
-    h3_audio_waveform waveform;
+    __block h3_audio_waveform waveform;
     memset(&waveform, 0, sizeof(waveform));
+    dispatch_group_t audio_group = NULL;
+    __block int audio_ok = 1;
+    char *audio_detail = calloc(1, 256);
     uint8_t *rgb8 = NULL;
     h3_result *result = NULL;
     char *conditioning_key = NULL;
@@ -1583,6 +1593,16 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
     }
 
     int denoise_success = 0;
+    H3NGramSpeculativeContext *ngram_dit_ctx = NULL;
+    if (params->ngram || getenv("H3_NGRAM")) {
+        ngram_dit_ctx = malloc(sizeof(H3NGramSpeculativeContext));
+        if (ngram_dit_ctx) {
+            float thresh = params->ngram_threshold > 0.0f ? params->ngram_threshold : 0.985f;
+            h3_ngram_init(ngram_dit_ctx, thresh);
+            h3_dit_set_ngram_ctx(dit, ngram_dit_ctx);
+        }
+    }
+
     if (params->sol_cache || getenv("H3_SOL_CACHE")) {
         float thresh = params->sol_cache_thresh > 0.0f ? params->sol_cache_thresh : 0.08f;
         denoise_success = h3_dit_denoise_sol_adaptive(
@@ -1621,6 +1641,15 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
         }
     }
 
+    if (ngram_dit_ctx && (getenv("H3_PROFILE") || params->sol_stats)) {
+        h3_ngram_print_telemetry(ngram_dit_ctx);
+    }
+    if (ngram_dit_ctx) {
+        h3_ngram_reset(ngram_dit_ctx);
+        free(ngram_dit_ctx);
+        h3_dit_set_ngram_ctx(dit, NULL);
+    }
+
     if (!denoise_success) {
         if (!live_preview.failed) h3_set_error(ctx, "%s", detail);
         if (dit_is_cached) {
@@ -1631,46 +1660,27 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
         }
         goto cleanup;
     }
-    if (!dit_is_cached) h3_dit_free(dit);
-    dit = NULL;
+    audio_group = dispatch_group_create();
+    audio_ok = 1;
+    if (audio_detail) audio_detail[0] = '\0';
     if (getenv("H3_NO_AUDIO") && atoi(getenv("H3_NO_AUDIO")) > 0) {
         fprintf(stderr, "h3: audio generation bypassed (H3_NO_AUDIO=1)\n");
         free(audio);
         audio = NULL;
     } else {
         h3_progress_emit(&progress, "audio VAE", 0, 7);
-        if (!h3_audio_vae_decode(audio_vae_path, "h3_shaders.metal", audio,
-                                 temporal.audio_t, h3_audio_vae_progress_bridge,
-                                 &progress, &waveform, detail, sizeof(detail))) {
-            h3_set_error(ctx, "%s", detail);
-            goto cleanup;
-        }
-        free(audio);
+        float *async_audio = audio;
         audio = NULL;
-    }
-    if (progress.cancelled) goto cleanup;
-
-    /* Speech / Dialogue mixing in C (Float PCM buffer blend) */
-    if (params->speech_audio && *params->speech_audio && waveform.pcm && waveform.samples > 0) {
-        float *speech_pcm = NULL;
-        int speech_samples = 0;
-        char speech_detail[256] = {0};
-        if (h3_ffmpeg_read_audio_f32(
-                params->speech_audio, waveform.samples, 0,
-                &speech_pcm, &speech_samples,
-                speech_detail, sizeof(speech_detail))) {
-            int channels = waveform.channels;
-            int mix_len = speech_samples < waveform.samples ? speech_samples : waveform.samples;
-            for (int ch = 0; ch < channels; ch++) {
-                float *w_ch = waveform.pcm + (size_t)ch * waveform.samples;
-                const float *s_ch = speech_pcm + (size_t)(ch % 2) * speech_samples;
-                for (int i = 0; i < mix_len; i++) {
-                    w_ch[i] = w_ch[i] * 0.30f + s_ch[i] * 1.30f;
-                }
+        dispatch_group_async(audio_group, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            if (!h3_audio_vae_decode(audio_vae_path, "h3_shaders.metal", async_audio,
+                                     temporal.audio_t, NULL, NULL,
+                                     &waveform, audio_detail, 256)) {
+                audio_ok = 0;
             }
-            free(speech_pcm);
-        }
+            free(async_audio);
+        });
     }
+
     if (!preview_decoder && ctx->cache_enabled) {
         h3_progress_emit(&progress, "video VAE load", 0, 36);
         preview_decoder = h3_acquire_video_decoder(
@@ -1699,7 +1709,77 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
     }
     free(video);
     video = NULL;
+
+    /* Wait for asynchronous Audio VAE to finish */
+    dispatch_group_wait(audio_group, DISPATCH_TIME_FOREVER);
+    dispatch_release(audio_group);
+    audio_group = NULL;
+    if (!audio_ok) {
+        h3_set_error(ctx, "%s", audio_detail);
+        goto cleanup;
+    }
+    h3_progress_emit(&progress, "audio VAE", 7, 7);
     if (progress.cancelled) goto cleanup;
+
+    /* Speech / Dialogue mixing in C (Float PCM buffer blend) */
+    if (params->speech_audio && *params->speech_audio && waveform.pcm && waveform.samples > 0) {
+        float *speech_pcm = NULL;
+        int speech_samples = 0;
+        char speech_detail[256] = {0};
+        if (h3_ffmpeg_read_audio_f32(
+                params->speech_audio, waveform.samples, 0,
+                &speech_pcm, &speech_samples,
+                speech_detail, sizeof(speech_detail))) {
+            int channels = waveform.channels;
+            int mix_len = speech_samples < waveform.samples ? speech_samples : waveform.samples;
+            for (int ch = 0; ch < channels; ch++) {
+                float *w_ch = waveform.pcm + (size_t)ch * waveform.samples;
+                const float *s_ch = speech_pcm + (size_t)(ch % 2) * speech_samples;
+                for (int i = 0; i < mix_len; i++) {
+                    w_ch[i] = w_ch[i] * 0.30f + s_ch[i] * 1.30f;
+                }
+            }
+            free(speech_pcm);
+        }
+    }
+
+    /* N-Gram Super-Detail & Micro-Fidelity Texture Harmonizer */
+    if (params->ngram || getenv("H3_NGRAM_DETAIL")) {
+        H3SuperDetailEngine detail_engine;
+        float sharpness_boost = 1.35f;
+        const char *boost_env = getenv("H3_SHARPNESS_BOOST");
+        if (boost_env && *boost_env) sharpness_boost = strtof(boost_env, NULL);
+        h3_super_detail_init(&detail_engine, sharpness_boost);
+        h3_super_detail_refine_rgb_interleaved(&detail_engine, frames.rgb,
+                                               frames.frames, frames.height, frames.width);
+        if (getenv("H3_PROFILE") || params->sol_stats) {
+            h3_super_detail_print_telemetry(&detail_engine);
+        }
+    }
+
+    /* Scalable Octree 3D Flow Tree & Motion Warp */
+    if (params->ngram || getenv("H3_OCTREE_NGRAM") || getenv("H3_OPTICAL_FLOW_WARP")) {
+        H3ScalableNGramEngine *octree_engine = calloc(1, sizeof(H3ScalableNGramEngine));
+        if (octree_engine) {
+            h3_scalable_ngram_init(octree_engine);
+            if (frames.frames > 1) {
+                size_t frame_pixels = (size_t)frames.height * (size_t)frames.width * 3;
+                for (int f = 1; f < frames.frames; f++) {
+                    h3_flow_estimate_and_warp(
+                        octree_engine,
+                        frames.rgb + (size_t)(f - 1) * frame_pixels,
+                        frames.rgb + (size_t)f * frame_pixels,
+                        frames.width, frames.height, 3);
+                }
+            }
+            if (getenv("H3_PROFILE") || params->sol_stats) {
+                h3_scalable_ngram_print_telemetry(octree_engine);
+            }
+            h3_scalable_ngram_free(octree_engine);
+            free(octree_engine);
+        }
+    }
+
     size_t rgb_count = (size_t)frames.frames * (size_t)frames.height *
                        (size_t)frames.width * 3;
     rgb8 = h3_rgb_f32_to_u8(frames.rgb, rgb_count);
@@ -1809,6 +1889,12 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
     result->seed = params->seed;
 
 cleanup:
+    if (audio_group) {
+        dispatch_group_wait(audio_group, DISPATCH_TIME_FOREVER);
+        dispatch_release(audio_group);
+        audio_group = NULL;
+    }
+    free(audio_detail);
     free(conditioning_key);
     free(prepared_key);
     free(decoder_key);

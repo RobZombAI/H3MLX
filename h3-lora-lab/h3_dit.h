@@ -141,6 +141,10 @@ void h3_dit_enable_sol_attn(h3_dit *dit, int enable, float threshold,
 void h3_dit_enable_sol_cache(h3_dit *dit, int enable, float threshold);
 int h3_dit_get_sol_stats(const h3_dit *dit, h3_sol_stats *stats);
 
+/* N-Gram Speculative Engine context injection */
+void h3_dit_set_ngram_ctx(h3_dit *dit, void *ctx);
+void *h3_dit_get_ngram_ctx(const h3_dit *dit);
+
 /* Sol-Engine Adaptive Euler Sampler with Velocity Delta Caching */
 int h3_dit_denoise_sol_adaptive(
                          h3_dit *dit, float *video_latent,

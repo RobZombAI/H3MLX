@@ -256,6 +256,22 @@ kernel void h3_scale_add_f32(device const float *residual [[buffer(0)]],
     output[index] = residual[index] + branch[index] * scale[column];
 }
 
+kernel void h3_scale_add_bf16(device const bfloat *residual [[buffer(0)]],
+                              device const bfloat *branch [[buffer(1)]],
+                              device const bfloat *scale [[buffer(2)]],
+                              device bfloat *output [[buffer(3)]],
+                              constant scale_add_args &args [[buffer(4)]],
+                              uint2 gid [[thread_position_in_grid]]) {
+    uint column = gid.x;
+    uint row = gid.y;
+    if (row >= args.rows || column >= args.width) return;
+    uint index = row * args.width + column;
+    float r = (float)residual[index];
+    float b = (float)branch[index];
+    float s = (float)scale[column];
+    output[index] = (bfloat)(r + b * s);
+}
+
 kernel void h3_layer_norm_f32(device const float *input [[buffer(0)]],
                               device const float *weight [[buffer(1)]],
                               device const float *bias [[buffer(2)]],
@@ -263,35 +279,32 @@ kernel void h3_layer_norm_f32(device const float *input [[buffer(0)]],
                               constant norm_args &args [[buffer(4)]],
                               uint3 group [[threadgroup_position_in_grid]],
                               uint3 thread_position [[thread_position_in_threadgroup]],
-                              uint3 threadgroup_size [[threads_per_threadgroup]]) {
-    uint row = group.x;
+                              uint3 threadgroup_size [[threads_per_threadgroup]],
+                              threadgroup float *shared_storage [[threadgroup(0)]]) {
+    uint row = group.y;
     uint tid = thread_position.x;
     uint threads = threadgroup_size.x;
     if (row >= args.rows) return;
-    threadgroup float reductions[256];
     device const float *x = input + row * args.width;
-    float local = 0.0f;
-    for (uint k = tid; k < args.width; k += threads) local += x[k];
-    reductions[tid] = local;
+    float sum = 0.0f, sq_sum = 0.0f;
+    for (uint column = tid; column < args.width; column += threads) {
+        float val = x[column];
+        sum += val;
+        sq_sum = fma(val, val, sq_sum);
+    }
+    shared_storage[tid] = sum;
+    shared_storage[threads + tid] = sq_sum;
     threadgroup_barrier(mem_flags::mem_threadgroup);
-    for (uint stride = threads / 2; stride; stride >>= 1) {
-        if (tid < stride) reductions[tid] += reductions[tid + stride];
+    for (uint s = threads / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared_storage[tid] += shared_storage[tid + s];
+            shared_storage[threads + tid] += shared_storage[threads + tid + s];
+        }
         threadgroup_barrier(mem_flags::mem_threadgroup);
     }
-    float mean = reductions[0] / float(args.width);
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    local = 0.0f;
-    for (uint k = tid; k < args.width; k += threads) {
-        float centered = x[k] - mean;
-        local = fma(centered, centered, local);
-    }
-    reductions[tid] = local;
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    for (uint stride = threads / 2; stride; stride >>= 1) {
-        if (tid < stride) reductions[tid] += reductions[tid + stride];
-        threadgroup_barrier(mem_flags::mem_threadgroup);
-    }
-    float inverse = rsqrt(reductions[0] / float(args.width) + args.epsilon);
+    float mean = shared_storage[0] / float(args.width);
+    float variance = shared_storage[threads] / float(args.width) - mean * mean;
+    float inverse = rsqrt(variance + args.epsilon);
     for (uint column = tid; column < args.width; column += threads)
         output[row * args.width + column] =
             (x[column] - mean) * inverse * weight[column] + bias[column];
@@ -342,6 +355,54 @@ kernel void h3_video_qkv_rope_f32(
     uint output_index = (row * args.heads + head) * args.head_dim + dimension;
     query[output_index] = q0;
     key[output_index] = k0;
+    value[output_index] = qkv[base + args.head_dim * 2 + dimension];
+}
+
+kernel void h3_video_qkv_rope_bf16(
+                            device const bfloat *qkv [[buffer(0)]],
+                            device const bfloat *rope_cos [[buffer(1)]],
+                            device const bfloat *rope_sin [[buffer(2)]],
+                            device bfloat *query [[buffer(3)]],
+                            device bfloat *key [[buffer(4)]],
+                            device bfloat *value [[buffer(5)]],
+                            constant qkv_args &args [[buffer(6)]],
+                            uint3 gid [[thread_position_in_grid]]) {
+    uint dimension = gid.x;
+    uint head = gid.y;
+    uint row = gid.z;
+    if (dimension >= args.head_dim || head >= args.heads || row >= args.sequence) return;
+    uint base = (row * args.heads + head) * args.head_dim * 3;
+    float q_sum = 0.0f, k_sum = 0.0f;
+    for (uint d = 0; d < args.head_dim; d++) {
+        float q = (float)qkv[base + d];
+        float k = (float)qkv[base + args.head_dim + d];
+        q_sum = fma(q, q, q_sum);
+        k_sum = fma(k, k, k_sum);
+    }
+    float qi = rsqrt(q_sum / float(args.head_dim) + args.epsilon);
+    float ki = rsqrt(k_sum / float(args.head_dim) + args.epsilon);
+    float q0 = (float)qkv[base + dimension] * qi;
+    float k0 = (float)qkv[base + args.head_dim + dimension] * ki;
+    if (dimension < args.rope_half) {
+        uint pair = dimension + args.rope_half;
+        float q1 = (float)qkv[base + pair] * qi;
+        float k1 = (float)qkv[base + args.head_dim + pair] * ki;
+        float c = (float)rope_cos[row * args.rope_half + dimension];
+        float s = (float)rope_sin[row * args.rope_half + dimension];
+        q0 = q0 * c - q1 * s;
+        k0 = k0 * c - k1 * s;
+    } else if (dimension < args.rope_half * 2) {
+        uint pair = dimension - args.rope_half;
+        float q1 = (float)qkv[base + pair] * qi;
+        float k1 = (float)qkv[base + args.head_dim + pair] * ki;
+        float c = (float)rope_cos[row * args.rope_half + pair];
+        float s = (float)rope_sin[row * args.rope_half + pair];
+        q0 = q0 * c + q1 * s;
+        k0 = k0 * c + k1 * s;
+    }
+    uint output_index = (row * args.heads + head) * args.head_dim + dimension;
+    query[output_index] = (bfloat)q0;
+    key[output_index] = (bfloat)k0;
     value[output_index] = qkv[base + args.head_dim * 2 + dimension];
 }
 
@@ -2350,6 +2411,7 @@ kernel void h3_linear_int8_nax_r128(
                            device const float *weight_scales [[buffer(3)]],
                            device bfloat *output [[buffer(4)]],
                            constant linear_args &args [[buffer(5)]],
+                           device const bfloat *bias [[buffer(6)]],
                            uint code [[threadgroup_position_in_grid]]) {
     constexpr uint TILE = 128;
     uint padded_rows = (args.rows + TILE - 1) & ~(TILE - 1);
@@ -2387,10 +2449,12 @@ kernel void h3_linear_int8_nax_r128(
         auto index = accum.get_multidimensional_index(element);
         uint row = row_start + (uint)index[1];
         uint column = column_start + (uint)index[0];
-        if (row < args.rows)
+        if (row < args.rows) {
+            float b = (args.has_bias && bias) ? (float)bias[column] : 0.0f;
             output[row * args.output_dim + column] =
                 (bfloat)((float)accum[element] * input_scales[row] *
-                         weight_scales[column]);
+                         weight_scales[column] + b);
+        }
     }
 }
 
@@ -2516,6 +2580,7 @@ kernel void h3_linear_int8_local_scales_nax_r128_impl(
                            device const float *weight_scales [[buffer(3)]],
                            device bfloat *output [[buffer(4)]],
                            constant linear_args &args [[buffer(5)]],
+                           device const bfloat *bias [[buffer(6)]],
                            uint code [[threadgroup_position_in_grid]],
                            ushort tid [[thread_index_in_threadgroup]]) {
     constexpr uint TILE = 128;
@@ -2572,11 +2637,13 @@ kernel void h3_linear_int8_local_scales_nax_r128_impl(
         auto index = accum.get_multidimensional_index(element);
         uint row = row_start + (uint)index[1];
         uint column = column_start + (uint)index[0];
-        if (row < args.rows)
+        if (row < args.rows) {
+            float b = (args.has_bias && bias) ? (float)bias[column] : 0.0f;
             output[row * output_dim + column] =
                 (bfloat)((float)accum[element] *
                          local_input_scales[(uint)index[1]] *
-                         local_weight_scales[(uint)index[0]]);
+                         local_weight_scales[(uint)index[0]] + b);
+        }
     }
 }
 
@@ -4550,4 +4617,32 @@ kernel void h3_latent_upsample_3d_f32(device const float *input [[buffer(0)]],
                      ((size_t)oh * args.out_w) + ow;
     output[out_idx] = result;
 }
+
+struct vae_speculative_tile_bypass_args {
+    uint tile_w;
+    uint tile_h;
+    uint tile_t;
+    uint channels;
+    float variance_threshold;
+};
+
+kernel void h3_speculative_fused_vae_tile_bypass_f32(
+    device const float *prev_decoded_rgb [[buffer(0)]],
+    device float *out_tile_rgb [[buffer(1)]],
+    constant vae_speculative_tile_bypass_args &args [[buffer(2)]],
+    uint3 gid [[thread_position_in_grid]])
+{
+    uint w = gid.x;
+    uint h = gid.y;
+    uint t = gid.z;
+    if (w >= args.tile_w || h >= args.tile_h || t >= args.tile_t) return;
+
+    size_t spatial_idx = (size_t)t * args.tile_h * args.tile_w + (size_t)h * args.tile_w + w;
+    size_t plane_stride = (size_t)args.tile_t * args.tile_h * args.tile_w;
+
+    out_tile_rgb[spatial_idx + 0 * plane_stride] = prev_decoded_rgb[spatial_idx + 0 * plane_stride];
+    out_tile_rgb[spatial_idx + 1 * plane_stride] = prev_decoded_rgb[spatial_idx + 1 * plane_stride];
+    out_tile_rgb[spatial_idx + 2 * plane_stride] = prev_decoded_rgb[spatial_idx + 2 * plane_stride];
+}
+
 

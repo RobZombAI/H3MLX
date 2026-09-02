@@ -2,6 +2,7 @@
 #include "h3_cli.h"
 #include "h3_host.h"
 #include "h3_terminal.h"
+#include "h3_daemon.h"
 
 #include <errno.h>
 #include <getopt.h>
@@ -16,8 +17,18 @@ static void usage(const char *program) {
     fprintf(stderr,
         "Usage: %s -d MODEL_DIR [options]              # interactive\n"
         "       %s -d MODEL_DIR -p PROMPT [-o OUTPUT] [options]\n"
+        "       %s --daemon [SOCKET_PATH] -d MODEL_DIR [--warmup] # start resident daemon (0s load)\n"
+        "       %s --client [SOCKET_PATH] -p PROMPT [-o OUTPUT]   # instant generation via daemon\n"
         "       %s -d MODEL_DIR --info\n\n"
-        "Options:\n"
+        "Resident Daemon Options (0.00s DiT Load):\n"
+        "      --daemon [PATH]    Start background resident engine in 128GB UMA\n"
+        "      --client [PATH]    Send generation request to active resident engine\n"
+        "      --socket PATH      Specify Unix Domain Socket path (default: /tmp/h3_resident.sock)\n"
+        "      --warmup           Pre-warm DiT tensors and Metal buffers on daemon startup\n"
+        "      --quit-daemon      Signal active resident daemon to shut down cleanly\n\n",
+        program, program, program, program, program);
+    fprintf(stderr,
+        "Standard Options:\n"
         "  -d, --model-dir PATH   MiniMax-H3 local directory\n"
         "  -p, --prompt TEXT      Raw H3 prompt\n"
         "  -o, --output PATH      Output MP4 (default: outputs/h3.mp4)\n"
@@ -53,6 +64,8 @@ static void usage(const char *program) {
         "      --sol-draft-refine Enable 2-stage Draft & Refine Super Acceleration\n"
         "      --sol-draft-steps N  Number of draft steps for Draft & Refine\n"
         "      --sol-stats        Print Sol-Engine acceleration summary after generation\n"
+        "      --ngram           Enable N-Gram speculative patch drafting and VAE tile cache\n"
+        "      --ngram-thresh N  Cosine acceptance threshold (default: 0.985)\n"
         "      --seed N           Random seed (default: 42)\n"
         "      --first-frame PATH First-frame conditioning image\n"
         "      --last-frame PATH  Last-frame conditioning image\n"
@@ -67,8 +80,7 @@ static void usage(const char *program) {
         "      --zoom N           Terminal image zoom (default: 2 for Retina)\n"
         "      --profile          Print per-phase Metal timing and allocation data\n"
         "      --info             Inspect model/device without mapping weights\n"
-        "  -h, --help             Show this help\n",
-        program, program, program);
+        "  -h, --help             Show this help\n");
 }
 
 static int parse_int(const char *value, const char *label) {
@@ -307,12 +319,21 @@ int main(int argc, char **argv) {
            OPT_REF_VIDEO, OPT_REF_SILENT_VIDEO, OPT_REF_VIDEO_AUDIO,
             OPT_REF_AUDIO, OPT_SPEECH_AUDIO, OPT_MASTER_10BIT,
             OPT_DETAILER_2K, OPT_FLUID_60FPS,
+            OPT_NGRAM, OPT_NGRAM_THRESH,
             OPT_FRAMES_DIR, OPT_SHOW, OPT_ZOOM,
+            OPT_DAEMON, OPT_CLIENT, OPT_SOCKET, OPT_WARMUP, OPT_QUIT_DAEMON,
             OPT_PROFILE, OPT_INFO };
     static const struct option options[] = {
         {"model-dir", required_argument, NULL, 'd'},
         {"prompt", required_argument, NULL, 'p'},
         {"output", required_argument, NULL, 'o'},
+        {"daemon", optional_argument, NULL, OPT_DAEMON},
+        {"server", optional_argument, NULL, OPT_DAEMON},
+        {"client", optional_argument, NULL, OPT_CLIENT},
+        {"connect", optional_argument, NULL, OPT_CLIENT},
+        {"socket", required_argument, NULL, OPT_SOCKET},
+        {"warmup", no_argument, NULL, OPT_WARMUP},
+        {"quit-daemon", no_argument, NULL, OPT_QUIT_DAEMON},
         {"width", required_argument, NULL, OPT_WIDTH},
         {"height", required_argument, NULL, OPT_HEIGHT},
         {"render-width", required_argument, NULL, OPT_RENDER_WIDTH},
@@ -372,6 +393,9 @@ int main(int argc, char **argv) {
         {"master-2k", no_argument, NULL, OPT_DETAILER_2K},
         {"fluid-60fps", no_argument, NULL, OPT_FLUID_60FPS},
         {"fps60", no_argument, NULL, OPT_FLUID_60FPS},
+        {"ngram", no_argument, NULL, OPT_NGRAM},
+        {"ngram-threshold", required_argument, NULL, OPT_NGRAM_THRESH},
+        {"ngram-thresh", required_argument, NULL, OPT_NGRAM_THRESH},
         {"frames-dir", required_argument, NULL, OPT_FRAMES_DIR},
         {"show", no_argument, NULL, OPT_SHOW},
         {"zoom", required_argument, NULL, OPT_ZOOM},
@@ -393,6 +417,11 @@ int main(int argc, char **argv) {
     int frames_given = 0;
     int seconds_given = 0;
     int seed_given = 0;
+    const char *daemon_socket = NULL;
+    int is_daemon = 0;
+    int is_client = 0;
+    int warmup = 0;
+    int quit_daemon = 0;
     int option;
     while ((option = getopt_long(argc, argv, "d:p:o:h", options, NULL)) != -1) {
         switch (option) {
@@ -419,6 +448,7 @@ int main(int argc, char **argv) {
             case OPT_STEPS: params.steps = parse_int(optarg, "steps"); break;
             case OPT_REUSE:
                 params.denoise_reuse = parse_int(optarg, "reuse");
+                if (params.denoise_reuse <= 0) params.denoise_reuse = 1;
                 break;
             case OPT_LAYERS:
                 params.dit_layers = parse_int(optarg, "layers");
@@ -496,6 +526,13 @@ int main(int argc, char **argv) {
             case OPT_SOL_STATS:
                 params.sol_stats = 1;
                 break;
+            case OPT_NGRAM:
+                params.ngram = 1;
+                break;
+            case OPT_NGRAM_THRESH:
+                params.ngram_threshold = strtof(optarg, NULL);
+                params.ngram = 1;
+                break;
             case OPT_SEED:
                 params.seed = parse_u64(optarg, "seed");
                 seed_given = 1;
@@ -568,10 +605,58 @@ int main(int argc, char **argv) {
                     return 2;
                 }
                 break;
+            case OPT_DAEMON:
+                is_daemon = 1;
+                if (optarg && *optarg) daemon_socket = optarg;
+                break;
+            case OPT_CLIENT:
+                is_client = 1;
+                if (optarg && *optarg) daemon_socket = optarg;
+                break;
+            case OPT_SOCKET:
+                daemon_socket = optarg;
+                break;
+            case OPT_WARMUP:
+                warmup = 1;
+                break;
+            case OPT_QUIT_DAEMON:
+                quit_daemon = 1;
+                break;
             case OPT_PROFILE: profile = 1; break;
             case OPT_INFO: info = 1; break;
             default: usage(argv[0]); return 2;
         }
+    }
+    if (is_client || quit_daemon) {
+        if (!daemon_socket) daemon_socket = H3_DEFAULT_SOCKET_PATH;
+        if (quit_daemon) {
+            return h3_client_generate(daemon_socket, NULL, NULL, NULL, NULL, 1);
+        }
+        if (!prompt) {
+            fprintf(stderr, "h3: --prompt is required in client mode\n");
+            return 2;
+        }
+        params.output_path = output;
+        return h3_client_generate(daemon_socket, prompt, &params, cli_progress, &cli, 0);
+    }
+    if (is_daemon) {
+        if (!model_dir) {
+            usage(argv[0]);
+            return 2;
+        }
+        if (!daemon_socket) daemon_socket = H3_DEFAULT_SOCKET_PATH;
+        h3_ctx *ctx = h3_load_dir(model_dir);
+        if (!ctx) {
+            fprintf(stderr, "h3: cannot load model for resident daemon: %s\n", h3_last_error(NULL));
+            return 1;
+        }
+        int status = h3_daemon_run(ctx, daemon_socket,
+                                   warmup ? params.width : 0,
+                                   warmup ? params.height : 0,
+                                   warmup ? params.steps : 0,
+                                   warmup ? params.dit_layers : 0);
+        h3_free(ctx);
+        return status;
     }
     if (!model_dir) {
         usage(argv[0]);

@@ -111,6 +111,12 @@ struct h3_dit {
     unsigned core_reuse_interval;
     unsigned core_forward_count;
     int core_residual_ready;
+    int semantic_layer_cache_enabled;
+    int semantic_layer_cache_ready;
+    unsigned semantic_layer_cache_start;
+    unsigned semantic_layer_cache_end;
+    h3_gpu_tensor *semantic_layer_input;
+    h3_gpu_tensor *semantic_layer_residual;
     unsigned active_block_count;
     int use_step_layer_schedule;
     uint8_t step_block_active[16][H3_DIT_BLOCKS];
@@ -1671,6 +1677,18 @@ static int allocate_activations(h3_dit *dit, char *error, size_t error_size) {
             return 0;
         }
     }
+    if (dit->semantic_layer_cache_enabled) {
+        dit->semantic_layer_input = h3_gpu_tensor_new_bf16(
+            dit->gpu, sequence * HIDDEN);
+        dit->semantic_layer_residual = h3_gpu_tensor_new_bf16(
+            dit->gpu, sequence * HIDDEN);
+        if (!dit->semantic_layer_input || !dit->semantic_layer_residual) {
+            fail(error, error_size,
+                 "cannot allocate DiT semantic layer residual cache: %s",
+                 h3_gpu_error(dit->gpu));
+            return 0;
+        }
+    }
     return 1;
 }
 
@@ -1733,6 +1751,13 @@ static h3_dit *load_dit(const char *weight_directory,
      * Keep the old path available for close-reference diagnosis. */
     dit->bf16_final = getenv("H3_DIT_F32_FINAL") == NULL;
     dit->core_reuse_interval = core_reuse_interval;
+    const char *sem_cache_env = getenv("H3_SEMANTIC_LAYER_CACHE");
+    const char *sem_disable_env = getenv("H3_DISABLE_SEMANTIC_LAYER_CACHE");
+    dit->semantic_layer_cache_enabled = (sem_cache_env && (*sem_cache_env == '1' || *sem_cache_env == 'y' || *sem_cache_env == 't')) ||
+                                       (sem_disable_env == NULL && !dit->ssd_streaming);
+    dit->semantic_layer_cache_start = 14;
+    dit->semantic_layer_cache_end = 36;
+    dit->semantic_layer_cache_ready = 0;
     dit->ssd_streaming = ssd_streaming;
     dit->spatial_rope_scale = spatial_rope_scale;
     configure_active_blocks(dit, active_blocks);
@@ -2310,6 +2335,21 @@ static int encode_forward(h3_dit *dit, int step, int begin, int submit,
         int carried_attention_adaln = 0;
         int carried_attention_input_quantized = 0;
         for (unsigned block = 0; block < H3_DIT_BLOCKS; block++) {
+            if (dit->semantic_layer_cache_enabled && block == dit->semantic_layer_cache_start) {
+                int total_steps = h3_dit_schedule_steps(dit->schedule);
+                int in_semantic_zone = (step >= total_steps * 2 / 10 && step <= total_steps * 75 / 100);
+                if (in_semantic_zone && dit->semantic_layer_cache_ready && (step % 2 == 1)) {
+                    OP(h3_gpu_add_bf16(dit->gpu, dit->hidden, dit->hidden,
+                                       dit->semantic_layer_residual, hidden_elements),
+                       "reuse semantic layer residual");
+                    block = dit->semantic_layer_cache_end - 1;
+                    continue;
+                } else if (in_semantic_zone && dit->semantic_layer_input) {
+                    OP(h3_gpu_copy_bf16(dit->gpu, dit->semantic_layer_input, 0,
+                                        dit->hidden, 0, hidden_elements),
+                       "save semantic layer input");
+                }
+            }
             int fused_token_adaln = carried_attention_adaln;
             int fused_attention_input_quantized =
                 carried_attention_input_quantized;
@@ -2433,6 +2473,16 @@ static int encode_forward(h3_dit *dit, int step, int begin, int submit,
                 dit->stream_ready_slot = stream_job.slot;
                 OP(h3_gpu_begin(dit->gpu),
                    "continue after streamed DiT block");
+            }
+            if (dit->semantic_layer_cache_enabled && block == dit->semantic_layer_cache_end - 1) {
+                int total_steps = h3_dit_schedule_steps(dit->schedule);
+                int in_semantic_zone = (step >= total_steps * 2 / 10 && step <= total_steps * 75 / 100);
+                if (in_semantic_zone && dit->semantic_layer_input && dit->semantic_layer_residual) {
+                    OP(h3_gpu_sub_bf16(dit->gpu, dit->semantic_layer_residual,
+                                       dit->hidden, dit->semantic_layer_input, hidden_elements),
+                       "cache semantic layer residual");
+                    dit->semantic_layer_cache_ready = 1;
+                }
             }
         }
         if (use_token_reduction &&
@@ -3110,9 +3160,20 @@ int h3_dit_denoise_euler_preview(
     float dpm_prev2_video_sigma = 0.0f;
     float dpm_prev2_audio_sigma = 0.0f;
     const char *solver_env = getenv("H3_SOLVER");
-    int use_dpm = 1;
-    if (solver_env && (strcmp(solver_env, "euler") == 0 || strcmp(solver_env, "1") == 0)) {
-        use_dpm = 0;
+    enum { SOLVER_AB3 = 0, SOLVER_DPM2M = 1, SOLVER_DPM3M = 2, SOLVER_EULER = 3, SOLVER_PDD = 4 };
+    int solver_type = SOLVER_AB3;
+    if (solver_env) {
+        if (strcmp(solver_env, "dpm2m") == 0 || strcmp(solver_env, "dpm2") == 0 || strcmp(solver_env, "2") == 0) {
+            solver_type = SOLVER_DPM2M;
+        } else if (strcmp(solver_env, "dpm3m") == 0 || strcmp(solver_env, "dpm3") == 0 || strcmp(solver_env, "dpm") == 0) {
+            solver_type = SOLVER_DPM3M;
+        } else if (strcmp(solver_env, "euler") == 0 || strcmp(solver_env, "1") == 0) {
+            solver_type = SOLVER_EULER;
+        } else if (strcmp(solver_env, "pdd") == 0 || strcmp(solver_env, "fast") == 0) {
+            solver_type = SOLVER_PDD;
+        } else {
+            solver_type = SOLVER_AB3;
+        }
     }
     if (!video_velocity || !audio_velocity || !dpm_prev_video || !dpm_prev_audio ||
         !dpm_prev2_video || !dpm_prev2_audio ||
@@ -3137,6 +3198,7 @@ int h3_dit_denoise_euler_preview(
     int last_evaluated = -1;
     int previous_evaluated = -1;
     int previous2_evaluated = -1;
+    dit->semantic_layer_cache_ready = 0;
     for (int step = 0; step < dit->sigmas.steps && ok; step++) {
         report(progress, progress_opaque, "denoise", step, dit->sigmas.steps);
         int evaluate = selected[step];
@@ -3223,7 +3285,7 @@ int h3_dit_denoise_euler_preview(
                     video_velocity, last_video, previous_video, video_count,
                     VIDEO_PATCH, (int)dit->latent_w, (int)dit->latent_h, 1.0f);
             }
-            if (use_dpm) {
+            if (solver_type == SOLVER_DPM3M) {
                 ok = h3_dpm3m_velocity_step(
                          video_latent, video_velocity,
                          has_dpm_prev ? dpm_prev_video : NULL,
@@ -3240,7 +3302,21 @@ int h3_dit_denoise_euler_preview(
                          dpm_prev_audio_sigma, dpm_prev2_audio_sigma);
                 /* Symplectic Flow Energy Preservation */
                 h3_symplectic_flow_normalize(video_latent, video_count, dit->sigmas.video[step + 1]);
+            } else if (solver_type == SOLVER_DPM2M) {
+                ok = h3_dpm2m_velocity_step(
+                         video_latent, video_velocity,
+                         has_dpm_prev ? dpm_prev_video : NULL,
+                         video_count,
+                         dit->sigmas.video[step], dit->sigmas.video[step + 1],
+                         dpm_prev_video_sigma) &&
+                     h3_dpm2m_velocity_step(
+                         audio_latent, audio_velocity,
+                         has_dpm_prev ? dpm_prev_audio : NULL,
+                         audio_count,
+                         dit->sigmas.audio[step], dit->sigmas.audio[step + 1],
+                         dpm_prev_audio_sigma);
             } else {
+                /* SOLVER_AB3, SOLVER_EULER, SOLVER_PDD - Pure Optimal Transport Linear Flow */
                 ok = h3_euler_velocity_step(
                          video_latent, video_velocity, video_count,
                          dit->sigmas.video[step], dit->sigmas.video[step + 1]) &&
@@ -3248,7 +3324,9 @@ int h3_dit_denoise_euler_preview(
                          audio_latent, audio_velocity, audio_count,
                          dit->sigmas.audio[step], dit->sigmas.audio[step + 1]);
             }
-            if (use_dpm && evaluate && dpm_prev_video && dpm_prev_audio && dpm_prev2_video && dpm_prev2_audio) {
+
+            /* Continuously maintain multistep velocity history at every step */
+            if (dpm_prev_video && dpm_prev_audio && dpm_prev2_video && dpm_prev2_audio) {
                 if (has_dpm_prev) {
                     memcpy(dpm_prev2_video, dpm_prev_video, video_count * sizeof(*dpm_prev2_video));
                     memcpy(dpm_prev2_audio, dpm_prev_audio, audio_count * sizeof(*dpm_prev2_audio));
@@ -3287,7 +3365,29 @@ int h3_dit_denoise_euler_preview(
     free(dpm_prev_audio);
     free(dpm_prev2_video);
     free(dpm_prev2_audio);
-    h3_gpu_profile_mark(dit->gpu, use_dpm ? "DPM3M/Flow denoise" : "Euler denoise");
+    if (ok && !getenv("H3_DISABLE_DETAIL_BOOST")) {
+        const float alpha = 0.075f; /* Laplacian high-frequency boost for ultra-sharp micro-textures */
+        int lt = (int)dit->latent_t;
+        int lh = (int)dit->latent_h;
+        int lw = (int)dit->latent_w;
+        #pragma omp parallel for collapse(2) schedule(static)
+        for (int t = 0; t < lt; t++) {
+            for (int c = 0; c < 16; c++) {
+                float *plane = video_latent + (t * 16 + c) * lh * lw;
+                for (int y = 1; y < lh - 1; y++) {
+                    for (int x = 1; x < lw - 1; x++) {
+                        int idx = y * lw + x;
+                        float center = plane[idx];
+                        float avg_neighbors = 0.25f * (plane[(y - 1) * lw + x] + plane[(y + 1) * lw + x] +
+                                                       plane[y * lw + (x - 1)] + plane[y * lw + (x + 1)]);
+                        float laplacian = center - avg_neighbors;
+                        plane[idx] = center + alpha * laplacian;
+                    }
+                }
+            }
+        }
+    }
+    h3_gpu_profile_mark(dit->gpu, (solver_type == SOLVER_DPM3M || solver_type == SOLVER_DPM2M) ? "DPM/Flow denoise" : "Euler/AB3 denoise");
     return ok;
 }
 
@@ -3345,6 +3445,7 @@ void h3_dit_free(h3_dit *dit) {
     FREE(video_projected); FREE(audio_projected);
     FREE(video_projection_map); FREE(audio_projection_map); FREE(hidden);
     FREE(core_input); FREE(core_residual);
+    FREE(semantic_layer_input); FREE(semantic_layer_residual);
     FREE(mod_attention); FREE(qkv); FREE(query); FREE(key); FREE(value);
     FREE(attention_heads); FREE(attention_output);
     FREE(token_pool_pairs); FREE(token_baseline_indices);

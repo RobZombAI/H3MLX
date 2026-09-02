@@ -140,6 +140,13 @@ typedef struct {
     int detailer_2k;
     /* 60 FPS motion-compensated fluid optical flow */
     int fluid_60fps;
+    /* N-Gram Speculative Engine: hash-based patch velocity drafting in the
+     * DiT denoiser and zero-copy tile caching in the video VAE decoder.
+     * When enabled, the denoiser may skip expensive 33B forward passes
+     * for patches whose momentum can be accurately extrapolated, and
+     * the VAE may bypass convolutions for tiles with cached RGB output. */
+    int ngram;
+    float ngram_threshold;   /* Cosine acceptance gate (default 0.985) */
     h3_frame_callback on_frame;
     h3_progress_callback on_progress;
     void *callback_opaque;
@@ -151,6 +158,7 @@ typedef struct {
     1, H3_DEFAULT_DIT_LAYERS, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
     0, 10.0f, 32, 0, 0.08f, 0, 0, 0, \
     NULL, 0, 0, 0, \
+    0, 0.985f, \
     NULL, NULL, NULL \
 }
 

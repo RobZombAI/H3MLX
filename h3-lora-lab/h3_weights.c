@@ -151,10 +151,16 @@ static h3_gpu_tensor *load_tensor(const h3_weight_store *store, h3_gpu *gpu,
         fail(error, error_size, "required weight is absent: %s", name);
         return NULL;
     }
-    if (tensor->dtype != dtype || tensor->ndim != ndim) {
-        fail(error, error_size, "weight %s has dtype/rank %s/%d, expected %s/%d",
-             name, h3_dtype_name(tensor->dtype), tensor->ndim,
-             h3_dtype_name(dtype), ndim);
+    if (tensor->ndim != ndim) {
+        fail(error, error_size, "weight %s has rank %d, expected %d",
+             name, tensor->ndim, ndim);
+        return NULL;
+    }
+    if (tensor->dtype != dtype &&
+        !(dtype == H3_DTYPE_BF16 && tensor->dtype == H3_DTYPE_F32) &&
+        !(dtype == H3_DTYPE_F32 && tensor->dtype == H3_DTYPE_BF16)) {
+        fail(error, error_size, "weight %s has dtype %s, expected %s",
+             name, h3_dtype_name(tensor->dtype), h3_dtype_name(dtype));
         return NULL;
     }
     uint64_t elements = 1;
@@ -174,11 +180,24 @@ static h3_gpu_tensor *load_tensor(const h3_weight_store *store, h3_gpu *gpu,
         fail(error, error_size, "weight %s is too large for this process", name);
         return NULL;
     }
-    h3_gpu_tensor *result = dtype == H3_DTYPE_BF16 ?
-        h3_gpu_tensor_load_bf16(gpu, header->path, tensor->file_offset,
-                                (size_t)elements) :
-        h3_gpu_tensor_load_f32(gpu, header->path, tensor->file_offset,
-                               (size_t)elements);
+    h3_gpu_tensor *result = NULL;
+    if (dtype == H3_DTYPE_BF16) {
+        if (tensor->dtype == H3_DTYPE_BF16) {
+            result = h3_gpu_tensor_load_bf16(gpu, header->path, tensor->file_offset,
+                                            (size_t)elements);
+        } else {
+            result = h3_gpu_tensor_load_f32_as_bf16(gpu, header->path, tensor->file_offset,
+                                                   (size_t)elements);
+        }
+    } else {
+        if (tensor->dtype == H3_DTYPE_F32) {
+            result = h3_gpu_tensor_load_f32(gpu, header->path, tensor->file_offset,
+                                           (size_t)elements);
+        } else {
+            result = h3_gpu_tensor_load_bf16_as_f32(gpu, header->path, tensor->file_offset,
+                                                   (size_t)elements);
+        }
+    }
     if (!result) {
         fail(error, error_size, "cannot load %s: %s", name, h3_gpu_error(gpu));
     }
