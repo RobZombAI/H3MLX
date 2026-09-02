@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "H3OmniStructuredPromptSchema",
+  "description": "Standardized Omni-Modal JSON Schema for MiniMax-H3 High-Fidelity Video & Audio Generation on Apple Silicon M5 Max",
+  "type": "object",
+  "required": [
+    "meta",
+    "cinematography",
+    "subjects",
+    "environment_and_props",
+    "timeline",
+    "audio_soundscape",
+    "engine_tuning"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["project_name", "canvas_width", "canvas_height", "duration_seconds", "fps", "seed"],
+      "properties": {
+        "project_name": { "type": "string" },
+        "canvas_width": { "type": "integer", "default": 640 },
+        "canvas_height": { "type": "integer", "default": 640 },
+        "duration_seconds": { "type": "number", "default": 4.0 },
+        "fps": { "type": "integer", "default": 24 },
+        "seed": { "type": "integer", "default": 42 }
+      }
+    },
+    "cinematography": {
+      "type": "object",
+      "required": ["lens", "color_grading", "lighting_setup"],
+      "properties": {
+        "lens": { "type": "string", "example": "35mm anamorphic prime, f/1.4" },
+        "color_grading": { "type": "string", "example": "Cineon Log with soft-knee highlight roll-off and deep clean blacks" },
+        "lighting_setup": { "type": "string", "example": "Low-key warm lantern rim-light with soft fill" }
+      }
+    },
+    "subjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "appearance", "anatomical_constraints", "kinematics"],
+        "properties": {
+          "name": { "type": "string" },
+          "appearance": { "type": "string" },
+          "anatomical_constraints": { "type": "string", "example": "Strict 5-digit articulated hand lock, sharp iris reflections, micro-porous skin" },
+          "kinematics": { "type": "string", "example": "Fluid shoulder-to-wrist braceo, head spotting during spin, kinetic settling" }
+        }
+      }
+    },
+    "environment_and_props": {
+      "type": "object",
+      "required": ["setting", "props_physics"],
+      "properties": {
+        "setting": { "type": "string" },
+        "props_physics": { "type": "string", "example": "Aerodynamic silk drag, heavy cloth inertia, rigid prop origin tracking" }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["shot_id", "timestamp_start", "framing", "action", "dialogue"],
+        "properties": {
+          "shot_id": { "type": "integer" },
+          "timestamp_start": { "type": "string", "example": "00:00.000" },
+          "framing": { "type": "string", "example": "Medium-wide 35mm master shot" },
+          "action": { "type": "string" },
+          "dialogue": {
+            "type": "object",
+            "properties": {
+              "speaker_id": { "type": "string", "default": "S1" },
+              "language": { "type": "string", "default": "English" },
+              "text": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "audio_soundscape": {
+      "type": "object",
+      "required": ["diegetic_foley", "non_diegetic_music"],
+      "properties": {
+        "diegetic_foley": { "type": "string" },
+        "non_diegetic_music": { "type": "string" }
+      }
+    },
+    "engine_tuning": {
+      "type": "object",
+      "required": ["sampler", "steps", "layers", "reuse", "vshift", "ashift"],
+      "properties": {
+        "sampler": { "type": "string", "enum": ["predictive_step_reuse_2", "dpmpp_2m_gold", "flow_shift_96", "euler_a"], "default": "predictive_step_reuse_2" },
+        "steps": { "type": "integer", "default": 8 },
+        "layers": { "type": "integer", "default": 50 },
+        "reuse": { "type": "integer", "default": 2 },
+        "vshift": { "type": "number", "default": 10.0 },
+        "ashift": { "type": "number", "default": 3.0 },
+        "facial_roi_focus_weight": { "type": "number", "default": 1.5 },
+        "taylor_damping_gamma": { "type": "number", "default": 0.45 }
+      }
+    }
+  }
+}

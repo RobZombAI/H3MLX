@@ -390,12 +390,12 @@ int h3_ffmpeg_read_audio_f32(const char *path, int max_samples,
                              int truncate_at_limit,
                              float **pcm, int *samples,
                              char *error, size_t error_size) {
-    enum { AUDIO_RATE = 32000, AUDIO_CHANNELS = 2, MIN_SAMPLES = 64000 };
+    enum { AUDIO_RATE = 32000, AUDIO_CHANNELS = 2, MIN_SAMPLES = 1 };
     if (error && error_size) error[0] = '\0';
     if (pcm) *pcm = NULL;
     if (samples) *samples = 0;
     if (!path || !*path || !pcm || !samples || max_samples < MIN_SAMPLES ||
-        max_samples > AUDIO_RATE * 15 ||
+        max_samples > AUDIO_RATE * 60 ||
         (truncate_at_limit != 0 && truncate_at_limit != 1)) {
         fail(error, error_size, "invalid FFmpeg audio input arguments");
         return 0;
@@ -642,28 +642,31 @@ int h3_ffmpeg_write_av_rgb24_f32(const char *path, const uint8_t *frames,
             interleaved[(size_t)sample * (size_t)channels + (size_t)channel] =
                 pcm[(size_t)channel * (size_t)samples + (size_t)sample];
 
-    int video_pipe[2] = {-1, -1}, audio_pipe[2] = {-1, -1};
-    if (pipe(video_pipe) != 0 || pipe(audio_pipe) != 0) {
-        fail(error, error_size, "cannot create FFmpeg A/V pipes: %s",
-             strerror(errno));
-        if (video_pipe[0] >= 0) close(video_pipe[0]);
-        if (video_pipe[1] >= 0) close(video_pipe[1]);
-        if (audio_pipe[0] >= 0) close(audio_pipe[0]);
-        if (audio_pipe[1] >= 0) close(audio_pipe[1]);
+    char temp_audio_path[1024];
+    snprintf(temp_audio_path, sizeof(temp_audio_path), "/tmp/h3_audio_%d_%ld.f32",
+             getpid(), (long)time(NULL));
+    FILE *af = fopen(temp_audio_path, "wb");
+    if (!af) {
         free(interleaved);
+        fail(error, error_size, "cannot create temporary audio file: %s", strerror(errno));
         return 0;
     }
-    int audio_target = video_pipe[0];
-    if (video_pipe[1] > audio_target) audio_target = video_pipe[1];
-    if (audio_pipe[0] > audio_target) audio_target = audio_pipe[0];
-    if (audio_pipe[1] > audio_target) audio_target = audio_pipe[1];
-    audio_target++;
-    char size[64], rate[32], audio_rate[32], audio_channels[32], audio_input[32];
+    fwrite(interleaved, sizeof(float), pcm_elements, af);
+    fclose(af);
+    free(interleaved);
+
+    int video_pipe[2] = {-1, -1};
+    if (pipe(video_pipe) != 0) {
+        unlink(temp_audio_path);
+        fail(error, error_size, "cannot create FFmpeg video pipe: %s", strerror(errno));
+        return 0;
+    }
+
+    char size[64], rate[32], audio_rate[32], audio_channels[32];
     snprintf(size, sizeof(size), "%dx%d", width, height);
     snprintf(rate, sizeof(rate), "%d", fps);
     snprintf(audio_rate, sizeof(audio_rate), "%d", sample_rate);
     snprintf(audio_channels, sizeof(audio_channels), "%d", channels);
-    snprintf(audio_input, sizeof(audio_input), "pipe:%d", audio_target);
     const char *crf_env = getenv("H3_CRF");
     const char *crf_str = (crf_env && *crf_env) ? crf_env : "14";
     char *arguments[] = {
@@ -672,7 +675,7 @@ int h3_ffmpeg_write_av_rgb24_f32(const char *path, const uint8_t *frames,
         "-video_size", size, "-framerate", rate,
         "-i", "pipe:0",
         "-f", "f32le", "-ar", audio_rate, "-ac", audio_channels,
-        "-i", audio_input,
+        "-i", temp_audio_path,
         "-map", "0:v:0", "-map", "1:a:0",
         "-af", "aresample=48000,loudnorm=I=-14:TP=-1.0:LRA=11",
         "-c:v", "libx264", "-preset", "fast", "-crf", (char *)crf_str,
@@ -682,26 +685,18 @@ int h3_ffmpeg_write_av_rgb24_f32(const char *path, const uint8_t *frames,
     };
     posix_spawn_file_actions_t actions;
     int code = posix_spawn_file_actions_init(&actions);
-    if (!code) code = posix_spawn_file_actions_adddup2(
-        &actions, video_pipe[0], STDIN_FILENO);
-    if (!code) code = posix_spawn_file_actions_adddup2(
-        &actions, audio_pipe[0], audio_target);
-    int descriptors[] = {video_pipe[0], video_pipe[1],
-                         audio_pipe[0], audio_pipe[1]};
-    for (size_t index = 0; !code && index < sizeof(descriptors) / sizeof(*descriptors);
-         index++)
-        code = close_action(&actions, descriptors[index], STDIN_FILENO,
-                            audio_target);
+    if (!code) code = posix_spawn_file_actions_adddup2(&actions, video_pipe[0], STDIN_FILENO);
+    if (!code) code = posix_spawn_file_actions_addclose(&actions, video_pipe[0]);
+    if (!code) code = posix_spawn_file_actions_addclose(&actions, video_pipe[1]);
+
     pid_t child = -1;
     if (!code) code = posix_spawnp(&child, ffmpeg_program(), &actions, NULL,
                                     arguments, environ);
     posix_spawn_file_actions_destroy(&actions);
     close(video_pipe[0]);
-    close(audio_pipe[0]);
     if (code) {
         close(video_pipe[1]);
-        close(audio_pipe[1]);
-        free(interleaved);
+        unlink(temp_audio_path);
         fail(error, error_size, "cannot start FFmpeg: %s", strerror(code));
         return 0;
     }
@@ -714,40 +709,30 @@ int h3_ffmpeg_write_av_rgb24_f32(const char *path, const uint8_t *frames,
     stream_writer video = {
         video_pipe[1], frames, (size_t)frame_count * pixels * 3, 0
     };
-    stream_writer audio = {
-        audio_pipe[1], (const uint8_t *)interleaved,
-        pcm_elements * sizeof(*interleaved), 0
-    };
-    pthread_t video_thread, audio_thread;
+    pthread_t video_thread;
     int video_code = pthread_create(&video_thread, NULL, stream_thread, &video);
-    int audio_code = pthread_create(&audio_thread, NULL, stream_thread, &audio);
     if (video_code) {
         close(video.descriptor);
         video.descriptor = -1;
+    } else {
+        pthread_join(video_thread, NULL);
     }
-    if (audio_code) {
-        close(audio.descriptor);
-        audio.descriptor = -1;
-    }
-    if (!video_code) pthread_join(video_thread, NULL);
-    if (!audio_code) pthread_join(audio_thread, NULL);
     sigaction(SIGPIPE, &previous, NULL);
-    free(interleaved);
 
     int status = 0;
     while (waitpid(child, &status, 0) < 0) {
         if (errno == EINTR) continue;
+        unlink(temp_audio_path);
         fail(error, error_size, "cannot wait for FFmpeg: %s", strerror(errno));
         return 0;
     }
-    if (video_code || audio_code) {
-        fail(error, error_size, "cannot start FFmpeg stream thread: %s",
-             strerror(video_code ? video_code : audio_code));
+    unlink(temp_audio_path);
+    if (video_code) {
+        fail(error, error_size, "cannot start FFmpeg stream thread: %s", strerror(video_code));
         return 0;
     }
-    if (video.error || audio.error) {
-        fail(error, error_size, "cannot stream generated A/V to FFmpeg: %s",
-             strerror(video.error ? video.error : audio.error));
+    if (video.error) {
+        fail(error, error_size, "cannot stream generated RGB to FFmpeg: %s", strerror(video.error));
         return 0;
     }
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {

@@ -2,20 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-👑 H3XML SUITE: HIGH-PERFORMANCE MINIMAX H3 ENGINE ON APPLE SILICON
-Universal Green AI Video Generation Toolkit · Metal 4 NAX Native Acceleration
+👑 H3MLX SUITE v0.2: HIGH-PERFORMANCE VIDEO & IMAGE ENGINE ON APPLE SILICON
+Unified Metal 4 NAX Native Acceleration · 50-Layer DiT · 128GB Zero-Copy UMA
 Author: RobZomb & Google Antigravity Team
 ================================================================================
-Features:
-- 12 Curated Golden Cinema Video Presets (Gun-Fu, Katana, Acrobatic, IMAX 70mm, etc.)
-- Full Text-to-Video (T2V) and Image-to-Video (I2V) Pipelines
-- PDD 14-Step Optimal Distillation Schedule (Record 74.89s for 4.0s @ 4K UHD)
-- Metal 4 NAX Fused Micro-Kernels (H3_NAX="qkv-attn") & Native GPU Trajectory Sampler
-- Spatial Token Reduction (4:34) preserving 100% facial topology
-- Monolithic 3D VAE Zero-Stitch Decoding on 128GB Unified Memory (UMA)
-- 4K UHD Master Reconstruction + 48 kHz Neural Foley Audio Synthesis
-- Universal Apple Silicon Scalability (M1, M2, M3, M4, M5 - Air, Pro, Max, Ultra)
 """
+
+__version__ = "0.2.0"
+__engine__ = "H3MLX Metal 4 NAX Unified Engine"
 
 import os
 import sys
@@ -25,7 +19,7 @@ import socket
 import argparse
 import subprocess
 import platform
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageOps
 
 # Paths Configuration
 BASE_MODEL_DIR = '/Users/robzomb/h3-models/MiniMax-H3'

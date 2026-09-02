@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "project_name": "flamenco_ultra_gold_master",
+    "canvas_width": 640,
+    "canvas_height": 640,
+    "duration_seconds": 4.0,
+    "fps": 24,
+    "seed": 42
+  },
+  "cinematography": {
+    "lens": "Zeiss Supreme Prime 50mm T1.5 cinema lens, shallow depth of field, f/1.4",
+    "color_grading": "10-bit Cineon Log master, warm Andalusian amber tones, deep velvety blacks, filmic highlight roll-off",
+    "lighting_setup": "Chiaroscuro theatrical lighting with warm tungsten spotlights from above, soft rim lighting accentuating silk gown folds"
+  },
+  "subjects": [
+    {
+      "name": "Lucía (Flamenco Bailaora)",
+      "appearance": "28-year-old Andalusian flamenco dancer, olive skin, dark hair tied in a sleek Spanish moño bun adorned with a crimson rose, wearing a multi-layered scarlet and black ruffled bata de cola silk dress",
+      "anatomical_constraints": "Photorealistic 5-digit rigid finger articulation with flawless castanet grips, sharp macro facial focus, expressive dark eyes with realistic tear duct reflections, natural skin pores, and authentic muscle tension in back and arms",
+      "kinematics": "Physically flawless flamenco braceo (fluid continuous circular arm movements), rapid 360-degree vueltas (spins) with exact aerodynamic silk dress inertia and centrifugal swirl, followed by sharp rhythmic zapateado (footwork) and zero temporal deceleration artifacts"
+    }
+  ],
+  "environment_and_props": {
+    "setting": "Intimate authentic Sevillian tablao flamenco with aged dark oak wooden floorboards, rustic exposed brick walls, and delicate floating dust motes illuminated in golden spotlight beams",
+    "props_physics": "Wooden floorboards with authentic resonant acoustic response, silk dress fabric adhering to Navier-Stokes aerodynamic drag equations, castanet strings held with natural finger tension"
+  },
+  "timeline": [
+    {
+      "shot_id": 1,
+      "timestamp_start": "00:00.000",
+      "framing": "Medium close-up to dynamic 360-degree orbital full-body tracking shot",
+      "action": "A passionate Spanish flamenco dancer in a scarlet silk dress performs a breathtaking vuelta (spin) across the wooden tablao stage. Her arms glide in an impeccably fluid braceo, hands rotating with five perfectly defined fingers clicking wooden castanets. As she completes the spin, her dress swirls in an authentic aerodynamic cascade and settles naturally with physical inertia. The camera moves in for a razor-sharp macro close-up of her focused face: sweat glints on her temple, dark intense eyes look forward with pride and passion, and her breath escapes in a soft, realistic exhalation as she strikes a fierce final pose.",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "Spanish",
+        "text": ""
+      }
+    }
+  ],
+  "audio_soundscape": {
+    "diegetic_foley": "Crisp dry rhythmic wooden zapateado heel-stomps vibrating through oak planks, sharp hollow wooden castanet roll clicks, silk bata de cola fabric swooshes, and the dancer's deep rhythmic exhalation.",
+    "non_diegetic_music": "Virtuosic Spanish flamenco guitar Bulerías in A phrygian mode at 150 BPM, intense rhythmic palmas (handclaps), and a passionate deep cante jondo vocal resonance."
+  },
+  "engine_tuning": {
+    "sampler": "predictive_step_reuse_2",
+    "steps": 8,
+    "layers": 50,
+    "reuse": 2,
+    "vshift": 12.0,
+    "ashift": 3.0,
+    "facial_roi_focus_weight": 1.6,
+    "taylor_damping_gamma": 0.45,
+    "lora_adapter": "outputs_118_scenes_ultra_master_gold/dynamic_motion_118_ultra_lora.safetensors"
+  }
+}

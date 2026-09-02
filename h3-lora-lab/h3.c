@@ -1736,10 +1736,28 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
                 float *w_ch = waveform.pcm + (size_t)ch * waveform.samples;
                 const float *s_ch = speech_pcm + (size_t)(ch % 2) * speech_samples;
                 for (int i = 0; i < mix_len; i++) {
-                    w_ch[i] = w_ch[i] * 0.30f + s_ch[i] * 1.30f;
+                    w_ch[i] = w_ch[i] * 0.20f + s_ch[i] * 1.10f;
                 }
             }
             free(speech_pcm);
+        }
+    }
+
+    /* Native Audio VAE True Peak Normalization & Dynamic Mastering in C */
+    if (waveform.pcm && waveform.samples > 0) {
+        float max_val = 0.0f;
+        size_t total_samples = (size_t)waveform.samples * waveform.channels;
+        for (size_t i = 0; i < total_samples; i++) {
+            float abs_v = fabsf(waveform.pcm[i]);
+            if (abs_v > max_val) max_val = abs_v;
+        }
+        if (max_val > 1e-6f) {
+            float target_peak = 0.95f; /* -0.45 dBFS */
+            float gain = target_peak / max_val;
+            if (gain > 80.0f) gain = 80.0f; /* Safe ceiling boost */
+            for (size_t i = 0; i < total_samples; i++) {
+                waveform.pcm[i] = tanhf(waveform.pcm[i] * gain);
+            }
         }
     }
 

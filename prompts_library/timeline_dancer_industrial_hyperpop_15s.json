@@ -1,0 +1,25 @@
+{
+  "project_metadata": {
+    "title": "TIMELINE DANCER: Industrial Hyperpop × Deconstructed Club",
+    "duration_sec": 15.0,
+    "fps": 24,
+    "total_frames": 360,
+    "tempo_bpm": 160,
+    "meter": "4/4",
+    "total_beats": 40,
+    "color_palette": ["#050505 (Pure Void Black)", "#f8fafc (Cold Laser White)", "#ef4444 (Warning Neon Red)"]
+  },
+  "character_identity": {
+    "name": "Maya (The Timeline Dancer)",
+    "consistency_rules": "Strict identity lock across all 360 frames. Single woman dancer, identical facial features, sharp angular jawline, dark cropped wet-look bob hairstyle, athletic silhouette, dressed in an avant-garde matte black aerodynamic technical bodysuit with crimson warning seam accents and responsive LED pulse strips.",
+    "past_frame_projections": "Any secondary figures appearing on screen are exclusively past-frame motion afterimages, stroboscopic ghost projections, and temporal delay trails."
+  },
+  "world_physics_and_rhythm_logic": {
+    "kick_drum_effect": "Each heavy 808 kick violently compresses 3D space and timeline rails toward the dancer along the camera axis (anticipation -> explosive attack -> overshoot).",
+    "snare_drum_effect": "Each metallic snare crack duplicates past body positions into adjacent floating glass timeline frames with recursive perspective shifts.",
+    "hi_hat_and_glitch_effect": "1/16th glitch hi-hats animate floating laser UI cursors, digital scanning grids, and sub-pixel glass particle shards.",
+    "sub_bass_effect": "Distorted sub-bass glides physically bend the 2D interface plane, folding it like origami into a dynamic 3D kinetic architecture.",
+    "architectural_typography": "The monolithic physical 3D architectural letters 'MINIMAX' are constructed from brushed titanium and frosted glass as structural stage elements with volumetric laser backlights, strictly never as flat 2D subtitles."
+  },
+  "multimodal_prompt_compiled": "integrated_multimodal_description: [Shot 1: 00:00.000 - 00:04.500 | 12 Beats] Extreme wide-angle low-angle tracking shot in an infinite void of glass timeline rails, scanning laser grids, and suspended metal conduits in stark void black, cold laser white, and warning neon red. A single female dancer in a matte black technical aerodynamic bodysuit with crimson LED seams begins sharp, staccato popping and tutting. On every heavy 808 kick, the entire spatial environment compresses violently toward her in perfect rhythmic sync. Glitch cuts fragment the perspective as floating timeline frames shudder under high-velocity acceleration. [Shot 2: 00:04.500 - 00:08.250 | 10 Beats] Match-on-action cut to a Dutch-angle Dutch-tilt medium shot as rapid metallic snares duplicate her movements into an echelon of recursive translucent ghost projections trailing behind her limbs. She glides under the towering physical 3D monolithic brushed-titanium architecture spelling 'MINIMAX' that casts sharp geometric shadows across the reflective glass floorboards. [Shot 3: 00:08.250 - 00:11.250 | 8 Beats] Top-down bird's-eye perspective plunging downward into a folding 3D kinetic origami matrix. The 2D timeline interface bends upward along glowing crimson gridlines, forming a closing tunnel of light and glass as the dancer performs an intense back-bend wave, resisting temporal entrapment. [Shot 4: 00:11.250 - 00:15.000 | 10 Beats | THE DROP] Match-on-action explosion into an impossible, hyper-fluid continuous 360-degree orbital long take. The dancer shatters the timeline repetition loop, breaking out into an explosive, unrestricted hyper-kinetic contemporary dance routine. Glass timeline lattices fragment into millions of weightless illuminated red-and-white shards swirling centrifugally around her, as the camera orbits at warp speed and settles into a razor-sharp, defiant final hero pose in extreme close-up.\n\noverall_soundscape: Visceral industrial acoustic assault: sub-bass shockwaves rattling glass panels, razor-sharp metallic rim-shots, clicking laser scanning pulses, glitching UI feedback loops, whooshing kinetic air displacement, and breath of the dancer during the drop.\n\nnon_diegetic_music: Blistering Industrial Hyperpop × Deconstructed Club track at 160 BPM in D minor: heavily distorted 808 kicks, razor-sharp metallic snare rolls, stuttering pitch-shifted vocal chops, aggressive modular synthesizer stabs, and a devastating drop at 00:11.250."
+}

@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "project_name": "dynamic_motion_118_scenes_lora_training",
+    "canvas_width": 640,
+    "canvas_height": 640,
+    "duration_seconds": 4.0,
+    "fps": 24,
+    "seed": 42
+  },
+  "cinematography": {
+    "lens": "Hyper-speed 35mm cinema anamorphic lens with continuous kinetic motion tracking, f/1.2",
+    "color_grading": "10-bit Cineon Log cinema master, extreme dynamic range, zero temporal smearing, ultra-deep black floor",
+    "lighting_setup": "Rapid dynamic multi-source illumination: neon laser sweeps, solar flares, strobe bursts, and bioluminescent pulses"
+  },
+  "subjects": [
+    {
+      "name": "118 Hyper-Kinetic Dynamic Scenes",
+      "appearance": "An astronomical rapid-fire continuum of 118 distinct kinetic entities: martial artists, fluid vortices, quantum particles, sprinting predators, collapsing stars, liquid metal morphing, robotic servos, and aerodynamic fabrics",
+      "anatomical_constraints": "Crisp anatomical bone constraints on every sub-frame cut, 5-finger articulated rigidity, flawless fluid conservation, and zero polygon tearing",
+      "kinematics": "Ultra-dense dynamic motion vectors: 360-degree rotations, ballistic trajectories, sonic booms, supersonic whip-pans, and elastic deformation physics"
+    }
+  ],
+  "environment_and_props": {
+    "setting": "118 rapidly morphing micro-environments spanning deep cosmos, cybernetic megacities, stormy oceans, volcanic vents, and particle accelerators",
+    "props_physics": "Real-time physics conservation: angular momentum, Navier-Stokes fluid turbulence, Lorentz magnetic force, and aerodynamic drag"
+  },
+  "timeline": [
+    {
+      "shot_id": 1,
+      "timestamp_start": "00:00.000",
+      "framing": "Ultra-rapid hyper-kinetic 4-second montage transitioning across 118 extreme dynamic motion micro-scenes",
+      "action": "A breathtaking, ultra-dense 4.0-second visual symphony cycling across 118 distinct dynamic motion micro-scenes at lightning speed: [1-20] Martial arts kicks, spinning swords, samurai slashes, breaking glass, flying sparks; [21-40] Pouring mercury, swirling water vortices, erupting magma, ocean tidal waves, tornadoes; [41-60] Sprinting panthers, diving falcons, fluttering hummingbird wings, galloping stallions, schooling barracudas; [61-80] Cybernetic laser cannons, pulsing warp drives, racing hypercars, rocket launches, exploding supernovas; [81-100] Flamenco spins, ballet leaps, breakdance power-moves, gymnastics flips, synchronized divers; [101-118] Quantum subatomic collisions, DNA helix rotations, neural network firing, fiber optic lightspeed pulses, and a final blinding burst of celestial hyper-space energy.",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "English",
+        "text": ""
+      }
+    }
+  ],
+  "audio_soundscape": {
+    "diegetic_foley": "Massive hyper-dense layered acoustic soundscape: 118 synchronized micro-impacts, sonic booms, sword clashes, roaring engines, liquid sloshes, laser whirs, and thunderous sub-bass drops.",
+    "non_diegetic_music": "Insane 160 BPM cinematic trailer hybrid synthwave with relentless pounding sub-bass, screaming analog synthesizers, rapid orchestral ostinatos, and an explosive climax."
+  },
+  "engine_tuning": {
+    "sampler": "predictive_step_reuse_2",
+    "steps": 6,
+    "layers": 50,
+    "reuse": 2,
+    "vshift": 10.0,
+    "ashift": 3.0,
+    "facial_roi_focus_weight": 1.5,
+    "taylor_damping_gamma": 0.45,
+    "lora_concurrent_training": true
+  }
+}

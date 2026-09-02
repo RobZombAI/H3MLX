@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "project_name": "little_robot_pixar_gold",
+    "canvas_width": 640,
+    "canvas_height": 640,
+    "duration_seconds": 4.0,
+    "fps": 24,
+    "seed": 42
+  },
+  "cinematography": {
+    "lens": "High-end 3D animated feature film cinematography, 50mm prime, soft cinematic depth of field, f/1.8",
+    "color_grading": "Pixar-style rich cinematic palette, warm golden dust motes, deep ambient occlusion, and pristine metallic specular reflections",
+    "lighting_setup": "Volumetric sunset rim-light filtering through tall workshop windowpanes, casting long soft shadows"
+  },
+  "subjects": [
+    {
+      "name": "Little Robot",
+      "appearance": "Charming, weathered yellow-painted little robot with large round expressive optical glass lenses, articulated mechanical fingers, and cute antenna",
+      "anatomical_constraints": "Rigid metallic joint articulation, realistic scratched painted metal shaders with subsurface edge wear, and crystal-clear reflective glass lens eyes",
+      "kinematics": "Gentle mechanical servo head tilt, delicate three-finger metallic grip holding a small glowing memory core crystal, and subtle emotional shoulder slump"
+    }
+  ],
+  "environment_and_props": {
+    "setting": "Atmospheric retro-futuristic robot repair workshop filled with glowing gears, copper pipes, and soft floating dust particles at golden hour",
+    "props_physics": "Glowing amber memory crystal casting dynamic soft point-light illumination on the robot's chest plate and metallic fingers"
+  },
+  "timeline": [
+    {
+      "shot_id": 1,
+      "timestamp_start": "00:00.000",
+      "framing": "Cinematic 3D medium shot with subtle emotional push-in",
+      "action": "The cute little yellow robot rolls forward on small rubber tracks, searching through workshop shelves, holding up a glowing amber crystal with his metallic fingers. He looks around anxiously and speaks in a sweet, heartfelt robotic voice:",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "English",
+        "text": "Papa? Where are you?"
+      }
+    },
+    {
+      "shot_id": 2,
+      "timestamp_start": "00:02.500",
+      "framing": "Match-on-action cut to an emotional close-up portrait of the robot's face",
+      "action": "Camera frames his expressive glowing blue lens eyes dilating with sorrow; the crystal in his small hands pulses gently, reflecting golden light across his yellow metal cheek as a single tiny drop of blue fluid glides like a tear down his chassis.",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "English",
+        "text": ""
+      }
+    }
+  ],
+  "audio_soundscape": {
+    "diegetic_foley": "Cute whirring servo motors, delicate metallic clinks of small rubber tracks over copper floor plates, soft electronic robot chirps, and the gentle harmonic hum of the glowing crystal.",
+    "non_diegetic_music": "Heartwarming Pixar-style orchestral score with emotional acoustic piano melody, tender solo oboe, and lush soaring strings that fade out gently."
+  },
+  "engine_tuning": {
+    "sampler": "predictive_step_reuse_2",
+    "steps": 8,
+    "layers": 50,
+    "reuse": 2,
+    "vshift": 10.0,
+    "ashift": 3.0,
+    "facial_roi_focus_weight": 1.5,
+    "taylor_damping_gamma": 0.45
+  }
+}

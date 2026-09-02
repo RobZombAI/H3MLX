@@ -1,0 +1,33 @@
+{
+  "project_name": "anime_baker_masterpiece_gold",
+  "category": "anime_cinematic_animation",
+  "style": "Studio Ghibli & Makoto Shinkai Masterpiece Anime Style",
+  "canvas": {
+    "width": 640,
+    "height": 640,
+    "frames": 96,
+    "fps": 24,
+    "duration_sec": 4.0
+  },
+  "scheduler_parameters": {
+    "engine": "Pure C / Metal 4 NAX v6 + Video N-Gram Speculative Engine",
+    "steps": 8,
+    "layers": 50,
+    "reuse": 2,
+    "quantization": "int8-row-fc2",
+    "video_shift": 12.0,
+    "audio_shift": 3.0,
+    "ngram_speculative": true,
+    "ngram_threshold": 0.985,
+    "seed": 42
+  },
+  "prompt_engineering": {
+    "integrated_multimodal_description": "[Shot 1] Masterpiece Makoto Shinkai and Studio Ghibli anime style 8K animation: Inside a cozy rustic bakery bathed in radiant golden morning sunlight through stained-glass windows, a cheerful young anime baker with rolled-up sleeves and a dusting of white flour on his cheek expertly kneads a pillow of sourdough bread. Flour particles float gently in golden volumetric light rays. The camera performs a smooth tracking orbital shot around the wooden table: his five fingers rhythmically fold and press the elastic dough with authentic biomechanical squish physics. In the background, fresh baguettes and croissants glow golden-brown inside a stone wood-fired oven with crackling warm embers. The baker looks up with a warm radiant smile and sparkling expressive anime eyes as steam billows softly from a freshly baked loaf.",
+    "overall_soundscape": "Soft rhythmic squishing of elastic dough on a floured wooden board, gentle puffs of airborne flour, crackling birch firewood in the stone hearth, and the baker's satisfied hum.",
+    "non_diegetic_music": "Heartwarming Studio Ghibli-style acoustic waltz with gentle acoustic piano, soft accordion melodies, and warm emotive strings at 110 BPM in D major."
+  },
+  "mastering": {
+    "color_grading": "Cineon Log 10-bit High10 Rec.709 with vibrant anime color saturation",
+    "audio_standard": "EBU R128 (-14 LUFS, True Peak -1.0 dBTP, 48kHz 24-bit AAC)"
+  }
+}

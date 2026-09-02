@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "project_name": "swarms_18_scenes_8k_rapid_fire",
+    "canvas_width": 640,
+    "canvas_height": 640,
+    "duration_seconds": 6.0,
+    "fps": 24,
+    "seed": 42
+  },
+  "cinematography": {
+    "lens": "High-speed 35mm cinema lens with anamorphic 8K macro bokeh, f/1.2",
+    "color_grading": "Hyper-vivid 10-bit Cineon HDR master, pristine micro-contrast, zero temporal ghosting",
+    "lighting_setup": "Dynamic multi-spectrum volumetric lighting: bioluminescent blues, golden hour ambers, and ultraviolet lasers"
+  },
+  "subjects": [
+    {
+      "name": "18 Emergent 8K Swarms",
+      "appearance": "Millions of hyper-detailed dynamic interacting micro-entities exhibiting emergent flocking and swarm intelligence",
+      "anatomical_constraints": "Crisp particle boundaries, zero pixel blending, razor-sharp motion vector vectors, and high-frequency fluid trajectories",
+      "kinematics": "Ultra-fast synchronized flocking dynamics, spiral vortices, turbulent dispersion, and rapid hyper-kinetic motion"
+    }
+  ],
+  "environment_and_props": {
+    "setting": "18 diverse cinematic environments shifting rapidly from deep cosmos to ocean depths, enchanted forests, and quantum circuits",
+    "props_physics": "Mass-conserving particle fluid dynamics, complex boids flocking algorithms, and realistic optical light refraction"
+  },
+  "timeline": [
+    {
+      "shot_id": 1,
+      "timestamp_start": "00:00.000",
+      "framing": "Hyper-kinetic rapid montage across 18 distinct 8K swarm scenes",
+      "action": "A dizzying, high-speed 6-second montage cut at lightning pace across 18 diverse 8K swarms: [1] Swarm of millions of glowing green bioluminescent fireflies in a dark enchanted forest; [2] Swarm of glowing blue cybernetic nanodrones weaving laser light trails; [3] Massive shimmering silver bait ball of a million sardine fish swirling in ocean depths; [4] Golden swarm of crystal honeybees circling a glowing honeycomb; [5] Huge dramatic murmuration of hundreds of thousands of starlings morphing in the sunset sky; [6] Blazing meteor swarm and cosmic stellar dust showering through a nebula; [7] Vibrant cloud of turquoise and orange monarch butterflies taking flight in a sunlit valley; [8] Microscopic glowing medical nanobots repairing arterial cells with surgical lasers; [9] Radiant subatomic particle swarm colliding in a quantum fusion chamber; [10] Deep-sea bioluminescent jellyfish swarm pulsing in unison with neon tentacles; [11] Dark flock of gothic ravens bursting into flight against lightning; [12] Blinding swarm of industrial laser plasma sparks exploding in slow motion; [13] Swarm of hexagonal ice crystals and diamond snow flakes whipping through a blizzard; [14] Golden autumn leaves caught in a violent swirling wind vortex; [15] Massive school of hammerhead sharks migrating through deep blue ocean currents; [16] Blazing streams of optical data photons racing through fiber optic glass circuits; [17] Iridescent neon dragonflies hovering and darting over still pond waters; [18] Breathtaking cosmic mega-swarm of spiraling stars and galaxies colliding in deep space, resolving in a blinding burst of celestial light.",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "English",
+        "text": ""
+      }
+    }
+  ],
+  "audio_soundscape": {
+    "diegetic_foley": "Massive hyper-dense rushing soundscape: millions of flapping wings, high-voltage electrical hums, ocean water turbulence, metallic servo whirring, crystalline chimes, and deep cinematic sub-bass whooshes on every cut.",
+    "non_diegetic_music": "High-octane trailer synthwave and epic orchestral hybrid track with relentless 140 BPM driving sub-bass, rapid arpeggios, and explosive brass swells."
+  },
+  "engine_tuning": {
+    "sampler": "predictive_step_reuse_2",
+    "steps": 6,
+    "layers": 50,
+    "reuse": 2,
+    "vshift": 10.0,
+    "ashift": 3.0,
+    "facial_roi_focus_weight": 1.5,
+    "taylor_damping_gamma": 0.45
+  }
+}

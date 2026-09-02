@@ -32,6 +32,11 @@ static void usage(const char *program) {
         "  -d, --model-dir PATH   MiniMax-H3 local directory\n"
         "  -p, --prompt TEXT      Raw H3 prompt\n"
         "  -o, --output PATH      Output MP4 (default: outputs/h3.mp4)\n"
+        "      --mode MODE        Engine mode: canonical (antirez pure) or boosted (H3XML)\n"
+        "      --canonical        Force antirez canonical reference mode (Euler, float, no-reuse)\n"
+        "      --boosted          Force H3XML frontier mode (Metal 4 NAX, AB-3, token-reduction)\n"
+        "      --int8, --w8a8     Enable Metal 4 NAX Row-Major INT8 dynamic FC2 quantization\n"
+        "      --solver SOLVER    ODE flow solver: euler, ab3, dpm3m\n"
         "      --width N          Output width (default: 864)\n"
         "      --height N         Output height (default: 480)\n"
         "      --render-width N   Lower internal model width (optional)\n"
@@ -322,11 +327,18 @@ int main(int argc, char **argv) {
             OPT_NGRAM, OPT_NGRAM_THRESH,
             OPT_FRAMES_DIR, OPT_SHOW, OPT_ZOOM,
             OPT_DAEMON, OPT_CLIENT, OPT_SOCKET, OPT_WARMUP, OPT_QUIT_DAEMON,
+            OPT_INT8, OPT_MODE, OPT_SOLVER, OPT_CANONICAL, OPT_BOOSTED,
             OPT_PROFILE, OPT_INFO };
     static const struct option options[] = {
         {"model-dir", required_argument, NULL, 'd'},
         {"prompt", required_argument, NULL, 'p'},
         {"output", required_argument, NULL, 'o'},
+        {"mode", required_argument, NULL, OPT_MODE},
+        {"solver", required_argument, NULL, OPT_SOLVER},
+        {"canonical", no_argument, NULL, OPT_CANONICAL},
+        {"boosted", no_argument, NULL, OPT_BOOSTED},
+        {"int8", no_argument, NULL, OPT_INT8},
+        {"w8a8", no_argument, NULL, OPT_INT8},
         {"daemon", optional_argument, NULL, OPT_DAEMON},
         {"server", optional_argument, NULL, OPT_DAEMON},
         {"client", optional_argument, NULL, OPT_CLIENT},
@@ -458,8 +470,41 @@ int main(int argc, char **argv) {
                 break;
             case OPT_TOKEN_REDUCTION: params.token_reduction = 1; break;
             case OPT_SSD_STREAMING: params.ssd_streaming = 1; break;
+            case OPT_INT8:
             case OPT_USE_INT8_ROW_FC2:
                 params.use_int8_row_fc2 = 1;
+                break;
+            case OPT_CANONICAL:
+                params.use_int8_row_fc2 = 0;
+                params.token_reduction = 0;
+                params.denoise_reuse = 1;
+                params.sol_attn = 0;
+                params.sol_cache = 0;
+                break;
+            case OPT_BOOSTED:
+                params.use_int8_row_fc2 = 1;
+                params.token_reduction = 1;
+                break;
+            case OPT_MODE:
+                if (!strcmp(optarg, "canonical") || !strcmp(optarg, "antirez") || !strcmp(optarg, "pure")) {
+                    params.use_int8_row_fc2 = 0;
+                    params.token_reduction = 0;
+                    params.denoise_reuse = 1;
+                    params.sol_attn = 0;
+                    params.sol_cache = 0;
+                } else if (!strcmp(optarg, "boosted") || !strcmp(optarg, "h3xml") || !strcmp(optarg, "robzomb")) {
+                    params.use_int8_row_fc2 = 1;
+                    params.token_reduction = 1;
+                }
+                break;
+            case OPT_SOLVER:
+                if (!strcmp(optarg, "dpm3m") || !strcmp(optarg, "ab3")) {
+                    setenv("H3_SOLVER", "dpm3m", 1);
+                    setenv("H3_CPU_SAMPLER", "1", 1);
+                } else if (!strcmp(optarg, "euler")) {
+                    setenv("H3_SOLVER", "euler", 1);
+                    setenv("H3_CPU_SAMPLER", "1", 1);
+                }
                 break;
             case OPT_USE_REFERENCE_ROPE:
                 params.use_reference_rope = 1;

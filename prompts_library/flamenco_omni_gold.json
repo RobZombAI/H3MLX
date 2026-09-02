@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "project_name": "flamenco_dancer_omni_gold",
+    "canvas_width": 640,
+    "canvas_height": 640,
+    "duration_seconds": 4.0,
+    "fps": 24,
+    "seed": 42
+  },
+  "cinematography": {
+    "lens": "35mm anamorphic prime lens, ultra-shallow depth of field, f/1.4",
+    "color_grading": "10-bit Cineon Log curve with filmic soft-knee highlight roll-off, deep pristine shadow contrast, and zero color banding",
+    "lighting_setup": "Low-key warm lantern rim-light against cool moody midnight blue ambient fill"
+  },
+  "subjects": [
+    {
+      "name": "Flamenco Dancer",
+      "appearance": "Passionate Spanish female dancer with intense sparkling dark eyes, delicate porcelain skin micro-porosity, high cheekbones, and an ornate black lace peineta comb in sleek dark hair",
+      "anatomical_constraints": "Strict 5-digit articulated hand lock with natural knuckle definition, pristine iris specular reflections, and zero facial texture smearing",
+      "kinematics": "Fluid braceo arm kinematics curving from shoulder through flexed elbow to wrist, precise head spotting during 360-degree spin, and realistic kinetic chest breathing settling from the turn"
+    }
+  ],
+  "environment_and_props": {
+    "setting": "Atmospheric cobbled Seville courtyard at midnight surrounded by ancient stucco walls and hanging iron lanterns",
+    "props_physics": "Heavy multi-layered crimson silk dress with realistic aerodynamic drag, centrifugal flaring during spin, and natural gravity settling around leather dance heels"
+  },
+  "timeline": [
+    {
+      "shot_id": 1,
+      "timestamp_start": "00:00.000",
+      "framing": "Medium-wide 35mm master shot with slow subtle camera push-in",
+      "action": "The dancer executes a swift, powerful 360-degree spin; her crimson silk dress flares outward with perfect aerodynamic fluid motion. She halts sharply on the cobblestones, arches her back with fierce emotion, and delivers her line:",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "Spanish",
+        "text": "Fuego en el alma."
+      }
+    },
+    {
+      "shot_id": 2,
+      "timestamp_start": "00:02.500",
+      "framing": "Match-on-action cut to an ultra-sharp 35mm macro close-up portrait",
+      "action": "Camera locks into extreme facial focus: razor-sharp eyelashes, sparkling amber-brown irises catching lantern specular highlights, natural lip-sync trailing breath, and subtle kinetic settling of the silk ruffles around her shoulders under pristine shadow gradients.",
+      "dialogue": {
+        "speaker_id": "S1",
+        "language": "Spanish",
+        "text": ""
+      }
+    }
+  ],
+  "audio_soundscape": {
+    "diegetic_foley": "Sharp rhythmic wooden heels stomping on cobblestones with heavy acoustic slap (taconeo), crisp wooden castanets clicking in rapid cadence, heavy silk fabric whooshing realistically through the night air, and natural courtyard reverberation.",
+    "non_diegetic_music": "Virtuosic Spanish flamenco nylon-string guitar with rapid rasgueado strumming, warm upright bass resonance, and a passionate fading final chord."
+  },
+  "engine_tuning": {
+    "sampler": "predictive_step_reuse_2",
+    "steps": 8,
+    "layers": 50,
+    "reuse": 2,
+    "vshift": 10.0,
+    "ashift": 3.0,
+    "facial_roi_focus_weight": 1.5,
+    "taylor_damping_gamma": 0.45
+  }
+}

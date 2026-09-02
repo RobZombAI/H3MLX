@@ -33,3 +33,5 @@ __pycache__/
 .cache/
 .vscode/
 .idea/
+_temp_*/
+.venv/
