@@ -5,7 +5,33 @@ Questo documento contiene i dati di benchmarking empirici ufficiali misurati dal
 
 ---
 
-## ⚡ 1. Confronto Empirico Live: Canonica Antirez vs Motore H3MLX
+## 🎬 1. Video & Animazioni GIF Generate dal Vivo nel Benchmark
+
+### 🐼 Scena 1: Red Panda Macro (512x512 · 2.0s / 48 Frame · 8 Step)
+> **Prompt**: *"A cute red panda eating fresh bamboo leaves in sunlight, macro photorealistic"*
+> **Risultato H3MLX**: **`31.43 s`** (vs `46.80 s` Canonica Antirez) — **1.49x Speedup** | **Qualità: `97.1 / 100` (Platinum 🏆)**
+
+![Red Panda H3MLX Benchmark](assets/benchmarks/01_case1_panda_h3mlx.gif)
+
+---
+
+### 💃 Scena 2: Flamenco Dancer (768x512 · 3.0s / 73 Frame · 8 Step)
+> **Prompt**: *"A graceful flamenco dancer in red dress spinning energetically, studio lighting, highly detailed"*
+> **Risultato H3MLX**: **`51.40 s`** (vs `85.67 s` Canonica Antirez) — **1.67x Speedup (-34.3s risparmiati)** | **Qualità: `88.6 / 100` (Gold)**
+
+![Flamenco Dancer H3MLX Benchmark](assets/benchmarks/02_case2_flamenco_h3mlx.gif)
+
+---
+
+### ⚔️ Scena 3: Osaka Gunfu Cinema 16:9 (864x480 · 3.75s / 90 Frame · 14 Step)
+> **Prompt**: *"Osaka gunfu neon rooftop sword fight in heavy rain, cinematic shallow depth of field, anamorphic lens flare"*
+> **Risultato H3MLX**: **`113.62 s`** (vs `252.25 s` Canonica Antirez) — **2.22x Speedup (-138.6s risparmiati!)** | **Qualità: `89.3 / 100` (Gold)**
+
+![Osaka Gunfu Cinema H3MLX Benchmark](assets/benchmarks/04_case3_cinema_h3mlx.gif)
+
+---
+
+## ⚡ 2. Tabella Comparativa Completa dei Dati Empirici
 
 | Preset / Scena di Test | Risoluzione Latenti | Frame Totali | 🏛️ Antirez Canonica (Pure BF16) | ⚡ Motore H3MLX (Metal 4 NAX + INT8) | 🏎️ Throughput H3MLX | 🛡️ Qualità Forense (0-100) | 👑 Guadagno Netto |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -16,27 +42,22 @@ Questo documento contiene i dati di benchmarking empirici ufficiali misurati dal
 
 ---
 
-## 📈 2. Grafici Ufficiali di Benchmark e Velocità
+## 📈 3. Grafici Ufficiali di Benchmark e Velocità
 
 ![Confronto Ufficiale Antirez Canonica vs H3MLX Engine](assets/antirez_vs_h3mlx_comparison_chart.png)
 
 ---
 
-## 🔬 3. La Scala di Valutazione Forense Cinematografica (Severe Quality Scale)
+## 🔬 4. La Scala di Valutazione Forense Cinematografica (Severe Quality Scale)
 
 * **`93.0 - 96.0+` (Tier 1: Master Platinum Hollywood)**: Micro-dettagli sub-pixel perfetti, zero sdoppiamento bordi, coerenza anatomica assoluta.
 * **`88.0 - 92.9` (Tier 2: Cinema Gold Broadcast)**: Elevatissimo fotorealismo, micro-texture complete, minime derive su rotazioni rapide.
 * **`83.0 - 87.9` (Tier 3: Cinema Silver)**: Ottima resa scenica standard.
 * **`< 75.0` (Degradato / Unacceptable)**: Presenza di artefatti da tiling VAE o jitter di velocità.
 
-### Dettaglio Metriche Spaziali e Temporali:
-1. **Micro-MTF & Sharpness Laplaciana**: H3MLX raggiunge **`382.4`** (vs `248.6` canonico) garantendo texture autentiche su capelli, peli e tessuti senza effetto "plastic-blur".
-2. **Coerenza Ottica di Movimento (Dense Optical Flow)**: Punteggio di **`95.1 / 100`**, con traiettorie continue e assenza di micro-scatti.
-3. **Monolithic 3D VAE Zero-Stitch**: Decompressione latente in singolo passaggio 3D che elimina al 100% le cuciture da tiling VAE.
-
 ---
 
-## ⚠️ 4. Hardware Safety & Thermal Fan Alert
+## ⚠️ 5. Hardware Safety & Thermal Fan Alert
 
 > [!CAUTION]
 > **AVVISO IMPORTANTE SULLA DISSIPAZIONE TERMICA**:
@@ -45,7 +66,7 @@ Questo documento contiene i dati di benchmarking empirici ufficiali misurati dal
 
 ---
 
-## 🌍 5. Il Manifesto Ecologico: Perché l'AI Locale Salva i Fiumi
+## 🌍 6. Il Manifesto Ecologico: Perché l'AI Locale Salva i Fiumi
 
 $$\text{Energia per Video (kWh)} = \frac{\text{Potenza (Watt)} \times \text{Tempo (Secondi)}}{3600}$$
 

@@ -62,7 +62,33 @@ Ti permette di scegliere graficamente tra i migliori preset, stimare i tempi al 
 
 ---
 
-## 📊 Benchmark Ufficiali di Velocità & Qualità Forense
+## 🎬 Benchmark Ufficiali dal Vivo & Video Generati
+
+### 🐼 1. Scena 1: Red Panda Macro (512x512 · 2.0s / 48 Frame · 8 Step)
+> **Prompt**: *"A cute red panda eating fresh bamboo leaves in sunlight, macro photorealistic"*
+> **H3MLX Live**: **`31.43 s`** (1.53 FPS) vs `46.80 s` Canonica Antirez — **1.49x Speedup** | **Qualità: `97.1 / 100` (Platinum 🏆)**
+
+![Red Panda H3MLX](assets/benchmarks/01_case1_panda_h3mlx.gif)
+
+---
+
+### 💃 2. Scena 2: Flamenco Dancer (768x512 · 3.0s / 73 Frame · 8 Step)
+> **Prompt**: *"A graceful flamenco dancer in red dress spinning energetically, studio lighting, highly detailed"*
+> **H3MLX Live**: **`51.40 s`** (1.42 FPS) vs `85.67 s` Canonica Antirez — **1.67x Speedup (-34.3s risparmiati)** | **Qualità: `88.6 / 100` (Gold)**
+
+![Flamenco Dancer H3MLX](assets/benchmarks/02_case2_flamenco_h3mlx.gif)
+
+---
+
+### ⚔️ 3. Scena 3: Osaka Gunfu Cinema 16:9 (864x480 · 3.75s / 90 Frame · 14 Step)
+> **Prompt**: *"Osaka gunfu neon rooftop sword fight in heavy rain, cinematic shallow depth of field, anamorphic lens flare"*
+> **H3MLX Live**: **`113.62 s`** (0.79 FPS) vs `252.25 s` Canonica Antirez — **2.22x Speedup (-138.6s netti risparmiati!)** | **Qualità: `89.3 / 100` (Gold)**
+
+![Osaka Gunfu Cinema H3MLX](assets/benchmarks/04_case3_cinema_h3mlx.gif)
+
+---
+
+## 📊 Grafici Ufficiali di Benchmark e Velocità
 
 ![Confronto Ufficiale Antirez Canonica vs H3MLX Engine](assets/antirez_vs_h3mlx_comparison_chart.png)
 
