@@ -141,7 +141,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
     }
 }
 
-def calculate_canonical_frames(seconds: float) -> int:
+def calculate_canonical_frames(seconds: float, width: int = 768, height: int = 512, *args, **kwargs) -> int:
     """Calculate the canonical frame count using antirez lattice rounding (24 fps)."""
     raw_frames = int(round(seconds * 24))
     if raw_frames <= 22:
