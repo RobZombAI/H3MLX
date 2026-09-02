@@ -90,6 +90,22 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "int8": True,
         "prompt": "Osaka gunfu neon rooftop sword fight in heavy rain, cinematic shallow depth of field, anamorphic lens flare"
     },
+    "h3mlx_livello1": {
+        "name": "H3MLX Livello 1 (NAX + GPU Sampler)",
+        "description": "50 full dense layers (100% spatial density, pure sampling) with Metal 4 NAX & Native GPU Sampler",
+        "width": 768,
+        "height": 512,
+        "seconds": 3.75,
+        "frames": 90,
+        "steps": 14,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "euler",
+        "token_reduction": False,
+        "int8": True,
+        "prompt": "Shot on Arri Alexa LF with Cooke Anamorphic S4i Prime 50mm T2.3 lens, MTF optical sub-pixel phase coherence, John Wick in crisp tailored black wool suit with white shirt and black tie facing 3/4 frontally with razor-sharp Keanu Reeves likeness executing a rapid tactical Gun-Fu double-tap in torrential night rain, brilliant golden muzzle flash illuminating facial skin pores, brass shell casing ejecting in mid-air, 4k 24fps master"
+    },
     "h3mlx_turbo_fast_2s": {
         "name": "H3MLX Turbo Fast 2s",
         "description": "Sub-15s ultra fast preview with row-major INT8 and predictive step reuse",

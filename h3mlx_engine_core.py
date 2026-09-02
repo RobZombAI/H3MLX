@@ -158,19 +158,19 @@ def execute_h3_generation(
         env["H3_GPU_SAMPLER"] = "0"
         env["H3_SOLVER"] = "euler"
     else:  # H3MLX boosted engine (Level 1-5 Frontiers)
-        cmd.append("--boosted")
-        cmd.append("--sol-cache")
+        if token_reduction:
+            cmd.append("--token-reduction")
+            env["H3_TOKEN_REDUCTION"] = "1"
+            env["H3_TOKEN_REDUCTION_BLOCKS"] = token_reduction_blocks
+        else:
+            env["H3_TOKEN_REDUCTION"] = "0"
+
         if int8:
             cmd.append("--int8")
             cmd.append("--use-int8-row-fc2")
             env["H3_INT8_FC2"] = "1"
         else:
             env["H3_INT8_FC2"] = "0"
-            
-        if token_reduction:
-            cmd.append("--token-reduction")
-            env["H3_TOKEN_REDUCTION"] = "1"
-            env["H3_TOKEN_REDUCTION_BLOCKS"] = token_reduction_blocks
             
         env["H3_NAX"] = "qkv-attn"
         env["H3_GPU_SAMPLER"] = "1"
