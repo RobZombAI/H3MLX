@@ -70,6 +70,9 @@ def main():
     parser.add_argument("--solver", type=str, default="auto", choices=["auto", "dpm3m", "ab3", "euler"],
                         help="ODE flow solver: 'dpm3m' (3rd order), 'ab3', or 'euler'")
     parser.add_argument("--4k", "--upscale", dest="upscale_4k", action="store_true", help="Upscale generated output to 4K UHD Master (3840x2160)")
+    parser.add_argument("--smart-filter", type=str, default="auto",
+                        choices=["auto", "portrait", "cinema", "anime", "action", "macro", "clean"],
+                        help="Smart Mastering Filter: 'auto' (content-aware), 'portrait' (AMD CAS+Bilateral), 'cinema', 'anime', 'action', 'macro', or 'clean'")
     parser.add_argument("--profile", action="store_true", default=True, help="Print per-phase Metal profiling metrics")
     parser.add_argument("--frames-dir", type=str, default="", help="Directory to dump individual decoded RGB frames (.ppm)")
     
@@ -174,6 +177,7 @@ def main():
         speech_audio=args.speech_audio if args.speech_audio else None,
         ssd_streaming=args.ssd_streaming,
         upscale_4k=args.upscale_4k,
+        smart_filter=args.smart_filter,
         model_dir=args.model_dir if args.model_dir else None,
         profile=args.profile
     )

@@ -66,6 +66,8 @@ def resolve_model_path(model_dir: Optional[str] = None, steps: int = 14) -> Path
         "Oppure specifica il percorso con l'opzione -d / --model-dir <percorso>."
     )
 
+from h3mlx_smart_filters import build_smart_video_filter
+
 def execute_h3_generation(
     prompt: str,
     output_path: str,
@@ -89,6 +91,7 @@ def execute_h3_generation(
     speech_audio: Optional[str] = None,
     ssd_streaming: bool = False,
     upscale_4k: bool = False,
+    smart_filter: str = "auto",
     model_dir: Optional[str] = None,
     profile: bool = True,
     extra_env: Optional[Dict[str, str]] = None
@@ -207,15 +210,21 @@ def execute_h3_generation(
                 except Exception:
                     pass
 
-    # Optional Level 5 Broadcast 4K Cinema Mastering & 48kHz Audio Foley (Bilateral De-Gridding + Lanczos 4K)
+    # Level 5 Smart Cinema Mastering & 48kHz Audio Foley (Content-Aware / AMD FidelityFX CAS / Bilateral)
     final_output_path = str(out_file)
     if proc.returncode == 0 and out_file.exists() and upscale_4k:
         four_k_path = out_file.parent / f"{out_file.stem}_4k.mp4"
-        print(f"🎬 Avvio Upscaling 4K Cinema Master: {out_file.name} -> {four_k_path.name}")
+        filter_str, profile_key, profile_name = build_smart_video_filter(
+            profile=smart_filter,
+            prompt=prompt,
+            scale_factor=4
+        )
+        print(f"🎬 Avvio Mastering 4K Cinema Master: {out_file.name} -> {four_k_path.name}")
+        print(f"✨ Smart Filter attivo: {profile_name}")
         cmd_4k = [
             "ffmpeg", "-y", "-i", str(out_file),
             "-af", "stereowiden=crossfeed=0.4:feedback=0.3:drymix=0.8,bass=g=6.0:f=80:w=0.6,treble=g=5.0:f=10000:w=0.7,dynaudnorm=p=0.95:m=10.0:r=0.9:b=1",
-            "-vf", "bilateral=sigmaS=2:sigmaR=0.06,scale=iw*4:ih*4:flags=lanczos+accurate_rnd+full_chroma_int",
+            "-vf", filter_str,
             "-c:v", "libx264", "-preset", "slow", "-crf", "14",
             "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
             str(four_k_path)
@@ -223,7 +232,7 @@ def execute_h3_generation(
         sub_4k = subprocess.run(cmd_4k, capture_output=True)
         if sub_4k.returncode == 0 and four_k_path.exists():
             size_mb = four_k_path.stat().st_size / (1024 * 1024)
-            print(f"✅ Upscaling 4K completato con successo: {four_k_path.name} ({size_mb:.2f} MB)")
+            print(f"✅ Mastering 4K ({profile_name}) completato: {four_k_path.name} ({size_mb:.2f} MB)")
             final_output_path = str(four_k_path)
             
     success = (proc.returncode == 0 and out_file.exists())
