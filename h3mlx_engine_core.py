@@ -207,7 +207,7 @@ def execute_h3_generation(
                 except Exception:
                     pass
 
-    # Optional Level 5 Broadcast 4K Cinema Mastering & 48kHz Audio Foley
+    # Optional Level 5 Broadcast 4K Cinema Mastering & 48kHz Audio Foley (Bilateral De-Gridding + Lanczos 4K)
     final_output_path = str(out_file)
     if proc.returncode == 0 and out_file.exists() and upscale_4k:
         four_k_path = out_file.parent / f"{out_file.stem}_4k.mp4"
@@ -215,7 +215,7 @@ def execute_h3_generation(
         cmd_4k = [
             "ffmpeg", "-y", "-i", str(out_file),
             "-af", "stereowiden=crossfeed=0.4:feedback=0.3:drymix=0.8,bass=g=6.0:f=80:w=0.6,treble=g=5.0:f=10000:w=0.7,dynaudnorm=p=0.95:m=10.0:r=0.9:b=1",
-            "-vf", "scale=iw*4:ih*4:flags=lanczos+accurate_rnd+full_chroma_int,unsharp=5:5:0.75:5:5:0.0",
+            "-vf", "bilateral=sigmaS=2:sigmaR=0.06,scale=iw*4:ih*4:flags=lanczos+accurate_rnd+full_chroma_int",
             "-c:v", "libx264", "-preset", "slow", "-crf", "14",
             "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
             str(four_k_path)
