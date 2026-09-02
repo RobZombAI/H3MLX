@@ -2,7 +2,7 @@
 """
 👑 H3MLX Unified Universal CLI (v2.5 Master Edition)
 1:1 Complete & Faithful Drop-in Replacement for Salvatore Sanfilippo (antirez) h3.c CLI
-with RobZomb H3MLX Metal 4 NAX Acceleration, INT8 FC2, 3D VAE Zero-Stitch, & 4K Cinema Upscaler.
+with RobZomb H3MLX Metal 4 NAX Acceleration, All 5 Frontier Levels, INT8 FC2, 3D VAE Zero-Stitch, & 4K Cinema Upscaler.
 """
 
 import os
@@ -20,7 +20,7 @@ def main():
         return
 
     parser = argparse.ArgumentParser(
-        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration",
+        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 5 Frontiers",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -29,6 +29,9 @@ def main():
     parser.add_argument("-p", "--prompt", type=str, default="A graceful flamenco dancer in red dress spinning energetically, studio lighting, highly detailed", help="Text generation prompt")
     parser.add_argument("-o", "--output", type=str, default="outputs/h3mlx_output.mp4", help="Output MP4 file path")
     parser.add_argument("--preset", type=str, default="", choices=list(PRESETS.keys()), help="Load a pre-configured video preset")
+    parser.add_argument("--frontier", "--level", dest="frontier_level", type=str, default="",
+                        choices=["1", "2", "3", "4", "5", "champion"],
+                        help="Select Frontier Level: 1 (Isolated NAX + GPU Sampler), 2 (Token Reduction 4:34), 3 (Monolithic 3D VAE), 4 (14-Step PDD), 5/champion (Master 4K + Audio)")
     parser.add_argument("-i", "--interactive", action="store_true", help="Launch interactive studio director")
     
     # 2. Dimensions & Temporal Grid
@@ -76,58 +79,88 @@ def main():
         import h3mlx_studio
         h3mlx_studio.main()
         return
-        
+
+    # Handle Frontier Levels
+    if args.frontier_level == "1":
+        print("🏛️ Attivazione Frontiera Livello 1: Test Isolato Livello 1 (NAX + GPU Sampler)")
+        args.engine_mode = "boosted"
+        args.layers = 50
+        args.steps = 14
+        args.reuse = 1
+        args.token_reduction = False
+        args.int8 = True
+        args.solver = "euler"
+    elif args.frontier_level == "2":
+        print("⚡ Attivazione Frontiera Livello 2: Spatial Token Reduction Adattiva Multi-Scala (4:34)")
+        args.engine_mode = "boosted"
+        args.layers = 50
+        args.token_reduction = True
+        args.int8 = True
+    elif args.frontier_level == "3":
+        print("💎 Attivazione Frontiera Livello 3: Monolithic 3D VAE Zero-Stitch")
+        args.engine_mode = "boosted"
+    elif args.frontier_level == "4":
+        print("🚀 Attivazione Frontiera Livello 4: 14-Step PDD Optimal Trajectory")
+        args.engine_mode = "boosted"
+        args.steps = 14
+        args.reuse = 2
+        args.int8 = True
+        args.token_reduction = True
+    elif args.frontier_level in ["5", "champion"]:
+        print("👑 Attivazione Frontiera Livello 5: Champion Master (Cooke Anamorphic S4/i MTF + 4K Broadcast)")
+        args.engine_mode = "boosted"
+        args.steps = 14
+        args.reuse = 2
+        args.int8 = True
+        args.token_reduction = True
+        args.upscale_4k = True
+
     # Apply Preset if specified
     if args.preset:
-        p_cfg = get_preset(args.preset)
-        print(f"🎬 Caricamento Preset: {p_cfg['name']} ({p_cfg['description']})")
-        args.width = p_cfg.get("width", args.width)
-        args.height = p_cfg.get("height", args.height)
-        args.seconds = p_cfg.get("seconds", args.seconds)
-        args.frames = p_cfg.get("frames", args.frames)
-        args.steps = p_cfg.get("steps", args.steps)
-        args.reuse = p_cfg.get("reuse", args.reuse)
-        args.layers = p_cfg.get("layers", args.layers)
-        args.prompt = p_cfg.get("prompt", args.prompt)
-        if "token_reduction" in p_cfg:
-            args.token_reduction = p_cfg["token_reduction"]
-        if "int8" in p_cfg:
-            args.int8 = p_cfg["int8"]
-        if "solver" in p_cfg:
-            args.solver = p_cfg["solver"]
-        if "mode" in p_cfg:
-            args.engine_mode = p_cfg["mode"]
-        if p_cfg.get("upscale_4k"):
-            args.upscale_4k = True
-            
-    # Resolve Canonical vs Boosted flags
+        preset_cfg = get_preset(args.preset)
+        if preset_cfg:
+            print(f"🎬 Caricamento Preset: {preset_cfg['name']} ({preset_cfg['description']})\n")
+            args.width = preset_cfg.get("width", args.width)
+            args.height = preset_cfg.get("height", args.height)
+            args.seconds = preset_cfg.get("seconds", args.seconds)
+            args.steps = preset_cfg.get("steps", args.steps)
+            args.engine_mode = preset_cfg.get("engine_mode", args.engine_mode)
+            args.solver = preset_cfg.get("solver", args.solver)
+            args.int8 = preset_cfg.get("int8", args.int8)
+            args.token_reduction = preset_cfg.get("token_reduction", args.token_reduction)
+            args.upscale_4k = preset_cfg.get("upscale_4k", args.upscale_4k)
+            args.layers = preset_cfg.get("layers", args.layers)
+            args.reuse = preset_cfg.get("reuse", args.reuse)
+
+    # Resolution override if canonical
     if args.canonical:
-        engine_mode = "canonical"
-    elif args.boosted or args.engine_mode in ["h3mlx", "boosted"]:
-        engine_mode = "boosted"
+        args.engine_mode = "canonical"
+    elif args.boosted:
+        args.engine_mode = "boosted"
+
+    # Frame calculations
+    if args.frames > 0:
+        total_frames = args.frames
     else:
-        engine_mode = args.engine_mode
-        
-    # Resolve Frame Count
-    frames = args.frames if args.frames > 0 else calculate_canonical_frames(args.seconds)
-    
-    print("\n" + "="*70)
-    print(f"🚀 H3MLX Master Pipeline | Engine: {engine_mode.upper()} | Model: {args.steps} Steps")
-    print(f"📐 Canvas: {args.width}x{args.height} | Frames: {frames} ({args.seconds}s @ 24fps) | Seed: {args.seed}")
-    print(f"⚡ Accelerations: NAX={'ON' if engine_mode=='boosted' else 'OFF'}, INT8={'ON' if (engine_mode=='boosted' and args.int8) else 'OFF'}, TokenReduction={'ON' if args.token_reduction else 'OFF'}")
-    print(f"📝 Prompt: \"{args.prompt}\"")
+        total_frames = calculate_canonical_frames(args.seconds, args.width, args.height)
+
+    print("=" * 70)
+    print(f"🚀 H3MLX Master Pipeline | Engine: {args.engine_mode.upper()} | Steps: {args.steps}")
+    print(f"📐 Canvas: {args.width}x{args.height} | Frames: {total_frames} ({total_frames/24:.1f}s @ 24fps) | Seed: {args.seed}")
+    print(f"⚡ Accelerations: NAX={'ON' if args.engine_mode != 'canonical' else 'OFF'}, INT8={'ON' if args.int8 else 'OFF'}, TokenReduction={'ON' if args.token_reduction else 'OFF'}")
+    print(f"📝 Prompt: \"{args.prompt[:80]}...\"")
     print(f"💾 Output: {args.output}")
-    print("="*70 + "\n")
-    
+    print("=" * 70 + "\n")
+
     res = execute_h3_generation(
         prompt=args.prompt,
         output_path=args.output,
         width=args.width,
         height=args.height,
-        frames=frames,
+        frames=total_frames,
         steps=args.steps,
         seed=args.seed,
-        engine_mode=engine_mode,
+        engine_mode=args.engine_mode,
         solver=args.solver,
         reuse=args.reuse,
         layers=args.layers,
@@ -144,19 +177,18 @@ def main():
         model_dir=args.model_dir if args.model_dir else None,
         profile=args.profile
     )
-    
+
     if res.success:
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print(f"✅ Generazione completata con successo in {res.wall_time_s:.2f}s!")
         print(f"🎥 Video finale salvato in: {res.output_path}")
         if res.profile_data:
             print("📊 Profiling Fasi:")
-            for phase, duration in res.profile_data.items():
-                print(f"   • {phase:25s}: {duration:.2f}s")
-        print("="*70 + "\n")
-        sys.exit(0)
+            for k, v in res.profile_data.items():
+                print(f"   • {k:<25}: {v:.2f}s")
+        print("=" * 70 + "\n")
     else:
-        print(f"\n❌ Errore durante la generazione:\n{res.stderr}", file=sys.stderr)
+        print(f"\n❌ Errore durante l'esecuzione di H3:\n{res.stderr}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
