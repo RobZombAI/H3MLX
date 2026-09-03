@@ -236,7 +236,7 @@ def execute_h3_generation(
             env["H3_SOLVER"] = solver
             
         env["H3_WARP_GAMMA"] = "1.0"
-        env["H3_TEMPORAL_CRISP"] = "0.08"
+        env["H3_TEMPORAL_CRISP"] = "0.04"
             
     if extra_env:
         env.update(extra_env)

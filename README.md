@@ -16,11 +16,11 @@ La Versione 3.0 adotta esclusivamente i **5 Golden Presets ad altissima fedeltà
 
 | Preset Ufficiale | Risoluzione & 4K | ⏱️ Tempo Totale (90 fr / 4.0s) | 🏎️ Throughput | 🎛️ Smart Filter | 📦 Dimensioni (RAW / Master) | 🎞️ Anteprima Animata |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **👑 Champion Master Gold (3:2)** | `768x512 → 3840x2160` | **`84.00 s`** | **`1.07 FPS`** | `👤 Portrait & Beauty` | `2.2 MB` / `12.7 MB` | ![Champion Gold](assets/preview_v3_h3mlx_champion_gold.gif) |
-| **🎬 Cinema Anamorphic (16:9)** | `960x544 → 3840x2160` | **`121.23 s`** | **`0.74 FPS`** | `🏎️ Cinema / Action` | `4.3 MB` / `21.2 MB` | ![Cinema 16:9](assets/preview_v3_h3mlx_cinema_16x9.gif) |
-| **💎 Square High-Density (1:1)** | `640x640 → 3840x2160` | **`96.92 s`** | **`0.93 FPS`** | `🏎️ Action & Speed` | `5.1 MB` / `22.1 MB` | ![Square](assets/preview_v3_h3mlx_macro_square.gif) |
-| **📱 Vertical Cinema Reel (9:16)** | `576x1024 → 3840x2160` | **`157.02 s`** | **`0.57 FPS`** | `👤 Portrait / Beauty` | `4.2 MB` / `19.2 MB` | ![Vertical Reel](assets/preview_v3_h3mlx_vertical_reel.gif) |
-| **🌿 Studio Ghibli Master (3:2)** | `768x512 → 3840x2160` | **`95.86 s`** | **`0.94 FPS`** | `🌿 Anime & Ghibli` | `2.7 MB` / `16.8 MB` | ![Ghibli Master](assets/preview_v3_h3mlx_ghibli_master.gif) |
+| **👑 Champion Master Gold (3:2)** | `768x512 → 3840x2160` | **`85.12 s`** | **`1.06 FPS`** | `👤 Portrait & Beauty` | `2.2 MB` / `14.8 MB` | ![Champion Gold](assets/preview_v3_h3mlx_champion_gold.gif) |
+| **🎬 Cinema Anamorphic (16:9)** | `960x544 → 3840x2160` | **`122.53 s`** | **`0.73 FPS`** | `🏎️ Cinema / Action` | `4.3 MB` / `26.1 MB` | ![Cinema 16:9](assets/preview_v3_h3mlx_cinema_16x9.gif) |
+| **💎 Square High-Density (1:1)** | `640x640 → 3840x2160` | **`93.93 s`** | **`0.96 FPS`** | `🏎️ Action & Speed` | `5.1 MB` / `19.7 MB` | ![Square](assets/preview_v3_h3mlx_macro_square.gif) |
+| **📱 Vertical Cinema Reel (9:16)** | `576x1024 → 3840x2160` | **`157.11 s`** | **`0.57 FPS`** | `👤 Portrait / Beauty` | `4.2 MB` / `19.8 MB` | ![Vertical Reel](assets/preview_v3_h3mlx_vertical_reel.gif) |
+| **🌿 Studio Ghibli Master (3:2)** | `768x512 → 3840x2160` | **`95.74 s`** | **`0.94 FPS`** | `🌿 Anime & Ghibli` | `2.7 MB` / `16.3 MB` | ![Ghibli Master](assets/preview_v3_h3mlx_ghibli_master.gif) |
 
 ---
 

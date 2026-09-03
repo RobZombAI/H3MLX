@@ -1699,7 +1699,7 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
             h3_progress_emit(&progress, "video VAE load", 36, 36);
     }
     const char *crisp_env = getenv("H3_TEMPORAL_CRISP");
-    float crisp_gamma = (crisp_env && *crisp_env) ? (float)atof(crisp_env) : 0.08f;
+    float crisp_gamma = (crisp_env && *crisp_env) ? (float)atof(crisp_env) : 0.04f;
     if (crisp_gamma > 0.001f && (size_t)temporal.video_t > 2) {
         size_t frame_elements = 16 * (size_t)latent_h * (size_t)latent_w;
         size_t total_elements = frame_elements * (size_t)temporal.video_t;
