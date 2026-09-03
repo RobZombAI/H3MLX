@@ -147,6 +147,11 @@ typedef struct {
      * the VAE may bypass convolutions for tiles with cached RGB output. */
     int ngram;
     float ngram_threshold;   /* Cosine acceptance gate (default 0.985) */
+    /* NAX-Spatiotemporal Multimodal Attention: Global-Local decomposition
+     * for long-sequence video generation (> 4s) on Apple Silicon AMX/NAX. */
+    int nax_st;
+    uint32_t nax_st_chunk_frames;
+    uint32_t nax_st_keyframe_stride;
     h3_frame_callback on_frame;
     h3_progress_callback on_progress;
     void *callback_opaque;
@@ -159,6 +164,7 @@ typedef struct {
     0, 10.0f, 32, 0, 0.08f, 0, 0, 0, \
     NULL, 0, 0, 0, \
     0, 0.985f, \
+    0, 4, 4, \
     NULL, NULL, NULL \
 }
 

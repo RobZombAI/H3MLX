@@ -429,7 +429,7 @@ h3_gpu *h3_gpu_create(const char *shader_source_path,
             @"h3_token_pool_bf16", @"h3_token_pool_adaln_bf16",
             @"h3_token_expand_delta_bf16",
             @"h3_token_expand_adaln_bf16",
-            @"h3_euler_bf16", @"h3_silu_mul_bf16",
+            @"h3_euler_bf16", @"h3_dataward_euler_bf16", @"h3_silu_mul_bf16",
             @"h3_weight_norm_f32", @"h3_add_scaled_f32",
             @"h3_alias_free_snake_f32", @"h3_snake1d_f32",
             @"h3_audio_qkv_split_f32", @"h3_audio_attention_pool_f32",
@@ -1182,6 +1182,8 @@ typedef struct {
 } gqa_args;
 typedef struct { uint32_t sample_offset, elements; float delta, ratio; }
     euler_args;
+typedef struct { uint32_t sample_offset, elements; float sigma, sigma_next, ratio; }
+    dataward_args;
 typedef struct {
     uint32_t rows, heads, head_dim;
     float scale, threshold;
@@ -1703,6 +1705,169 @@ static H3SDPA *h3_gpu_sdpa_graph(H3GPU *gpu, uint32_t batch,
     }
 }
 
+static H3SDPA *h3_gpu_nax_st_graph(H3GPU *gpu,
+                                   uint32_t total_rows,
+                                   uint32_t text_rows,
+                                   uint32_t audio_rows,
+                                   uint32_t chunk_tokens,
+                                   uint32_t heads,
+                                   uint32_t head_dim,
+                                   float scale,
+                                   MPSDataType dataType,
+                                   int headMajor,
+                                   int outputHeadMajor) {
+    @autoreleasepool {
+        NSString *cacheKey = [NSString stringWithFormat:
+                              @"NAX_ST:%u:%u:%u:%u:%u:%u:%u:%.9g:%d:%d",
+                              (unsigned)dataType, total_rows, text_rows, audio_rows,
+                              chunk_tokens, heads, head_dim, scale,
+                              headMajor, outputHeadMajor];
+        H3SDPA *cached = gpu.sdpaCache[cacheKey];
+        if (cached) return cached;
+
+        uint32_t video_rows = total_rows - text_rows - audio_rows;
+        if (video_rows == 0 || chunk_tokens == 0) {
+            return nil;
+        }
+        uint32_t num_chunks = (video_rows + chunk_tokens - 1) / chunk_tokens;
+        uint32_t padded_video_rows = num_chunks * chunk_tokens;
+
+        MPSGraph *graph = [[MPSGraph alloc] init];
+        NSArray<NSNumber *> *rowMajorShape = @[@1, @(total_rows), @(heads), @(head_dim)];
+        NSArray<NSNumber *> *headMajorShape = @[@1, @(heads), @(total_rows), @(head_dim)];
+        NSArray<NSNumber *> *inputShape = headMajor ? headMajorShape : rowMajorShape;
+        NSArray<NSNumber *> *outputShape = outputHeadMajor ? headMajorShape : rowMajorShape;
+
+        MPSGraphTensor *q_in = [graph placeholderWithShape:inputShape dataType:dataType name:nil];
+        MPSGraphTensor *k_in = [graph placeholderWithShape:inputShape dataType:dataType name:nil];
+        MPSGraphTensor *v_in = [graph placeholderWithShape:inputShape dataType:dataType name:nil];
+
+        MPSGraphTensor *q = headMajor ? q_in :
+            [graph transposeTensor:q_in dimension:1 withDimension:2 name:nil];
+        MPSGraphTensor *k = headMajor ? k_in :
+            [graph transposeTensor:k_in dimension:1 withDimension:2 name:nil];
+        MPSGraphTensor *v = headMajor ? v_in :
+            [graph transposeTensor:v_in dimension:1 withDimension:2 name:nil];
+
+        MPSGraphTensor *q_text = [graph sliceTensor:q dimension:2 start:0 length:text_rows name:nil];
+        MPSGraphTensor *k_text = [graph sliceTensor:k dimension:2 start:0 length:text_rows name:nil];
+        MPSGraphTensor *v_text = [graph sliceTensor:v dimension:2 start:0 length:text_rows name:nil];
+        MPSGraphTensor *out_text = [graph scaledDotProductAttentionWithQueryTensor:q_text
+                                                                        keyTensor:k_text
+                                                                      valueTensor:v_text
+                                                                            scale:scale name:nil];
+
+        MPSGraphTensor *out_aud = nil;
+        if (audio_rows > 0) {
+            MPSGraphTensor *q_aud = [graph sliceTensor:q dimension:2 start:text_rows length:audio_rows name:nil];
+            MPSGraphTensor *k_aud = [graph sliceTensor:k dimension:2 start:text_rows length:audio_rows name:nil];
+            MPSGraphTensor *v_aud = [graph sliceTensor:v dimension:2 start:text_rows length:audio_rows name:nil];
+            out_aud = [graph scaledDotProductAttentionWithQueryTensor:q_aud
+                                                           keyTensor:k_aud
+                                                         valueTensor:v_aud
+                                                               scale:scale name:nil];
+        }
+
+        uint32_t video_start = text_rows + audio_rows;
+        MPSGraphTensor *q_vid = [graph sliceTensor:q dimension:2 start:video_start length:video_rows name:nil];
+        MPSGraphTensor *k_vid = [graph sliceTensor:k dimension:2 start:video_start length:video_rows name:nil];
+        MPSGraphTensor *v_vid = [graph sliceTensor:v dimension:2 start:video_start length:video_rows name:nil];
+
+        MPSGraphTensor *cross_text = [graph scaledDotProductAttentionWithQueryTensor:q_vid
+                                                                          keyTensor:k_text
+                                                                        valueTensor:v_text
+                                                                              scale:scale name:nil];
+
+        MPSGraphTensor *q_vid_p = q_vid;
+        MPSGraphTensor *k_vid_p = k_vid;
+        MPSGraphTensor *v_vid_p = v_vid;
+        if (padded_video_rows > video_rows) {
+            NSNumber *pad_diff = @(padded_video_rows - video_rows);
+            q_vid_p = [graph padTensor:q_vid withPaddingMode:MPSGraphPaddingModeConstant
+                           leftPadding:@[@0, @0, @0, @0]
+                          rightPadding:@[@0, @0, pad_diff, @0]
+                         constantValue:0.0f name:nil];
+            k_vid_p = [graph padTensor:k_vid withPaddingMode:MPSGraphPaddingModeConstant
+                           leftPadding:@[@0, @0, @0, @0]
+                          rightPadding:@[@0, @0, pad_diff, @0]
+                         constantValue:0.0f name:nil];
+            v_vid_p = [graph padTensor:v_vid withPaddingMode:MPSGraphPaddingModeConstant
+                           leftPadding:@[@0, @0, @0, @0]
+                          rightPadding:@[@0, @0, pad_diff, @0]
+                         constantValue:0.0f name:nil];
+        }
+
+        MPSGraphTensor *q_reshaped = [graph reshapeTensor:q_vid_p
+                                                withShape:@[@(heads), @(num_chunks), @(chunk_tokens), @(head_dim)]
+                                                     name:nil];
+        MPSGraphTensor *k_reshaped = [graph reshapeTensor:k_vid_p
+                                                withShape:@[@(heads), @(num_chunks), @(chunk_tokens), @(head_dim)]
+                                                     name:nil];
+        MPSGraphTensor *v_reshaped = [graph reshapeTensor:v_vid_p
+                                                withShape:@[@(heads), @(num_chunks), @(chunk_tokens), @(head_dim)]
+                                                     name:nil];
+
+        MPSGraphTensor *q_c = [graph transposeTensor:q_reshaped dimension:0 withDimension:1 name:nil];
+        MPSGraphTensor *k_c = [graph transposeTensor:k_reshaped dimension:0 withDimension:1 name:nil];
+        MPSGraphTensor *v_c = [graph transposeTensor:v_reshaped dimension:0 withDimension:1 name:nil];
+
+        MPSGraphTensor *local_c = [graph scaledDotProductAttentionWithQueryTensor:q_c
+                                                                       keyTensor:k_c
+                                                                     valueTensor:v_c
+                                                                           scale:scale name:nil];
+
+        MPSGraphTensor *local_trans = [graph transposeTensor:local_c dimension:0 withDimension:1 name:nil];
+        MPSGraphTensor *local_full = [graph reshapeTensor:local_trans
+                                               withShape:@[@1, @(heads), @(padded_video_rows), @(head_dim)]
+                                                    name:nil];
+
+        MPSGraphTensor *local_vid = (padded_video_rows > video_rows) ?
+            [graph sliceTensor:local_full dimension:2 start:0 length:video_rows name:nil] :
+            local_full;
+
+        MPSGraphTensor *out_vid = [graph additionWithPrimaryTensor:local_vid
+                                                   secondaryTensor:cross_text
+                                                              name:nil];
+
+        NSMutableArray<MPSGraphTensor *> *parts = [NSMutableArray arrayWithCapacity:3];
+        [parts addObject:out_text];
+        if (out_aud) {
+            [parts addObject:out_aud];
+        }
+        [parts addObject:out_vid];
+
+        MPSGraphTensor *attention = [graph concatTensors:parts dimension:2 name:nil];
+
+        H3SDPA *result = [[H3SDPA alloc] init];
+        result.graph = graph;
+        result.query = q_in;
+        result.key = k_in;
+        result.value = v_in;
+        result.output = outputHeadMajor ? attention :
+            [graph transposeTensor:attention dimension:1 withDimension:2 name:nil];
+        result.inputShape = inputShape;
+        result.outputShape = outputShape;
+
+        MPSGraphDevice *graphDevice = [MPSGraphDevice deviceWithMTLDevice:gpu.device];
+        MPSGraphShapedType *qType = [[MPSGraphShapedType alloc] initWithShape:inputShape dataType:dataType];
+        MPSGraphShapedType *kType = [[MPSGraphShapedType alloc] initWithShape:inputShape dataType:dataType];
+        MPSGraphShapedType *vType = [[MPSGraphShapedType alloc] initWithShape:inputShape dataType:dataType];
+        NSDictionary *feedTypes = @{q_in: qType, k_in: kType, v_in: vType};
+        @try {
+            result.executable = [graph compileWithDevice:graphDevice
+                                                   feeds:feedTypes
+                                           targetTensors:@[result.output]
+                                        targetOperations:nil
+                                   compilationDescriptor:nil];
+        } @catch (NSException *e) {
+            result.executable = nil;
+        }
+
+        gpu.sdpaCache[cacheKey] = result;
+        return result;
+    }
+}
+
 static int h3_gpu_sdpa(h3_gpu *opaque, h3_gpu_tensor *output,
                        const h3_gpu_tensor *query, const h3_gpu_tensor *key,
                        const h3_gpu_tensor *value, uint32_t batch,
@@ -1830,6 +1995,61 @@ int h3_gpu_sol_attn_bf16(
             [encoder setBuffer:TENSOR(output).buffer offset:0 atIndex:3];
             [encoder setBytes:&args length:sizeof(args) atIndex:4];
         });
+}
+
+int h3_gpu_nax_spatiotemporal_sdpa(
+                     h3_gpu *opaque, h3_gpu_tensor *output,
+                     const h3_gpu_tensor *query, const h3_gpu_tensor *key,
+                     const h3_gpu_tensor *value, uint32_t sequence,
+                     uint32_t text_rows, uint32_t audio_rows,
+                     uint32_t chunk_tokens, uint32_t keyframe_stride,
+                     uint32_t heads, uint32_t head_dim, float scale,
+                     int output_head_major) {
+    (void)keyframe_stride;
+    H3GPU *gpu = GPU(opaque);
+    if (!sequence || !heads || !head_dim || !h3_gpu_require_command(gpu)) return 0;
+
+    int headMajor = gpu.headMajorSDPAInputs;
+    gpu.headMajorSDPAInputs = NO;
+
+    H3SDPA *cache = h3_gpu_nax_st_graph(gpu, sequence, text_rows, audio_rows,
+                                        chunk_tokens, heads, head_dim, scale,
+                                        MPSDataTypeBFloat16, headMajor, output_head_major);
+    if (!cache) {
+        return h3_gpu_sdpa(opaque, output, query, key, value, 1, sequence, heads,
+                           head_dim, scale, H3_GPU_BF16, MPSDataTypeBFloat16, 0,
+                           output_head_major);
+    }
+
+    @autoreleasepool {
+        MPSCommandBuffer *command = h3_gpu_mps_command(gpu);
+        MPSGraphTensorData *(^data)(const h3_gpu_tensor *) =
+            ^MPSGraphTensorData *(const h3_gpu_tensor *tensor) {
+                return h3_gpu_graph_data(tensor, cache.inputShape, MPSDataTypeBFloat16, 0);
+            };
+        MPSGraphTensorData *outputData = h3_gpu_graph_data(output, cache.outputShape, MPSDataTypeBFloat16, 0);
+
+        @try {
+            if (cache.executable) {
+                [cache.executable encodeToCommandBuffer:command
+                                            inputsArray:@[data(query), data(key), data(value)]
+                                           resultsArray:@[outputData]
+                                    executionDescriptor:nil];
+            } else {
+                NSDictionary *feeds = @{
+                    cache.query: data(query), cache.key: data(key), cache.value: data(value)
+                };
+                NSDictionary *results = @{cache.output: outputData};
+                [cache.graph encodeToCommandBuffer:command feeds:feeds targetOperations:nil
+                                 resultsDictionary:results executionDescriptor:nil];
+            }
+            gpu.command = command.rootCommandBuffer;
+            return 1;
+        } @catch (NSException *e) {
+            h3_gpu_set_error(gpu, [NSString stringWithFormat:@"NAX-ST SDPA failed: %@", e.reason]);
+            return 0;
+        }
+    }
 }
 
 int h3_gpu_latent_upsample_3d_f32(
@@ -3521,7 +3741,8 @@ int h3_gpu_mlp_int8_bf16(h3_gpu *opaque, h3_gpu_tensor *output,
         if (parsed >= 0.1f && parsed <= 1.0f) activation_clip = parsed;
     }
     BOOL grouped_fc2 = int8_fc2 && !use_int8_row_fc2;
-    BOOL row_fc2_n256 = use_int8_row_fc2 && rows <= 2048;
+    BOOL row_fc2_n256 = use_int8_row_fc2 && hidden_dim == 14336u &&
+        output_dim == 5376u && getenv("H3_DISABLE_FC2_N256") == NULL;
     BOOL grouped_fc2_local = grouped_fc2 &&
         getenv("H3_INT8_GROUP_FC2_THREADGROUP") == NULL;
     BOOL grouped_fc2_local128 = grouped_fc2 &&
@@ -5066,6 +5287,28 @@ int h3_gpu_euler_bf16(h3_gpu *opaque, h3_gpu_tensor *sample,
                              @"Euler previous velocity")) return 0;
     euler_args args = {(uint32_t)sample_offset, elements, delta, ratio};
     return h3_gpu_dispatch_1d(gpu, @"h3_euler_bf16", elements,
+        ^(id<MTLComputeCommandEncoder> encoder) {
+            [encoder setBuffer:TENSOR(sample).buffer offset:0 atIndex:0];
+            [encoder setBuffer:TENSOR(last).buffer offset:0 atIndex:1];
+            [encoder setBuffer:TENSOR(previous).buffer offset:0 atIndex:2];
+            [encoder setBytes:&args length:sizeof(args) atIndex:3];
+        });
+}
+
+int h3_gpu_dataward_euler_bf16(h3_gpu *opaque, h3_gpu_tensor *sample,
+                              size_t sample_offset, const h3_gpu_tensor *last,
+                              const h3_gpu_tensor *previous, uint32_t elements,
+                              float sigma, float sigma_next, float ratio) {
+    H3GPU *gpu = GPU(opaque);
+    if (!sample || TENSOR(sample).dtype != H3_GPU_F32 ||
+        sample_offset > TENSOR(sample).elements ||
+        elements > TENSOR(sample).elements - sample_offset ||
+        sample_offset > UINT32_MAX || elements > UINT32_MAX - sample_offset ||
+        !h3_gpu_require_bf16(gpu, last, elements, @"Data-Ward last velocity") ||
+        !h3_gpu_require_bf16(gpu, previous, elements,
+                             @"Data-Ward previous velocity")) return 0;
+    dataward_args args = {(uint32_t)sample_offset, elements, sigma, sigma_next, ratio};
+    return h3_gpu_dispatch_1d(gpu, @"h3_dataward_euler_bf16", elements,
         ^(id<MTLComputeCommandEncoder> encoder) {
             [encoder setBuffer:TENSOR(sample).buffer offset:0 atIndex:0];
             [encoder setBuffer:TENSOR(last).buffer offset:0 atIndex:1];

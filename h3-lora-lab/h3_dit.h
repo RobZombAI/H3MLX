@@ -145,6 +145,9 @@ int h3_dit_get_sol_stats(const h3_dit *dit, h3_sol_stats *stats);
 void h3_dit_set_ngram_ctx(h3_dit *dit, void *ctx);
 void *h3_dit_get_ngram_ctx(const h3_dit *dit);
 
+/* NAX-Spatiotemporal Attention Engine */
+void h3_dit_set_nax_st(h3_dit *dit, int enabled, uint32_t chunk_frames, uint32_t keyframe_stride);
+
 /* Sol-Engine Adaptive Euler Sampler with Velocity Delta Caching */
 int h3_dit_denoise_sol_adaptive(
                          h3_dit *dit, float *video_latent,

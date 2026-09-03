@@ -1603,6 +1603,14 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
         }
     }
 
+    if (params->nax_st || getenv("H3_NAX_ST")) {
+        uint32_t cf = params->nax_st_chunk_frames > 0 ? params->nax_st_chunk_frames : 4;
+        uint32_t ks = params->nax_st_keyframe_stride > 0 ? params->nax_st_keyframe_stride : 4;
+        printf("🚀 H3MLX: Attivazione NAX-Spatiotemporal Multimodal Attention (chunk=%u frames, stride=%u)...\n",
+               cf, ks);
+        h3_dit_set_nax_st(dit, 1, cf, ks);
+    }
+
     if (params->sol_cache || getenv("H3_SOL_CACHE")) {
         float thresh = params->sol_cache_thresh > 0.0f ? params->sol_cache_thresh : 0.08f;
         denoise_success = h3_dit_denoise_sol_adaptive(
@@ -1689,11 +1697,57 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
             &decoder_is_cached, detail, sizeof(detail));
         if (preview_decoder && ctx->video_decoder == preview_decoder)
             h3_progress_emit(&progress, "video VAE load", 36, 36);
-        if (!preview_decoder) {
-            h3_set_error(ctx, "%s", detail);
-            goto cleanup;
+    }
+    const char *crisp_env = getenv("H3_TEMPORAL_CRISP");
+    float crisp_gamma = (crisp_env && *crisp_env) ? (float)atof(crisp_env) : 0.08f;
+    if (crisp_gamma > 0.001f && (size_t)temporal.video_t > 2) {
+        size_t frame_elements = 16 * (size_t)latent_h * (size_t)latent_w;
+        size_t total_elements = frame_elements * (size_t)temporal.video_t;
+        float *filtered = malloc(total_elements * sizeof(float));
+        if (filtered) {
+            /* Frame 0: forward second-order difference */
+            const float *f0 = video;
+            const float *f1 = video + frame_elements;
+            const float *f2 = video + 2 * frame_elements;
+            float *out0 = filtered;
+            for (size_t i = 0; i < frame_elements; i++) {
+                float lap = f0[i] - 2.0f * f1[i] + f2[i];
+                out0[i] = f0[i] - 0.5f * crisp_gamma * lap;
+            }
+            /* Frames 1 .. T-2: TVD Minmod-Limited Temporal Curvature Sharpening */
+            for (size_t t = 1; t + 1 < (size_t)temporal.video_t; t++) {
+                const float *prev = video + (t - 1) * frame_elements;
+                const float *curr = video + t * frame_elements;
+                const float *next = video + (t + 1) * frame_elements;
+                float *out = filtered + t * frame_elements;
+                for (size_t i = 0; i < frame_elements; i++) {
+                    float d_prev = curr[i] - prev[i];
+                    float d_next = next[i] - curr[i];
+                    if (d_prev * d_next > 0.0f) {
+                        float min_d = fminf(fabsf(d_prev), fabsf(d_next));
+                        float lap = d_next - d_prev;
+                        float limited_lap = copysignf(fminf(fabsf(lap), min_d), lap);
+                        out[i] = curr[i] - crisp_gamma * limited_lap;
+                    } else {
+                        out[i] = curr[i];
+                    }
+                }
+            }
+            /* Frame T-1: backward second-order difference */
+            size_t last_t = temporal.video_t - 1;
+            const float *fn = video + last_t * frame_elements;
+            const float *fn_1 = video + (last_t - 1) * frame_elements;
+            const float *fn_2 = video + (last_t - 2) * frame_elements;
+            float *outn = filtered + last_t * frame_elements;
+            for (size_t i = 0; i < frame_elements; i++) {
+                float lap = fn[i] - 2.0f * fn_1[i] + fn_2[i];
+                outn[i] = fn[i] - 0.5f * crisp_gamma * lap;
+            }
+            memcpy(video, filtered, total_elements * sizeof(float));
+            free(filtered);
         }
     }
+
     int video_ok = preview_decoder ?
         h3_video_vae_decoder_decode(
             preview_decoder, video, temporal.video_t, &frames,

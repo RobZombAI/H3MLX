@@ -4387,6 +4387,31 @@ kernel void h3_euler_bf16(device float *sample [[buffer(0)]],
     sample[sample_index] = fma(args.delta, velocity, sample[sample_index]);
 }
 
+struct h3_dataward_args {
+    uint sample_offset;
+    uint elements;
+    float sigma;
+    float sigma_next;
+    float ratio;
+};
+
+kernel void h3_dataward_euler_bf16(device float *sample [[buffer(0)]],
+                                   device const ushort *last [[buffer(1)]],
+                                   device const ushort *previous [[buffer(2)]],
+                                   constant h3_dataward_args &args [[buffer(3)]],
+                                   uint gid [[thread_position_in_grid]]) {
+    if (gid >= args.elements) return;
+    float last_value = h3_bf16_to_f32(last[gid]);
+    float velocity = fma(args.ratio,
+                         last_value - h3_bf16_to_f32(previous[gid]),
+                         last_value);
+    uint sample_index = args.sample_offset + gid;
+    float x_t = sample[sample_index];
+    float x0 = fma(args.sigma, velocity, x_t);
+    float blend_weight = (args.sigma > 1e-6f) ? clamp(args.sigma_next / args.sigma, 0.0f, 1.0f) : 0.0f;
+    sample[sample_index] = mix(x0, x_t, blend_weight);
+}
+
 kernel void h3_silu_mul_bf16(device const ushort *gate [[buffer(0)]],
                               device const ushort *up [[buffer(1)]],
                               device ushort *output [[buffer(2)]],

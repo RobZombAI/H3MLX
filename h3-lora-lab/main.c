@@ -71,6 +71,9 @@ static void usage(const char *program) {
         "      --sol-stats        Print Sol-Engine acceleration summary after generation\n"
         "      --ngram           Enable N-Gram speculative patch drafting and VAE tile cache\n"
         "      --ngram-thresh N  Cosine acceptance threshold (default: 0.985)\n"
+        "      --nax-st          Enable NAX-Spatiotemporal Multimodal Attention for long video\n"
+        "      --nax-chunk N     Frames per local temporal chunk (default: 4)\n"
+        "      --nax-stride N    Keyframe anchor stride in frames (default: 4)\n"
         "      --seed N           Random seed (default: 42)\n"
         "      --first-frame PATH First-frame conditioning image\n"
         "      --last-frame PATH  Last-frame conditioning image\n"
@@ -325,6 +328,7 @@ int main(int argc, char **argv) {
             OPT_REF_AUDIO, OPT_SPEECH_AUDIO, OPT_MASTER_10BIT,
             OPT_DETAILER_2K, OPT_FLUID_60FPS,
             OPT_NGRAM, OPT_NGRAM_THRESH,
+            OPT_NAX_ST, OPT_NAX_CHUNK, OPT_NAX_STRIDE,
             OPT_FRAMES_DIR, OPT_SHOW, OPT_ZOOM,
             OPT_DAEMON, OPT_CLIENT, OPT_SOCKET, OPT_WARMUP, OPT_QUIT_DAEMON,
             OPT_INT8, OPT_MODE, OPT_SOLVER, OPT_CANONICAL, OPT_BOOSTED,
@@ -408,6 +412,9 @@ int main(int argc, char **argv) {
         {"ngram", no_argument, NULL, OPT_NGRAM},
         {"ngram-threshold", required_argument, NULL, OPT_NGRAM_THRESH},
         {"ngram-thresh", required_argument, NULL, OPT_NGRAM_THRESH},
+        {"nax-st", no_argument, NULL, OPT_NAX_ST},
+        {"nax-chunk", required_argument, NULL, OPT_NAX_CHUNK},
+        {"nax-stride", required_argument, NULL, OPT_NAX_STRIDE},
         {"frames-dir", required_argument, NULL, OPT_FRAMES_DIR},
         {"show", no_argument, NULL, OPT_SHOW},
         {"zoom", required_argument, NULL, OPT_ZOOM},
@@ -577,6 +584,17 @@ int main(int argc, char **argv) {
             case OPT_NGRAM_THRESH:
                 params.ngram_threshold = strtof(optarg, NULL);
                 params.ngram = 1;
+                break;
+            case OPT_NAX_ST:
+                params.nax_st = 1;
+                break;
+            case OPT_NAX_CHUNK:
+                params.nax_st_chunk_frames = (uint32_t)parse_int(optarg, "nax-chunk");
+                params.nax_st = 1;
+                break;
+            case OPT_NAX_STRIDE:
+                params.nax_st_keyframe_stride = (uint32_t)parse_int(optarg, "nax-stride");
+                params.nax_st = 1;
                 break;
             case OPT_SEED:
                 params.seed = parse_u64(optarg, "seed");

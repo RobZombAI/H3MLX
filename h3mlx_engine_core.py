@@ -40,6 +40,45 @@ class H3EngineResult:
         self.raw_output_path = raw_output_path or output_path
         self.master_output_path = master_output_path
 
+# Standard Optimal Duration Table for MiniMax-H3 Multimodal Architecture
+# Aligned strictly with the 3D Video VAE Temporal Lattice: frames = 17k + 5, latents = 5k + 2
+OPTIMAL_DURATIONS = {
+    "2s": 56,     # 2.33s @ 24fps (k=3, lat=17)
+    "3s": 73,     # 3.04s @ 24fps (k=4, lat=22)
+    "4s": 90,     # 3.75s (Default MiniMax-H3 Short, k=5, lat=27)
+    "6s": 141,    # 5.88s (~6s, k=8, lat=42)
+    "8s": 192,    # 8.00s esatti @ 24fps (Cinema Extended, k=11, lat=57)
+    "10s": 243,   # 10.12s (~10s, k=14, lat=72)
+    "12s": 294,   # 12.25s (~12s, k=17, lat=87)
+    "15s": 362,   # 15.08s (~15s Master, k=21, lat=107)
+    "20s": 481,   # 20.04s (~20s Ultra, k=28, lat=142)
+    "30s": 719,   # 29.96s (~30s Cinema Epic, k=42, lat=212)
+}
+
+def resolve_optimal_frames(duration: Optional[str] = None,
+                           seconds: Optional[float] = None,
+                           frames: Optional[int] = None) -> int:
+    """
+    Resolves the exact mathematically optimal frame count aligned with
+    MiniMax-H3 3D VAE lattice (17k + 5).
+    """
+    if duration:
+        d = duration.strip().lower()
+        if d in OPTIMAL_DURATIONS:
+            return OPTIMAL_DURATIONS[d]
+        try:
+            seconds = float(d.rstrip("s"))
+        except ValueError:
+            pass
+    if seconds is not None and seconds > 0:
+        target_frames = seconds * 24.0
+        k = max(0, int(round((target_frames - 5.0) / 17.0)))
+        return int(17 * k + 5)
+    if frames is not None and frames > 0:
+        k = max(0, int(round((frames - 5.0) / 17.0)))
+        return int(17 * k + 5)
+    return 90
+
 def resolve_model_path(model_dir: Optional[str] = None, steps: int = 14) -> Path:
     """Resolve model path with fallback to PDD or Full model across standard Mac directories."""
     if model_dir:
@@ -98,6 +137,9 @@ def execute_h3_generation(
     smart_filter: str = "auto",
     model_dir: Optional[str] = None,
     profile: bool = True,
+    nax_st: bool = False,
+    nax_chunk: int = 4,
+    nax_stride: int = 4,
     extra_env: Optional[Dict[str, str]] = None
 ) -> H3EngineResult:
     """
@@ -142,6 +184,12 @@ def execute_h3_generation(
         cmd.extend(["--speech-audio", str(speech_audio)])
     if ssd_streaming:
         cmd.append("--ssd-streaming")
+    if nax_st:
+        cmd.append("--nax-st")
+        if nax_chunk > 0:
+            cmd.extend(["--nax-chunk", str(nax_chunk)])
+        if nax_stride > 0:
+            cmd.extend(["--nax-stride", str(nax_stride)])
         
     env = os.environ.copy()
     
@@ -150,6 +198,7 @@ def execute_h3_generation(
     env["H3_ZERO_COPY_WEIGHTS"] = "1"
     env["H3_REUSE_MPS_COMMAND"] = "1"
     env["H3_DIT_COMMAND_BLOCKS"] = "0"
+    env["H3_GPU_SAMPLER_WINDOW"] = "0"
     env["OMP_NUM_THREADS"] = "18"
     env["METAL_DEVICE_WRAPPER_TYPE"] = "0"
     env["MTL_DEBUG_LAYER"] = "0"
@@ -182,9 +231,12 @@ def execute_h3_generation(
         env["H3_GPU_SAMPLER"] = "1"
         
         if solver == "auto":
-            env["H3_SOLVER"] = "dpm3m" if steps > 8 else "euler"
+            env["H3_SOLVER"] = "dpm2m"
         else:
             env["H3_SOLVER"] = solver
+            
+        env["H3_WARP_GAMMA"] = "1.0"
+        env["H3_TEMPORAL_CRISP"] = "0.08"
             
     if extra_env:
         env.update(extra_env)

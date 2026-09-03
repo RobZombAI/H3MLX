@@ -11,7 +11,7 @@ import argparse
 from pathlib import Path
 
 from h3mlx_presets import PRESETS, CANONICAL_RESOLUTIONS, calculate_canonical_frames, get_preset
-from h3mlx_engine_core import execute_h3_generation, resolve_model_path
+from h3mlx_engine_core import execute_h3_generation, resolve_model_path, resolve_optimal_frames, OPTIMAL_DURATIONS
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] in ["studio", "interactive", "ui", "tui", "-i", "--interactive"]:
@@ -40,7 +40,9 @@ def main():
     parser.add_argument("--render-width", type=int, default=0, help="Optional lower internal model canvas width")
     parser.add_argument("--render-height", type=int, default=0, help="Optional lower internal model canvas height")
     parser.add_argument("--frames", type=int, default=0, help="Total video frames (e.g. 48 for 2s, 73 for 3s, 90 for 4s)")
-    parser.add_argument("--seconds", type=float, default=3.0, help="Duration in seconds (calculated at 24 fps)")
+    parser.add_argument("--seconds", type=float, default=0.0, help="Duration in seconds (calculated at 24 fps)")
+    parser.add_argument("--duration", type=str, default="",
+                        help="Standard optimal duration: '3s', '4s', '6s', '8s', '10s', '12s', '15s', '20s', '30s'")
     parser.add_argument("--seed", type=int, default=42, help="Random number generator seed")
     
     # 3. Denoising & DiT Controls
@@ -75,6 +77,9 @@ def main():
                         help="Smart Mastering Filter: 'auto' (content-aware), 'portrait' (AMD CAS+Bilateral), 'cinema', 'anime', 'action', 'macro', or 'clean'")
     parser.add_argument("--profile", action="store_true", default=True, help="Print per-phase Metal profiling metrics")
     parser.add_argument("--frames-dir", type=str, default="", help="Directory to dump individual decoded RGB frames (.ppm)")
+    parser.add_argument("--nax-st", action="store_true", help="Enable NAX-Spatiotemporal Multimodal Attention for long video")
+    parser.add_argument("--nax-chunk", type=int, default=4, help="Frames per local temporal chunk (default: 4)")
+    parser.add_argument("--nax-stride", type=int, default=4, help="Keyframe anchor stride in frames (default: 4)")
     
     args = parser.parse_args()
     
@@ -146,11 +151,17 @@ def main():
     elif args.boosted:
         args.engine_mode = "boosted"
 
-    # Frame calculations
-    if args.frames > 0:
-        total_frames = args.frames
+    # Frame calculations using MiniMax-H3 optimal temporal lattice (17k + 5)
+    if args.duration:
+        total_frames = resolve_optimal_frames(duration=args.duration)
+    elif args.frames > 0:
+        total_frames = resolve_optimal_frames(frames=args.frames)
+    elif args.seconds > 0:
+        total_frames = resolve_optimal_frames(seconds=args.seconds)
     else:
-        total_frames = calculate_canonical_frames(args.seconds, args.width, args.height)
+        total_frames = 90  # Default ~4s standard
+
+    # Frame calculations using MiniMax-H3 optimal temporal lattice (17k + 5)
 
     print("=" * 70)
     print(f"🚀 H3MLX Master Pipeline | Engine: {args.engine_mode.upper()} | Steps: {args.steps}")
@@ -184,7 +195,10 @@ def main():
         upscale_4k=args.upscale_4k,
         smart_filter=args.smart_filter,
         model_dir=args.model_dir if args.model_dir else None,
-        profile=args.profile
+        profile=args.profile,
+        nax_st=args.nax_st,
+        nax_chunk=args.nax_chunk,
+        nax_stride=args.nax_stride
     )
 
     if res.success:
