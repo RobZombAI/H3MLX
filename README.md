@@ -137,15 +137,12 @@ The **v3.1 Frontier Engine** release introduces a suite of low-level mathematica
 | **💃 High-Motion Dynamic (Dance TVD)** | `768x512` | **8** | **50** | **`28.58 s`** | **`46.42 s`** | **1.21 FPS** |
 | **👑 Champion Gold 4s (Full Clip)** | `768x512` | **8** | **50** | **`64.12 s`** | **`84.00 s`** | **1.07 FPS** |
 
-### 🎬 Frontier Engine v3.1 Output: Static Portrait Photorealism (28s Denoise @ 24fps)
+### 🎬 Frontier Engine v3.1 Outputs: Static Photorealism vs Dynamic Motion Physics
 
-<p align="center">
-  <img src="assets/v3_1_frontier_brad_face_master.gif" alt="Frontier Static Face Master" width="640">
-  <br>
-  <em><b>Prompt</b>: "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed, photorealistic RAW"</em>
-  <br>
-  <em><b>Denoise</b>: 28.52s pure GPU · 8 dense steps · 50 full layers · DPM++ 2M Metal Curvature · Canonical Linear Schedule</em>
-</p>
+| 👤 Static RAW Portrait (28.3s GPU Denoise) | 💃 Dynamic Motion Physics (27.9s GPU Denoise) |
+| :---: | :---: |
+| ![Static Face](assets/v3_1_frontier_brad_face_master.gif) | ![Dynamic Dance](assets/v3_1_frontier_brad_dance_dynamic.gif) |
+| *Brad Pitt smiling · DPM++ 2M 2nd-order · 1.20 FPS* | *Tyler Durden dance · TVD Minmod anti-smearing · 1.21 FPS* |
 
 ---
 
