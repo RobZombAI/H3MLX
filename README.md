@@ -1,11 +1,11 @@
-# 👑 H3MLX (v3.0.0 Universal Edition)
+# 👑 H3MLX (v3.1.0 Frontier Edition)
 ### Next-Gen MiniMax H3 Inference Engine on Apple Silicon (M1–M5 Max/Ultra)
-#### Pure C/Metal 4 NAX Fused Attention · Content-Aware Smart Mastering · Dual Video Output (RAW + 4K Master)
+#### Pure C/Metal 4 NAX Fused Attention · DPM++ 2M Second-Order Curvature · TVD Minmod Anti-Smearing
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform: Apple Silicon](https://img.shields.io/badge/Platform-Apple%20Silicon%20M1--M5-black.svg)]()
 [![Metal: 4 NAX](https://img.shields.io/badge/Metal-4%20NAX%20Accelerated-blue.svg)]()
-[![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0--Universal-blue.svg)]()
+[![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0--Frontier-blue.svg)]()
 [![Green AI: Eco Sovereign](https://img.shields.io/badge/Green%20AI-99.5%25%20Carbon%20Reduction-brightgreen.svg)]()
 
 ---
@@ -101,20 +101,20 @@ Al termine di ogni run, la CLI stampa un report analitico dettagliato:
 
 ## 🏎️ 4. The Frontier Velocity & Motion Physics Engine (v3.1)
 
-L'aggiornamento **v3.1 Frontier Engine** introduce una suite di innovazioni matematiche e di calcolo GPU a basso livello che spingono MiniMax-H3 al vertice assoluto di velocità e qualità fotorealistica RAW nativa su Apple Silicon:
+The **v3.1 Frontier Engine** release introduces a suite of low-level mathematical and GPU architecture innovations that elevate MiniMax-H3 to peak speed and raw photorealistic fidelity on Apple Silicon:
 
 ### 1. Metal Native DPM++ 2M Second-Order Curvature Flow Solver
-* **La Matematica**: Risolve l'equazione differenziale di Flow Matching integrando la curvatura di Taylor di 2° ordine:
+* **The Mathematics**: Solves the rectified flow differential equation by integrating second-order Taylor curvature directly on GPU:
   $$r_k = \frac{\sigma_k - \sigma_{k+1}}{\sigma_{k-1} - \sigma_k}, \quad v_k^{\text{curved}} = \text{fma}(0.5 \cdot r_k, v_k - v_{k-1}, v_k)$$
-* **L'Impatto**: Riduce l'errore di troncamento numerico di $8\times$ ($O(\Delta t^3)$ rispetto a $O(\Delta t^2)$ del semplice Eulero), eliminando ogni artefatto o bruciatura sui contrasti fini con un tempo di denoise di appena **`28.05 s`** per 50 layer densi!
+* **The Impact**: Slashes numerical truncation error by $8\times$ ($O(\Delta t^3)$ compared to $O(\Delta t^2)$ in standard Euler), eliminating contrast burning and waxy artifacts with pure GPU denoise completed in just **`28.05 s`** across 50 full layers!
 
-### 2. Sblocco Hardware AMX 512-Thread Metal (`fc2_full_n256`)
-* **L'Hardware**: Eliminato il limite statico di riga (`rows <= 2048`) nel modulo `h3_gpu.m`.
-* **L'Ottimizzazione**: Il kernel cooperativo a 512 thread SIMD16 con descrittori hardware `matmul2d_descriptor` opera ora su tutte le lunghezze di sequenza (anche oltre 23.000 token), saturando la banda di memoria unificata dell'M5 Max a oltre 400 GB/s.
+### 2. Full-Width 512-Thread AMX Metal Matrix Acceleration (`fc2_full_n256`)
+* **The Hardware**: Removed the legacy row constraint (`rows <= 2048`) in `h3_gpu.m`.
+* **The Optimization**: Unlocks the 512-thread SIMD16 cooperative matrix kernel (`matmul2d_descriptor`) across arbitrary sequence lengths (>23,000 tokens), saturating the unified memory bandwidth of M5 Max past 400 GB/s.
 
-### 3. Limitatore di Pendenza TVD Minmod Anti-Smearing (Causal VAE Latent Filter)
-* **Il Problema**: Nelle scene dinamiche ad alta velocità (ballo, corsa, azione), la compressione temporale $4\times$ del VAE video 3D fonde i frame generando sfocatura cinetica e perdita di alte frequenze.
-* **La Soluzione Matematica**: Un operatore differenziale di pre-enfasi di secondo ordine $\nabla_t^2$ applicato nello spazio latente RAW $x_0$, protetto dal limitatore Total Variation Diminishing (TVD) Minmod:
+### 3. TVD Minmod-Limited Temporal Anti-Smearing Filter (Causal 3D VAE Latent Space)
+* **The Problem**: In dynamic, high-velocity motion (dancing, running, sports), the $4\times$ temporal compression of causal 3D video VAEs blends consecutive frames, causing kinetic blur and loss of high frequencies.
+* **The Mathematical Solution**: A second-order differential pre-emphasis operator $\nabla_t^2$ applied directly in the raw latent space $x_0$, governed by a Total Variation Diminishing (TVD) Minmod slope limiter:
   ```c
   if (d_prev * d_next > 0.0f) {
       float min_d = fminf(fabsf(d_prev), fabsf(d_next));
@@ -122,34 +122,34 @@ L'aggiornamento **v3.1 Frontier Engine** introduce una suite di innovazioni mate
       out[i] = curr[i] - gamma * copysignf(fminf(fabsf(lap), min_d), lap);
   }
   ```
-* **Il Risultato**: Cancella l'ammorbidimento del VAE senza introdurre oscillazioni di Gibbs o artefatti a pettine sulle braccia e sui volti in rapido movimento. Sulle parti statiche della scena l'effetto è rigorosamente zero ($\nabla_t^2 = 0$). Tempo di esecuzione: **`0.0003 s`** (zero overhead).
+* **The Result**: Neutralizes VAE temporal smearing without triggering Gibbs ringing or comb-like banding along fast-moving limbs. On static scene regions, the effect is identically zero ($\nabla_t^2 = 0$). Execution latency: **`0.0003 s`** (strictly zero overhead).
 
-### 4. Canonical Linear Warp Schedule
-* Calibrazione organica della traiettoria $\sigma(t)$ con curvatura gamma unitaria (`H3_WARP_GAMMA=1.0`), preservando la traslucenza della pelle (subsurface scattering), la profondità oculare e la morbidezza cinematografica naturale della luce.
+### 4. Canonical Linear Warp Reference Schedule
+* Calibrated $\sigma(t)$ trajectory with unitary gamma curvature (`H3_WARP_GAMMA=1.0`), restoring authentic skin translucency (subsurface scattering), corneal depth, and organic cinematic light diffusion.
 
 ---
 
-## 📊 Benchmark di Velocità Reale (Apple Silicon M5 Max 128GB)
+## 📊 Real-World Speed Benchmarks (Apple Silicon M5 Max 128GB)
 
-| Modalità Scena | Risoluzione | Step DIT | Layer | ⏱️ Denoise GPU Puro | ⏱️ Tempo Totale Reale | Throughput |
+| Scene Type | Canvas | DiT Steps | Layers | ⏱️ Pure GPU Denoise | ⏱️ Total Wall Time | Throughput |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **👤 Volto Statico RAW (Portrait)** | `768x512` | **8** | **50** | **`28.52 s`** | **`46.57 s`** | **1.20 FPS** |
-| **💃 Scena Dinamica (Dance TVD)** | `768x512` | **8** | **50** | **`28.58 s`** | **`46.42 s`** | **1.21 FPS** |
+| **👤 Static RAW Face (Portrait)** | `768x512` | **8** | **50** | **`28.52 s`** | **`46.57 s`** | **1.20 FPS** |
+| **💃 High-Motion Dynamic (Dance TVD)** | `768x512` | **8** | **50** | **`28.58 s`** | **`46.42 s`** | **1.21 FPS** |
 | **👑 Champion Gold 4s (Full Clip)** | `768x512` | **8** | **50** | **`64.12 s`** | **`84.00 s`** | **1.07 FPS** |
 
 ---
 
-## 👥 Riconoscimenti & Credits
+## 👥 Acknowledgments & Credits
 
-Questo progetto rappresenta l'incontro tra la ricerca scientifica sui modelli generativi video e l'eccellenza dell'ingegneria di sistema a basso livello:
+This project bridges bleeding-edge generative video research with low-level systems engineering:
 
-* **Salvatore Sanfilippo ([@antirez](https://github.com/antirez))**: Per la visione pionieristica e la creazione della base di codice originale `h3.c`, dimostrando che l'IA moderna può essere pura, elegante, comprensibile e priva di ingombranti dipendenze esterne.
-* **MiniMax AI / Team Hailuo**: Per l'architettura all'avanguardia MiniMax-H3 / PDD DiT e i pesi del modello che hanno ridefinito gli standard di coerenza video open-source.
-* **Apple Silicon Metal & CoreOS Architecture Teams**: Per l'incredibile architettura di memoria unificata, le istruzioni AMX e l'API Metal 4 che rendono possibile eseguire un gigante generativo da 50 layer interamente su un laptop.
-* **FastVideo & SGLang Teams**: Per la ricerca aperta sui solutori simplettici di Flow Matching e l'analisi della distillazione PDD.
-* **RobZomb AI & Antigravity (Google DeepMind)**: Per la progettazione e l'implementazione dell'architettura H3MLX Metal 4 NAX, il solutore DPM++ 2M su GPU, l'integrazione hardware VideoToolbox a 10-bit e il filtro di frontiera TVD Minmod Anti-Smearing.
+* **Salvatore Sanfilippo ([@antirez](https://github.com/antirez))**: For the visionary creation of the original `h3.c` codebase, proving that modern generative AI can be pure, elegant, auditable, and free of massive framework bloat.
+* **MiniMax AI / Hailuo Team**: For the state-of-the-art MiniMax-H3 / PDD DiT architecture and open model weights that set new benchmarks for video coherence.
+* **Apple Silicon Metal & CoreOS Architecture Teams**: For the unified memory architecture, AMX instructions, and Metal 4 framework that make running a 50-layer generative model on a laptop possible.
+* **FastVideo & SGLang Teams**: For open research on symplectic Flow Matching schedules and PDD distillation dynamics.
+* **RobZomb AI & Antigravity (Google DeepMind)**: For co-designing and engineering the H3MLX Metal 4 NAX architecture, GPU DPM++ 2M curvature solver, hardware 10-bit VideoToolbox pipeline, and TVD Minmod Anti-Smearing filter.
 
 ---
 
-## 📜 Licenza
-Rilasciato sotto Licenza Open-Source [MIT](LICENSE). Basato sull'opera pionieristica di Salvatore Sanfilippo (`antirez/h3.c`) ed esteso con l'architettura H3MLX Metal 4 NAX.
+## 📜 License
+Released under the open-source [MIT License](LICENSE). Built upon the foundational work of Salvatore Sanfilippo (`antirez/h3.c`) and extended with the H3MLX Metal 4 NAX architecture.
