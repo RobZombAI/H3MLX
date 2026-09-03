@@ -1,22 +1,36 @@
-# 📊 H3MLX v3.0 Official Reference Benchmarks
-### 5 Golden Presets · 4-Second Full Clips (90 Frames @ 24fps) · Apple Silicon M5 Max (128GB UMA)
-#### Metal 4 NAX Acceleration · Dual File Output (RAW + Smart 4K Master) · AMD FidelityFX CAS & Bilateral De-Gridding
+# 📊 H3MLX v3.1 Official Reference Benchmarks
+### 5 Golden Presets · Apple Silicon M5 Max (128GB Unified Memory, >400 GB/s)
+#### Metal 4 NAX Fused Attention · DPM++ 2M Second-Order Solver · Latent TVD Minmod Pre-Emphasis
 
-Questo documento riporta le misurazioni empiriche ufficiali eseguite in locale su **Apple Silicon M5 Max (128GB Unified Memory, banda passante >400 GB/s)**.
+Questo documento riporta le misurazioni empiriche ufficiali eseguite in locale su **Apple Silicon M5 Max (128GB Unified Memory)** con il motore **v3.1 Frontier Engine**.
 
 ---
 
-## ⚡ 1. Tabella Ufficiale di Benchmark (Clip da 4.0s / 90 Frame @ 24fps)
+## ⚡ 1. Tabella Ufficiale di Benchmark Rapido (2.0s / 56 Frame @ 24fps)
 
-Tutti i preset sono calcolati matematicamente sul reticolo temporale causale del 3D VAE ($T = 17n + 5 = 90$ frame) con **50 Layer Densi completi (100% densità spaziale)**, solutore simplettico DPM++ 3M e quantizzazione dinamica Row-Major INT8 FC2:
+Tutti i preset operano sul reticolo causale $T = 17 \times 3 + 5 = 56$ frame a **50 Layer Densi completi (100% densità)**, solutore simplettico Metal DPM++ 2M, filtro TVD Minmod e quantizzazione INT8 FC2:
 
-| Preset Ufficiale | Risoluzione & 4K | ⏱️ Tempo Totale (90 fr / 4.0s) | 🏎️ Throughput | 🎛️ Smart Filter | 📦 Dimensioni (RAW / Master) | 🎞️ Anteprima Animata |
+| Preset Ufficiale | Aspect & Risoluzione Reale (RAW → Master) | ⏱️ Tempo Totale (56 fr / 2.3s) | 🏎️ Throughput | 🎛️ Smart Filter | 📦 Dimensioni (RAW / Master) | 🎞️ Anteprima Animata |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **👑 Champion Master Gold (3:2)** | `768x512 → 3072x2048` | **`85.09 s`** | **`1.06 FPS`** | `👤 Portrait & Beauty` | `2.2 MB` / `13.9 MB` | ![Champion Gold](assets/preview_v3_h3mlx_champion_gold.gif) |
-| **🎬 Cinema Anamorphic (16:9)** | `960x544 → 3840x2176` | **`123.30 s`** | **`0.73 FPS`** | `🏎️ Cinema / Action` | `4.3 MB` / `26.5 MB` | ![Cinema 16:9](assets/preview_v3_h3mlx_cinema_16x9.gif) |
-| **💎 Square High-Density (1:1)** | `640x640 → 2560x2560` | **`102.17 s`** | **`0.88 FPS`** | `🏎️ Action & Speed` | `5.1 MB` / `27.1 MB` | ![Square](assets/preview_v3_h3mlx_macro_square.gif) |
-| **📱 Vertical Cinema Reel (9:16)** | `576x1024 → 2304x4096` | **`158.83 s`** | **`0.57 FPS`** | `👤 Portrait / Beauty` | `4.2 MB` / `31.1 MB` | ![Vertical Reel](assets/preview_v3_h3mlx_vertical_reel.gif) |
-| **🌿 Studio Ghibli Master (3:2)** | `768x512 → 3072x2048` | **`94.48 s`** | **`0.95 FPS`** | `🌿 Anime & Ghibli` | `2.7 MB` / `29.2 MB` | ![Ghibli Master](assets/preview_v3_h3mlx_ghibli_master.gif) |
+| **👑 Champion Master Gold (3:2)** | `3:2 (768x512 → 3072x2048)` | **`51.59 s`** | **`1.09 FPS`** | `👤 Smart Portrait` + 48kHz | `2.1 MB` / `12.2 MB` | ![Champion Gold](assets/preview_v3_h3mlx_champion_gold.gif) |
+| **🎬 Cinema Anamorphic (16:9)** | `16:9 (960x544 → 3840x2176)` | **`68.47 s`** | **`0.82 FPS`** | `🏎️ Cinema Action` + 48kHz | `3.6 MB` / `16.9 MB` | ![Cinema 16:9](assets/preview_v3_h3mlx_cinema_16x9.gif) |
+| **💎 Square High-Density (1:1)** | `1:1 (640x640 → 2560x2560)` | **`68.43 s`** | **`0.82 FPS`** | `🏎️ Speed & Detail` + 48kHz | `3.3 MB` / `13.9 MB` | ![Square](assets/preview_v3_h3mlx_macro_square.gif) |
+| **📱 Vertical Cinema Reel (9:16)** | `9:16 (576x1024 → 2304x4096)` | **`103.62 s`** | **`0.54 FPS`** | `👤 Vertical Beauty` + 48kHz | `2.7 MB` / `9.9 MB` | ![Vertical Reel](assets/preview_v3_h3mlx_vertical_reel.gif) |
+| **🌿 Studio Ghibli Master (3:2)** | `3:2 (768x512 → 3072x2048)` | **`66.77 s`** | **`0.84 FPS`** | `🌿 Anime & Ghibli` + 48kHz | `2.3 MB` / `13.3 MB` | ![Ghibli Master](assets/preview_v3_h3mlx_ghibli_master.gif) |
+
+---
+
+## 🎬 2. Tabella Ufficiale di Benchmark Cinema Master (4.0s / 90 Frame @ 24fps)
+
+Tutti i preset operano sul reticolo causale $T = 17 \times 5 + 5 = 90$ frame a 50 Layer Densi completi:
+
+| Preset Ufficiale | Aspect & Risoluzione Reale (RAW → Master) | ⏱️ Tempo Totale (90 fr / 4.0s) | 🏎️ Throughput | 🎛️ Smart Filter | 📦 Dimensioni (RAW / Master) | 🎞️ Anteprima Animata |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **👑 Champion Master Gold (3:2)** | `3:2 (768x512 → 3072x2048)` | **`85.12 s`** | **`1.06 FPS`** | `👤 Portrait & Beauty` | `2.2 MB` / `14.8 MB` | ![Champion Gold](assets/preview_v3_h3mlx_champion_gold.gif) |
+| **🎬 Cinema Anamorphic (16:9)** | `16:9 (960x544 → 3840x2176)` | **`122.53 s`** | **`0.73 FPS`** | `🏎️ Cinema / Action` | `4.3 MB` / `26.1 MB` | ![Cinema 16:9](assets/preview_v3_h3mlx_cinema_16x9.gif) |
+| **💎 Square High-Density (1:1)** | `1:1 (640x640 → 2560x2560)` | **`93.93 s`** | **`0.96 FPS`** | `🏎️ Action & Speed` | `5.1 MB` / `19.7 MB` | ![Square](assets/preview_v3_h3mlx_macro_square.gif) |
+| **📱 Vertical Cinema Reel (9:16)** | `9:16 (576x1024 → 2304x4096)` | **`157.11 s`** | **`0.57 FPS`** | `👤 Portrait / Beauty` | `4.2 MB` / `19.8 MB` | ![Vertical Reel](assets/preview_v3_h3mlx_vertical_reel.gif) |
+| **🌿 Studio Ghibli Master (3:2)** | `3:2 (768x512 → 3072x2048)` | **`95.74 s`** | **`0.94 FPS`** | `🌿 Anime & Ghibli` | `2.7 MB` / `16.3 MB` | ![Ghibli Master](assets/preview_v3_h3mlx_ghibli_master.gif) |
 
 ---
 

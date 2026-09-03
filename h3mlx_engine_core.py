@@ -273,12 +273,25 @@ def execute_h3_generation(
         four_k_path = out_file.parent / f"{out_file.stem}_4k.mp4"
         try:
             from h3_cinema_upscaler import upscale_video
-            print(f"🎬 Avvio Mastering 4K Cinema Master (Wavelet Bayes + CAS): {out_file.name} -> {four_k_path.name}")
+            # True Aspect Ratio 4x Scaling (Preserves true pixel geometry)
+            if width == 640 and height == 640:
+                t_w, t_h = 2560, 2560  # 1:1 True Square Master
+            elif width == 576 and height == 1024:
+                t_w, t_h = 2304, 4096  # 9:16 True Vertical Cinema Reel
+            elif width == 960 and height == 544:
+                t_w, t_h = 3840, 2176  # 16:9 True Cinema Anamorphic
+            elif width == 768 and height == 512:
+                t_w, t_h = 3072, 2048  # 3:2 True 35mm Photographic Master
+            else:
+                scale_factor = max(1, 3840 // width)
+                t_w = ((width * scale_factor) // 2) * 2
+                t_h = ((height * scale_factor) // 2) * 2
+
             result_path = upscale_video(
                 input_path=str(out_file),
                 output_path=str(four_k_path),
-                target_width=3840,
-                target_height=2160,
+                target_width=t_w,
+                target_height=t_h,
                 enable_denoise=True,
                 cas_strength=0.25,
                 use_videotoolbox=True
