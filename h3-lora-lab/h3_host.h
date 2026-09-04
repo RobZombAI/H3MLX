@@ -154,6 +154,10 @@ int h3_freqflow_velocity_boost(float *velocity, int channels, int time,
                               int height, int width, float sigma, float strength);
 int h3_spatial_phase_align(float *video, int channels, int time,
                            int height, int width, float gamma);
+int h3_tfm_temporal_momentum_regularize(float *velocity, int channels, int time,
+                                       int height, int width, float lambda_tau);
+int h3_spectral_eigen_clamp(float *video, int channels, int time,
+                            int height, int width, float threshold);
 
 #endif
 

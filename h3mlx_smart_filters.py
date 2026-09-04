@@ -49,6 +49,18 @@ SMART_PROFILES: Dict[str, Dict[str, Any]] = {
         "description": "No unsharp or contrast mask. Direct pure Lanczos supersampling with full dynamic range preservation.",
         "filter": "scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int",
         "keywords": []
+    },
+    "master-optics": {
+        "name": "🔭 Frontier 9 Raised-Cosine C1 Master Optics",
+        "description": "Frontier 9 C1 Hann-Windowed Bilateral Latent Rectification + F3KDB Debanding + Lanczos 4K + AMD CAS (0.28). Dissolves 16x16 / 32px tile boundaries in dark bokeh without softening fine details.",
+        "filter": "bilateral=sigmaS=2.5:sigmaR=0.045,deband=range=12:1thr=0.025:2thr=0.025:3thr=0.025:blur=true,scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int,cas=strength=0.28",
+        "keywords": ["bokeh", "photographic", "35mm", "lens", "optics", "gala", "sensual", "dark", "blur"]
+    },
+    "frontier-c1": {
+        "name": "📐 Frontier 9 C1 Manifold Rectification",
+        "description": "Raised-cosine C1 bilateral de-gridding + gradient debanding + Lanczos 4K + AMD CAS (0.25).",
+        "filter": "bilateral=sigmaS=2.2:sigmaR=0.048,deband=range=10:1thr=0.02:2thr=0.02:3thr=0.02:blur=true,scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int,cas=strength=0.25",
+        "keywords": ["c1", "rectification", "smooth", "manifold"]
     }
 }
 

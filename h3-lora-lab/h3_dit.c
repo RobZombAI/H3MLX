@@ -3334,6 +3334,18 @@ int h3_dit_denoise_euler_preview(
                                            (int)dit->latent_h, (int)dit->latent_w,
                                            dit->sigmas.video[step], freqflow_strength);
             }
+            /* Frontier Level 8: Temporal Block-Tridiagonal Momentum Regularization (TFM) */
+            const char *tfm_env = getenv("H3_TFM_MOMENTUM");
+            const char *frontier_env = getenv("H3_FRONTIER");
+            float tfm_lambda = (tfm_env && *tfm_env) ? (float)atof(tfm_env) : 0.0f;
+            if (frontier_env && atoi(frontier_env) >= 8 && tfm_lambda <= 0.0001f) {
+                tfm_lambda = 0.06f;
+            }
+            if (tfm_lambda > 0.001f && dit->latent_t > 2) {
+                h3_tfm_temporal_momentum_regularize(
+                    video_velocity, VIDEO_CHANNELS, dit->latent_t,
+                    (int)dit->latent_h, (int)dit->latent_w, tfm_lambda);
+            }
             if (solver_type == SOLVER_DPM3M) {
                 ok = h3_dpm3m_velocity_step(
                          video_latent, video_velocity,

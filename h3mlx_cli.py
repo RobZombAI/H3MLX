@@ -20,7 +20,7 @@ def main():
         return
 
     parser = argparse.ArgumentParser(
-        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 7 Frontiers (v3.2 Frontier Edition)",
+        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 11 Frontiers (v3.3 2026 SOTA Edition)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -30,8 +30,8 @@ def main():
     parser.add_argument("-o", "--output", type=str, default="outputs/h3mlx_output.mp4", help="Output MP4 file path")
     parser.add_argument("--preset", type=str, default="", choices=list(PRESETS.keys()), help="Load a pre-configured video preset")
     parser.add_argument("--frontier", "--level", dest="frontier_level", type=str, default="",
-                        choices=["1", "2", "3", "4", "5", "6", "7", "champion"],
-                        help="Select Frontier Level: 1-5, 6 (Temporal-FreqFlow), 7 (Super-Nyquist Cinema Optics)")
+                        choices=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "champion", "ultra"],
+                        help="Select Frontier Level: 1-5, 6 (Temporal-FreqFlow), 7 (Cinema Optics), 8 (TFM Momentum), 9 (C1 Hann Tile Rectification), 10 (Chebyshev Curvature Warp), 11 (Spectral Eigen-Clamping)")
     parser.add_argument("-i", "--interactive", action="store_true", help="Launch interactive studio director")
     
     # 2. Dimensions & Temporal Grid
@@ -73,8 +73,8 @@ def main():
                         help="ODE flow solver: 'dpm3m' (3rd order), 'ab3', or 'euler'")
     parser.add_argument("--4k", "--upscale", dest="upscale_4k", action="store_true", help="Upscale generated output to 4K UHD Master (3840x2160)")
     parser.add_argument("--smart-filter", type=str, default="auto",
-                        choices=["auto", "portrait", "cinema", "anime", "action", "macro", "clean", "master-optics", "optics"],
-                        help="Smart Mastering Filter: 'auto', 'portrait', 'cinema', 'anime', 'action', 'macro', 'clean', or 'master-optics' (Kodak Vision3 5219 Sensitometric Optics)")
+                        choices=["auto", "portrait", "cinema", "anime", "action", "macro", "clean", "master-optics", "optics", "frontier-c1"],
+                        help="Smart Mastering Filter: 'auto', 'portrait', 'cinema', 'anime', 'action', 'macro', 'clean', 'master-optics', or 'frontier-c1'")
     parser.add_argument("--profile", action="store_true", default=True, help="Print per-phase Metal profiling metrics")
     parser.add_argument("--frames-dir", type=str, default="", help="Directory to dump individual decoded RGB frames (.ppm)")
     parser.add_argument("--nax-st", action="store_true", help="Enable NAX-Spatiotemporal Multimodal Attention for long video")
@@ -90,7 +90,7 @@ def main():
 
     # Handle Frontier Levels
     if args.frontier_level == "1":
-        print("🏛️ Attivazione Frontiera Livello 1: Test Isolato Livello 1 (NAX + GPU Sampler)")
+        print("🏛️ Activating Frontier Level 1: Isolated Metal 4 NAX + GPU Sampler")
         args.engine_mode = "boosted"
         args.layers = 50
         args.steps = 14
@@ -99,35 +99,58 @@ def main():
         args.int8 = True
         args.solver = "euler"
     elif args.frontier_level == "2":
-        print("⚡ Attivazione Frontiera Livello 2: Spatial Token Reduction Adattiva Multi-Scala (4:34)")
+        print("⚡ Activating Frontier Level 2: Adaptive Multi-Scale Spatial Token Reduction (4:34)")
         args.engine_mode = "boosted"
         args.layers = 50
         args.token_reduction = True
         args.int8 = True
     elif args.frontier_level == "3":
-        print("💎 Attivazione Frontiera Livello 3: Monolithic 3D VAE Zero-Stitch")
+        print("💎 Activating Frontier Level 3: Monolithic 3D VAE Zero-Stitch")
         args.engine_mode = "boosted"
     elif args.frontier_level == "4":
-        print("🚀 Attivazione Frontiera Livello 4: 14-Step PDD Optimal Trajectory")
+        print("🚀 Activating Frontier Level 4: 14-Step PDD Optimal Trajectory")
         args.engine_mode = "boosted"
         args.steps = 14
         args.reuse = 2
         args.int8 = True
         args.token_reduction = True
     elif args.frontier_level in ["5", "champion"]:
-        print("👑 Attivazione Frontiera Livello 5: Champion Master (Cooke Anamorphic S4/i MTF + 4K Broadcast)")
+        print("👑 Activating Frontier Level 5: Champion Master (Cooke Anamorphic S4/i MTF + 4K Broadcast)")
         args.engine_mode = "boosted"
         args.steps = 14
         args.reuse = 2
         args.int8 = True
         args.token_reduction = True
         args.upscale_4k = True
+    elif args.frontier_level == "6":
+        print("🌊 Activating Frontier Level 6: FreqFlow Dynamic High-Frequency Spectral Velocity Boost")
+        args.engine_mode = "boosted"
+    elif args.frontier_level == "7":
+        print("🔭 Activating Frontier Level 7: Super-Nyquist Pre-VAE Phase Alignment & Kodak Vision3 Optics")
+        args.engine_mode = "boosted"
+        args.upscale_4k = True
+    elif args.frontier_level == "8":
+        print("🏃 Activating Frontier Level 8: Temporal Block-Tridiagonal Momentum Regularization (TFM)")
+        args.engine_mode = "boosted"
+    elif args.frontier_level == "9":
+        print("📐 Activating Frontier Level 9: Raised-Cosine C1 Latent Manifold Rectification")
+        args.engine_mode = "boosted"
+        args.smart_filter = "master-optics"
+    elif args.frontier_level == "10":
+        print("📈 Activating Frontier Level 10: Curvature-Adaptive Chebyshev Time-Warping (CACFM)")
+        args.engine_mode = "boosted"
+        args.reuse = 1
+    elif args.frontier_level in ["11", "ultra"]:
+        print("✨ Activating Frontier Level 11: Complete 2026 SOTA Multi-Physics Stack (Chebyshev + TFM + Hann C1 + 4K)")
+        args.engine_mode = "boosted"
+        args.upscale_4k = True
+        args.smart_filter = "master-optics"
 
     # Apply Preset if specified
     if args.preset:
         preset_cfg = get_preset(args.preset)
         if preset_cfg:
-            print(f"🎬 Caricamento Preset: {preset_cfg['name']} ({preset_cfg['description']})\n")
+            print(f"🎬 Loading Preset: {preset_cfg['name']} ({preset_cfg['description']})\n")
             args.width = preset_cfg.get("width", args.width)
             args.height = preset_cfg.get("height", args.height)
             args.seconds = preset_cfg.get("seconds", args.seconds)

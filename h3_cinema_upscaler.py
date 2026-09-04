@@ -38,12 +38,14 @@ def build_filtergraph(
     if aspect_ratio == "9:16":
         filters.append("crop=ih*9/16:ih:(iw-ih*9/16)/2:0")
 
+    if enable_denoise:
+        # Pre-scale Wavelet Bayesian Denoising: operates at native Nyquist resolution (16x fewer pixels)
+        # Prevents Lanczos sinc kernel from magnifying VAE high-frequency block noise into 4K band
+        filters.append("vaguedenoiser=threshold=1.2:method=garrote:nsteps=4:percent=45:planes=7:type=bayes")
+
     filters.append(
         f"scale={target_width}:{target_height}:flags=lanczos+accurate_rnd+full_chroma_int+full_chroma_inp"
     )
-
-    if enable_denoise:
-        filters.append("vaguedenoiser=threshold=1.2:method=garrote:nsteps=4:percent=45:planes=7:type=bayes")
 
     if cas_strength > 0.0:
         filters.append(f"cas=strength={cas_strength:.2f}")

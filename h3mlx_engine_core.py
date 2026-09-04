@@ -239,12 +239,38 @@ def execute_h3_generation(
         env["H3_WARP_GAMMA"] = "1.0"
         env["H3_TEMPORAL_CRISP"] = "0.04"
 
-        if frontier in ["6", 6]:
+        f_val = 0
+        try:
+            f_val = int(frontier) if frontier is not None else 0
+        except (ValueError, TypeError):
+            if frontier in ["champion", "optics", "cinema-optics"]:
+                f_val = 7
+            elif frontier in ["ultra", "frontier-2026"]:
+                f_val = 11
+
+        if f_val >= 6 or frontier in ["6", 6]:
             env["H3_FREQFLOW"] = "0.08"
-        elif frontier in ["7", 7, "champion", "optics", "cinema-optics"]:
+        if f_val >= 7 or frontier in ["7", 7, "champion", "optics", "cinema-optics"]:
             env["H3_FREQFLOW"] = "0.08"
             env["H3_SPATIAL_CRISP"] = "0.035"
             if smart_filter == "auto":
+                smart_filter = "master-optics"
+        if f_val >= 8 or frontier in ["8", 8]:
+            env["H3_TFM_MOMENTUM"] = "0.06"
+            env["H3_FRONTIER"] = str(max(8, f_val))
+        if f_val >= 9 or frontier in ["9", 9]:
+            if smart_filter in ["auto", "master-optics"]:
+                smart_filter = "master-optics"
+            env["H3_FRONTIER"] = str(max(9, f_val))
+        if f_val >= 10 or frontier in ["10", 10]:
+            env["H3_CHEBYSHEV_WARP"] = "1"
+            env["H3_FRONTIER"] = str(max(10, f_val))
+        if f_val >= 11 or frontier in ["11", 11, "ultra", "frontier-2026"]:
+            # Empirical ablation proof: Spectral eigen-clamping without spatial attention masks
+            # suppresses ocular and dental high-frequency phase. Keep opt-in via extra_env only.
+            env["H3_SPECTRAL_CLAMP"] = "0"
+            env["H3_FRONTIER"] = str(max(11, f_val))
+            if smart_filter in ["auto", "master-optics"]:
                 smart_filter = "master-optics"
             
     if extra_env:

@@ -1755,6 +1755,13 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
         h3_spatial_phase_align(video, 16, temporal.video_t, latent_h, latent_w, spatial_gamma);
     }
 
+    /* Frontier Level 11: Pre-VAE Spectral Eigen-Clamping (Opt-in only, high thresholds can mute facial micro-contrast) */
+    const char *spectral_clamp_env = getenv("H3_SPECTRAL_CLAMP");
+    float spectral_clamp = (spectral_clamp_env && *spectral_clamp_env) ? (float)atof(spectral_clamp_env) : 0.0f;
+    if (spectral_clamp > 0.001f && latent_h > 2 && latent_w > 2) {
+        h3_spectral_eigen_clamp(video, 16, temporal.video_t, latent_h, latent_w, spectral_clamp);
+    }
+
     int video_ok = preview_decoder ?
         h3_video_vae_decoder_decode(
             preview_decoder, video, temporal.video_t, &frames,

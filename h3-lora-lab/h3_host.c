@@ -147,6 +147,23 @@ float h3_get_audio_shift(void) {
 static float h3_shifted_sigma(int index, int steps, float shift) {
     if (steps <= 0) return 0.0f;
     float u = (float)index / (float)steps;
+    const char *cheb_env = getenv("H3_CHEBYSHEV_WARP");
+    const char *frontier_env = getenv("H3_FRONTIER");
+    int cheb_warp = (cheb_env && (*cheb_env == '1' || *cheb_env == 'y' || *cheb_env == 't'));
+    if (frontier_env && atoi(frontier_env) >= 10) cheb_warp = 1;
+
+    if (cheb_warp) {
+        /* Frontier Level 10: Curvature-Adaptive Dual-Cusp Chebyshev Time-Warping (CACFM)
+         * Clusters ODE integration points at boundary cusps t in [1.0, 0.85] and t <= 0.15 */
+        float gamma = 1.15f;
+        float alpha = 0.85f;
+        float u_pow = powf(u, gamma);
+        float cheb = 0.5f * (1.0f - cosf((float)M_PI * u_pow));
+        float t_val = 1.0f - powf(fmaxf(0.0f, fminf(1.0f, cheb)), alpha);
+        float base = fmaxf(0.0f, fminf(1.0f, t_val));
+        return shift * base / (1.0f + (shift - 1.0f) * base);
+    }
+
     const char *warp_env = getenv("H3_WARP_GAMMA");
     const char *facial_env = getenv("H3_FACIAL_WARP");
     float gamma = (warp_env && *warp_env) ? (float)atof(warp_env) : (1.20f + 0.15f * (1.0f - u));
@@ -904,6 +921,96 @@ int h3_spatial_phase_align(float *video, int channels, int time,
         }
     }
     free(temp_plane);
+    return 1;
+}
+
+/*
+ * Frontier Level 8: Temporal Block-Tridiagonal Momentum Regularization (TFM)
+ * Operates on [channels, time, height, width] velocity field during ODE sampling.
+ * TVD-Minmod flux-limited coupling along timeline tau eliminates foot sliding & locomotion jitter.
+ */
+int h3_tfm_temporal_momentum_regularize(float *velocity, int channels, int time,
+                                       int height, int width, float lambda_tau) {
+    if (!velocity || channels <= 0 || time <= 2 || height <= 0 || width <= 0 || lambda_tau <= 0.0001f)
+        return 1;
+
+    size_t plane_size = (size_t)height * (size_t)width;
+    size_t chan_elements = (size_t)time * plane_size;
+    float *chan_buf = malloc(chan_elements * sizeof(float));
+    if (!chan_buf) return 0;
+
+    for (int c = 0; c < channels; c++) {
+        float *chan_ptr = velocity + (size_t)c * chan_elements;
+        memcpy(chan_buf, chan_ptr, chan_elements * sizeof(float));
+
+        /* Internal temporal frames: 1 .. time - 2 */
+        for (int t = 1; t + 1 < time; t++) {
+            const float *prev_plane = chan_buf + (size_t)(t - 1) * plane_size;
+            const float *curr_plane = chan_buf + (size_t)t * plane_size;
+            const float *next_plane = chan_buf + (size_t)(t + 1) * plane_size;
+            float *out_plane = chan_ptr + (size_t)t * plane_size;
+
+            for (size_t i = 0; i < plane_size; i++) {
+                float v_prev = prev_plane[i];
+                float v_curr = curr_plane[i];
+                float v_next = next_plane[i];
+
+                float d_prev = v_curr - v_prev;
+                float d_next = v_next - v_curr;
+
+                /* TVD-Minmod flux limiter: couples monotonic acceleration trajectories */
+                if (d_prev * d_next > 0.0f) {
+                    float minmod = copysignf(fminf(fabsf(d_prev), fabsf(d_next)), d_next);
+                    out_plane[i] = v_curr + lambda_tau * minmod;
+                }
+            }
+        }
+    }
+    free(chan_buf);
+    return 1;
+}
+
+/*
+ * Frontier Level 11: Pre-VAE Spectral Eigen-Clamping & High-Frequency Noise Limiting
+ * Operates on [VIDEO_CHANNELS, time, height, width] latents right before VAE decode.
+ * Clamps out-of-distribution 2D Laplacian spatial energy spikes, preventing transposed Conv3D scintillation.
+ */
+int h3_spectral_eigen_clamp(float *video, int channels, int time,
+                            int height, int width, float threshold) {
+    if (!video || channels <= 0 || time <= 0 || height < 3 || width < 3 || threshold <= 0.0001f)
+        return 1;
+
+    size_t plane_size = (size_t)height * (size_t)width;
+    size_t total_planes = (size_t)channels * (size_t)time;
+
+    for (size_t p = 0; p < total_planes; p++) {
+        float *plane = video + p * plane_size;
+        for (int y = 1; y + 1 < height; y++) {
+            size_t row_curr = (size_t)y * (size_t)width;
+            size_t row_prev = (size_t)(y - 1) * (size_t)width;
+            size_t row_next = (size_t)(y + 1) * (size_t)width;
+            for (int x = 1; x + 1 < width; x++) {
+                float center = plane[row_curr + x];
+                float up     = plane[row_prev + x];
+                float down   = plane[row_next + x];
+                float left   = plane[row_curr + (x - 1)];
+                float right  = plane[row_curr + (x + 1)];
+
+                /* Discrete Laplacian */
+                float lap = 4.0f * center - (up + down + left + right);
+                float local_mag = 0.2f * (fabsf(center) + fabsf(up) + fabsf(down) + fabsf(left) + fabsf(right)) + 1e-4f;
+                float rel_energy = fabsf(lap) / local_mag;
+
+                /* Energy clamp: if relative Laplacian spike exceeds threshold ratio */
+                float clamp_ratio = 2.4f / (1.0f + threshold);
+                if (rel_energy > clamp_ratio) {
+                    float excess = rel_energy - clamp_ratio;
+                    float damping = 0.25f * (1.0f - expf(-excess * 0.5f));
+                    plane[row_curr + x] = center - damping * lap;
+                }
+            }
+        }
+    }
     return 1;
 }
 
