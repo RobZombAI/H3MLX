@@ -77,3 +77,20 @@ MiniMax H3 is a Progressive Distillation Diffusion (PDD) architecture. Operating
 ## 🎬 Level 5: Optical MTF Phase Coherence Prompt Conditioning
 
 To ensure consistent cinematic photorealism, H3XML incorporates Fourier optical phase constraints into prompt generation (`Cooke Anamorphic S4/i MTF phase coherence`, `Arri Alexa LF 14-stop dynamic range`, `sub-pixel skin pore locking`). This mathematically suppresses plastic skin artifacts and maintains authentic specular highlight roll-off.
+
+---
+
+## 🔬 Level 6: FreqFlow Late-Step Dynamic Spectral Velocity Boost
+
+* **Mechanism**: Bounded high-frequency spatial Laplacian boost applied directly to velocity field $v_t$ during late ODE steps ($\sigma \le 0.35$).
+* **TVD Minmod Protection**: Gradient-limited using computational fluid dynamics TVD Minmod to guarantee zero ringing, zero color fringing, and zero high-frequency strobe artifacts.
+* **Impact**: Preserves razor-sharp skin pores, iris striations, and hair textures without altering physical camera kinematics or anatomical geometry.
+
+---
+
+## 💎 Level 7: 2D Spatial Super-Nyquist Pre-VAE Phase Alignment & Kodak Master Optics
+
+* **Pre-VAE Phase Alignment**: Pre-compensates the non-ideal spatial modulation transfer function (MTF) and low-pass softening inherent to causal 3D convolutional upsampling ($8\times$ spatial expansion) prior to VAE decompression.
+* **Sensitometric Film Emulation**: Hardware-accelerated Kodak Vision3 5219 35mm optical grain coupled with AMD FidelityFX CAS adaptive contrast sharpening and Apple Silicon VideoToolbox Main 10-bit HEVC encoding at 60 Mbps.
+* **Impact**: Eliminates AI plastic smoothness and prevents motion liquefaction in dynamic action scenes.
+

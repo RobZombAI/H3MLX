@@ -29,6 +29,8 @@ def build_filtergraph(
     enable_denoise: bool = True,
     cas_strength: float = 0.25,
     pix_fmt: str = "yuv420p10le",
+    smart_filter: str = "auto",
+    sensitometric_grain: bool = False,
 ) -> str:
     """Build high-fidelity video filter chain."""
     filters = []
@@ -45,6 +47,10 @@ def build_filtergraph(
 
     if cas_strength > 0.0:
         filters.append(f"cas=strength={cas_strength:.2f}")
+
+    if sensitometric_grain or smart_filter in ["master-optics", "optics", "cinema-35mm"]:
+        # Kodak Vision3 5219 Sensitometric Optical Grain Emulation
+        filters.append("noise=alls=1.8:allf=t+u")
 
     if pix_fmt:
         filters.append(f"format={pix_fmt}")
@@ -76,6 +82,8 @@ def upscale_video(
     cas_strength: float = 0.25,
     bitrate: str = "60M",
     use_videotoolbox: bool = True,
+    smart_filter: str = "auto",
+    sensitometric_grain: bool = False,
 ) -> str:
     """Upscale and restore video using Apple Silicon native acceleration."""
     in_file = Path(input_path).resolve()
@@ -96,12 +104,14 @@ def upscale_video(
 
     has_audio = has_audio_stream(in_file)
     print(f"🎬 Avvio Intraframe Detail Restoration & Upscale: {in_file.name} -> {out_file.name}")
-    print(f"   📐 Risoluzione: {target_width}x{target_height} | Denoise: {enable_denoise} | CAS: {cas_strength} | Audio: {'Presente' if has_audio else 'Muto'}")
+    print(f"   📐 Risoluzione: {target_width}x{target_height} | Denoise: {enable_denoise} | CAS: {cas_strength} | Audio: {'Presente' if has_audio else 'Muto'} | Filter: {smart_filter}")
 
     if use_videotoolbox:
         vf_filter = build_filtergraph(
-            target_width, target_height, aspect_ratio, enable_denoise, cas_strength, "yuv420p10le"
+            target_width, target_height, aspect_ratio, enable_denoise, cas_strength, "yuv420p10le",
+            smart_filter=smart_filter, sensitometric_grain=sensitometric_grain
         )
+
         if has_audio:
             cmd = [
                 ffmpeg, "-y",

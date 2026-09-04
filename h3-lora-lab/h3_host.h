@@ -150,5 +150,10 @@ int h3_dpm3m_velocity_step(float *sample, const float *velocity,
                            size_t count, float sigma, float sigma_next,
                            float sigma_prev, float sigma_prev2);
 int h3_symplectic_flow_normalize(float *latent, size_t count, float sigma_next);
+int h3_freqflow_velocity_boost(float *velocity, int channels, int time,
+                              int height, int width, float sigma, float strength);
+int h3_spatial_phase_align(float *video, int channels, int time,
+                           int height, int width, float gamma);
 
 #endif
+

@@ -20,7 +20,7 @@ def main():
         return
 
     parser = argparse.ArgumentParser(
-        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 5 Frontiers",
+        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 7 Frontiers (v3.2 Frontier Edition)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -30,8 +30,8 @@ def main():
     parser.add_argument("-o", "--output", type=str, default="outputs/h3mlx_output.mp4", help="Output MP4 file path")
     parser.add_argument("--preset", type=str, default="", choices=list(PRESETS.keys()), help="Load a pre-configured video preset")
     parser.add_argument("--frontier", "--level", dest="frontier_level", type=str, default="",
-                        choices=["1", "2", "3", "4", "5", "champion"],
-                        help="Select Frontier Level: 1 (Isolated NAX + GPU Sampler), 2 (Token Reduction 4:34), 3 (Monolithic 3D VAE), 4 (14-Step PDD), 5/champion (Master 4K + Audio)")
+                        choices=["1", "2", "3", "4", "5", "6", "7", "champion"],
+                        help="Select Frontier Level: 1-5, 6 (Temporal-FreqFlow), 7 (Super-Nyquist Cinema Optics)")
     parser.add_argument("-i", "--interactive", action="store_true", help="Launch interactive studio director")
     
     # 2. Dimensions & Temporal Grid
@@ -73,8 +73,8 @@ def main():
                         help="ODE flow solver: 'dpm3m' (3rd order), 'ab3', or 'euler'")
     parser.add_argument("--4k", "--upscale", dest="upscale_4k", action="store_true", help="Upscale generated output to 4K UHD Master (3840x2160)")
     parser.add_argument("--smart-filter", type=str, default="auto",
-                        choices=["auto", "portrait", "cinema", "anime", "action", "macro", "clean"],
-                        help="Smart Mastering Filter: 'auto' (content-aware), 'portrait' (AMD CAS+Bilateral), 'cinema', 'anime', 'action', 'macro', or 'clean'")
+                        choices=["auto", "portrait", "cinema", "anime", "action", "macro", "clean", "master-optics", "optics"],
+                        help="Smart Mastering Filter: 'auto', 'portrait', 'cinema', 'anime', 'action', 'macro', 'clean', or 'master-optics' (Kodak Vision3 5219 Sensitometric Optics)")
     parser.add_argument("--profile", action="store_true", default=True, help="Print per-phase Metal profiling metrics")
     parser.add_argument("--frames-dir", type=str, default="", help="Directory to dump individual decoded RGB frames (.ppm)")
     parser.add_argument("--nax-st", action="store_true", help="Enable NAX-Spatiotemporal Multimodal Attention for long video")
@@ -198,7 +198,8 @@ def main():
         profile=args.profile,
         nax_st=args.nax_st,
         nax_chunk=args.nax_chunk,
-        nax_stride=args.nax_stride
+        nax_stride=args.nax_stride,
+        frontier=args.frontier_level
     )
 
     if res.success:

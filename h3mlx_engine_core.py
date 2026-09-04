@@ -140,6 +140,7 @@ def execute_h3_generation(
     nax_st: bool = False,
     nax_chunk: int = 4,
     nax_stride: int = 4,
+    frontier: Optional[Union[str, int]] = None,
     extra_env: Optional[Dict[str, str]] = None
 ) -> H3EngineResult:
     """
@@ -237,6 +238,14 @@ def execute_h3_generation(
             
         env["H3_WARP_GAMMA"] = "1.0"
         env["H3_TEMPORAL_CRISP"] = "0.04"
+
+        if frontier in ["6", 6]:
+            env["H3_FREQFLOW"] = "0.08"
+        elif frontier in ["7", 7, "champion", "optics", "cinema-optics"]:
+            env["H3_FREQFLOW"] = "0.08"
+            env["H3_SPATIAL_CRISP"] = "0.035"
+            if smart_filter == "auto":
+                smart_filter = "master-optics"
             
     if extra_env:
         env.update(extra_env)
@@ -294,7 +303,8 @@ def execute_h3_generation(
                 target_height=t_h,
                 enable_denoise=True,
                 cas_strength=0.25,
-                use_videotoolbox=True
+                use_videotoolbox=True,
+                smart_filter=smart_filter
             )
             final_output_path = result_path
             master_path_str = result_path

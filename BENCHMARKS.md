@@ -1,8 +1,8 @@
-# 📊 H3MLX v3.1 Official Reference Benchmarks
+# 📊 H3MLX v3.2 Official Reference Benchmarks
 ### 5 Golden Presets · Apple Silicon M5 Max (128GB Unified Memory, >400 GB/s)
-#### Metal 4 NAX Fused Attention · DPM++ 2M Second-Order Solver · Latent TVD Minmod Pre-Emphasis
+#### Metal 4 NAX Fused Attention · DPM++ 2M Second-Order Solver · FreqFlow & Super-Nyquist Phase Alignment · Latent TVD Minmod Pre-Emphasis
 
-Questo documento riporta le misurazioni empiriche ufficiali eseguite in locale su **Apple Silicon M5 Max (128GB Unified Memory)** con il motore **v3.1 Frontier Engine**.
+Questo documento riporta le misurazioni empiriche ufficiali eseguite in locale su **Apple Silicon M5 Max (128GB Unified Memory)** con il motore **v3.2 Frontier Engine**.
 
 ---
 

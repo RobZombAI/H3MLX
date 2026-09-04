@@ -4,6 +4,7 @@
 #include "h3_weights.h"
 #include "h3_ngram_speculative.h"
 #include "h3_antirez_16way_ngram_gating.h"
+#include "h3_host.h"
 
 #include <math.h>
 #include <pthread.h>
@@ -3324,6 +3325,14 @@ int h3_dit_denoise_euler_preview(
                 h3_ngram_so3_rotational_kinematics_recovery(
                     video_velocity, last_video, previous_video, video_count,
                     VIDEO_PATCH, (int)dit->latent_w, (int)dit->latent_h, 1.0f);
+            }
+            /* Frontier Level 6: FreqFlow Dynamic High-Frequency Spectral Velocity Boost */
+            const char *freqflow_env = getenv("H3_FREQFLOW");
+            float freqflow_strength = (freqflow_env && *freqflow_env) ? (float)atof(freqflow_env) : 0.0f;
+            if (freqflow_strength > 0.001f) {
+                h3_freqflow_velocity_boost(video_velocity, VIDEO_CHANNELS, dit->latent_t,
+                                           (int)dit->latent_h, (int)dit->latent_w,
+                                           dit->sigmas.video[step], freqflow_strength);
             }
             if (solver_type == SOLVER_DPM3M) {
                 ok = h3_dpm3m_velocity_step(

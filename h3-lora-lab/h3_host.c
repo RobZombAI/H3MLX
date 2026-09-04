@@ -814,3 +814,96 @@ int h3_symplectic_flow_normalize(float *latent, size_t count, float sigma_next) 
     return 1;
 }
 
+/*
+ * Frontier Level 6: FreqFlow Dynamic High-Frequency Spectral Velocity Boost
+ * Operates on [VIDEO_CHANNELS, time, height, width].
+ * Selectively boosts high-frequency spatial gradients in late ODE steps (sigma <= 0.35).
+ */
+int h3_freqflow_velocity_boost(float *velocity, int channels, int time,
+                              int height, int width, float sigma, float strength) {
+    if (!velocity || channels <= 0 || time <= 0 || height < 3 || width < 3 ||
+        sigma > 0.35f || strength <= 0.001f) return 1;
+
+    /* Dynamic late-step spectral scaling: smoothly grows as sigma -> 0 */
+    float alpha = strength * (1.0f - (sigma / 0.35f));
+    size_t plane_size = (size_t)height * (size_t)width;
+    size_t total_planes = (size_t)channels * (size_t)time;
+
+    for (size_t p = 0; p < total_planes; p++) {
+        float *plane = velocity + p * plane_size;
+        for (int y = 1; y + 1 < height; y++) {
+            size_t row_curr = (size_t)y * (size_t)width;
+            size_t row_prev = (size_t)(y - 1) * (size_t)width;
+            size_t row_next = (size_t)(y + 1) * (size_t)width;
+            for (int x = 1; x + 1 < width; x++) {
+                float center = plane[row_curr + x];
+                float up     = plane[row_prev + x];
+                float down   = plane[row_next + x];
+                float left   = plane[row_curr + (x - 1)];
+                float right  = plane[row_curr + (x + 1)];
+
+                float lap = 4.0f * center - (up + down + left + right);
+                float d_up = fabsf(center - up);
+                float d_dn = fabsf(center - down);
+                float d_lf = fabsf(center - left);
+                float d_rt = fabsf(center - right);
+                float max_grad = fmaxf(fmaxf(d_up, d_dn), fmaxf(d_lf, d_rt));
+                float limited_lap = copysignf(fminf(fabsf(lap), 1.5f * max_grad), lap);
+
+                plane[row_curr + x] += alpha * limited_lap;
+            }
+        }
+    }
+    return 1;
+}
+
+/*
+ * Frontier Level 7: 2D Spatial Super-Nyquist Pre-VAE Phase Alignment
+ * Operates on [VIDEO_CHANNELS, time, height, width] right before VAE decode.
+ * Pre-compensates the 3D VAE spatial upsampling and Conv3D low-pass blurring.
+ */
+int h3_spatial_phase_align(float *video, int channels, int time,
+                           int height, int width, float gamma) {
+    if (!video || channels <= 0 || time <= 0 || height < 3 || width < 3 || gamma <= 0.001f)
+        return 1;
+
+    size_t plane_size = (size_t)height * (size_t)width;
+    size_t total_planes = (size_t)channels * (size_t)time;
+
+    float *temp_plane = malloc(plane_size * sizeof(float));
+    if (!temp_plane) return 0;
+
+    for (size_t p = 0; p < total_planes; p++) {
+        float *plane = video + p * plane_size;
+        memcpy(temp_plane, plane, plane_size * sizeof(float));
+
+        for (int y = 1; y + 1 < height; y++) {
+            size_t row_curr = (size_t)y * (size_t)width;
+            size_t row_prev = (size_t)(y - 1) * (size_t)width;
+            size_t row_next = (size_t)(y + 1) * (size_t)width;
+            for (int x = 1; x + 1 < width; x++) {
+                float center = temp_plane[row_curr + x];
+                float up     = temp_plane[row_prev + x];
+                float down   = temp_plane[row_next + x];
+                float left   = temp_plane[row_curr + (x - 1)];
+                float right  = temp_plane[row_curr + (x + 1)];
+
+                float dx1 = center - left;
+                float dx2 = right - center;
+                float dy1 = center - up;
+                float dy2 = down - center;
+
+                /* 2D TVD-Minmod Spatial Limiter to prevent edge ringing */
+                float lap_x = (dx1 * dx2 > 0.0f) ? copysignf(fminf(fabsf(dx2 - dx1), fminf(fabsf(dx1), fabsf(dx2))), dx2 - dx1) : 0.0f;
+                float lap_y = (dy1 * dy2 > 0.0f) ? copysignf(fminf(fabsf(dy2 - dy1), fminf(fabsf(dy1), fabsf(dy2))), dy2 - dy1) : 0.0f;
+                float limited_lap = lap_x + lap_y;
+
+                /* Pre-compensate the 3D VAE spatial low-pass filter */
+                plane[row_curr + x] = center - gamma * limited_lap;
+            }
+        }
+    }
+    free(temp_plane);
+    return 1;
+}
+

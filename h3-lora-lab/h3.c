@@ -1748,6 +1748,13 @@ h3_result *h3_generate(h3_ctx *ctx, const char *prompt,
         }
     }
 
+    /* Frontier Level 7: 2D Spatial Super-Nyquist Pre-VAE Phase Alignment */
+    const char *spatial_crisp_env = getenv("H3_SPATIAL_CRISP");
+    float spatial_gamma = (spatial_crisp_env && *spatial_crisp_env) ? (float)atof(spatial_crisp_env) : 0.0f;
+    if (spatial_gamma > 0.001f && latent_h > 2 && latent_w > 2) {
+        h3_spatial_phase_align(video, 16, temporal.video_t, latent_h, latent_w, spatial_gamma);
+    }
+
     int video_ok = preview_decoder ?
         h3_video_vae_decoder_decode(
             preview_decoder, video, temporal.video_t, &frames,
