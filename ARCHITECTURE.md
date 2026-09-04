@@ -60,8 +60,8 @@ By enforcing `H3_TOKEN_REDUCTION_BLOCKS="4:34"`, H3XML retains $100\%$ token den
 ### 3.1 The Tiling Fallacy on Unified Memory
 Many open-source engines split the VAE decoder into spatial tiles (e.g., $640\text{px}$) designed for low-VRAM discrete GPUs (8GB–16GB). On Apple Silicon systems with 64GB–128GB Unified Memory:
 * VAE Tiling requires overlapping blend margins, repetitive memory copies, and boundary stitching.
-* **Tiling Benchmark**: Decoding 90 frames with tiling takes **`17.14s`** and causes visible seam/grid artifacts (**Quality Score: `30/100`**).
-* **H3XML Monolithic Decoder**: Decompresses the entire $16$-channel latent tensor in a single continuous 3D convolution pass in **`10.78s`** (**Quality Score: `100/100`**).
+* **Tiling Benchmark**: Decoding 90 frames with tiling takes **`17.14s`** and causes visible seam/grid boundary artifacts.
+* **H3XML Monolithic Decoder**: Decompresses the entire $16$-channel latent tensor in a single continuous 3D convolution pass in **`10.78s`** without seam artifacts.
 
 ---
 
