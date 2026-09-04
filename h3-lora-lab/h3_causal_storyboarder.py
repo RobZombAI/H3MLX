@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 H3XML Causal Latent Storyboard Chaining Engine
-Multi-Beat Cinematic Video Generator on Apple Silicon M5 Max
+Multi-Beat Cinematic Video Generator on Apple Silicon (Unified Memory)
 Features:
 - C2 Quintic Smoothstep Latent Boundary Continuity
 - Zero-Copy UMA Resident Model Weights
@@ -15,11 +15,13 @@ import sys
 import time
 import math
 import subprocess
+from pathlib import Path
 from h3xml_cli import align_frame_count
 
-MODEL_DIR = os.environ.get('H3_MODEL_DIR', '/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step')
-DOWNLOADS_DIR = os.path.expanduser('~/Downloads')
-BRAIN_DIR = '/Users/robzomb/.gemini/antigravity/brain/a6b18108-3903-4957-ade7-687e85eb20df'
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_DIR = os.environ.get('H3_MODEL_DIR', str(Path.home() / 'h3-models' / 'MiniMax-H3-PDD-8Step'))
+OUTPUTS_DIR = str(BASE_DIR / 'outputs')
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
 def generate_storyboard_video(beats, width=768, height=512, fps=24, output_name='storyboard_final.mp4', base_seed=888):
     """
@@ -40,13 +42,13 @@ def generate_storyboard_video(beats, width=768, height=512, fps=24, output_name=
         'OMP_NUM_THREADS': '18'
     })
     
-    print(f"=== H3XML CAUSAL STORYBOARD ENGINE: {total_beats} BEAT ({total_beats * 4.0}s) ===")
+    print(f"=== H3XML CAUSAL STORYBOARD ENGINE: {total_beats} BEATS ({total_beats * 4.0}s) ===")
     total_denoise = 0.0
     t_start = time.time()
     
     for idx, prompt in enumerate(beats):
         beat_idx = idx + 1
-        out_beat_mp4 = os.path.join(DOWNLOADS_DIR, f"temp_beat_{beat_idx}_{output_name}")
+        out_beat_mp4 = os.path.join(OUTPUTS_DIR, f"temp_beat_{beat_idx}_{output_name}")
         temp_files.append(out_beat_mp4)
         
         print(f"\n🎬 [Beat {beat_idx}/{total_beats}] ({idx*4.0:.1f}s - {beat_idx*4.0:.1f}s): {prompt[:70]}...")
@@ -67,24 +69,27 @@ def generate_storyboard_video(beats, width=768, height=512, fps=24, output_name=
         ]
         
         t0 = time.time()
-        res = subprocess.run(cmd, cwd='/Users/robzomb/Documents/antigravity/cool-hopper/h3-lora-lab', env=env, capture_output=True, text=True)
+        res = subprocess.run(cmd, cwd=str(BASE_DIR), env=env, capture_output=True, text=True)
         t_beat = time.time() - t0
         
         denoise_time = 0.0
         for line in res.stderr.splitlines():
             if 'Euler/AB3 denoise' in line and 'wall=' in line:
-                denoise_time = float(line.split('wall=')[1].split()[0].replace('s', ''))
+                try:
+                    denoise_time = float(line.split('wall=')[1].split()[0].replace('s', ''))
+                except Exception:
+                    pass
         
         total_denoise += denoise_time
-        print(f"  ✓ Beat {beat_idx} completato in {t_beat:.2f}s (Denoise GPU: {denoise_time:.2f}s)")
+        print(f"  ✓ Beat {beat_idx} completed in {t_beat:.2f}s (GPU Denoise: {denoise_time:.2f}s)")
         
-    final_mp4 = os.path.join(DOWNLOADS_DIR, output_name)
-    final_gif = os.path.join(BRAIN_DIR, output_name.replace('.mp4', '.gif'))
-    frame_b1 = os.path.join(BRAIN_DIR, output_name.replace('.mp4', '_beat1_frame.jpg'))
-    frame_b2 = os.path.join(BRAIN_DIR, output_name.replace('.mp4', '_beat2_frame.jpg'))
+    final_mp4 = os.path.join(OUTPUTS_DIR, output_name)
+    final_gif = os.path.join(OUTPUTS_DIR, output_name.replace('.mp4', '.gif'))
+    frame_b1 = os.path.join(OUTPUTS_DIR, output_name.replace('.mp4', '_beat1_frame.jpg'))
+    frame_b2 = os.path.join(OUTPUTS_DIR, output_name.replace('.mp4', '_beat2_frame.jpg'))
     
     # Concatenate with Quintic Smoothstep crossfade & Neural Foley 48kHz Mastering
-    print(f"\n🔗 Raccordo Quintic Smoothstep e Mastering Audio Foley 48kHz...")
+    print(f"\n🔗 Quintic Smoothstep transition and 48kHz Foley Audio Mastering...")
     filter_inputs = "".join([f"[{i}:v][{i}:a]" for i in range(total_beats)])
     concat_filter = (
         f"{filter_inputs}concat=n={total_beats}:v=1:a=1[raw_v][raw_a];"
@@ -109,8 +114,8 @@ def generate_storyboard_video(beats, width=768, height=512, fps=24, output_name=
     subprocess.run(['ffmpeg', '-y', '-ss', '00:00:06.0', '-i', final_mp4, '-vframes', '1', frame_b2], capture_output=True)
     
     t_total = time.time() - t_start
-    print(f"\n✓ Sequenza Storyboard da {total_beats * 4.0}s completata in {t_total:.2f}s ({t_total/60.0:.2f} min)!")
-    print(f"Denoise GPU Totale: {total_denoise:.2f}s")
+    print(f"\n✓ Storyboard Sequence ({total_beats * 4.0}s) completed in {t_total:.2f}s ({t_total/60.0:.2f} min)!")
+    print(f"Total GPU Denoise: {total_denoise:.2f}s")
     
     return {
         'final_mp4': final_mp4,

@@ -1,49 +1,49 @@
 ---
 name: minimax-h3-fast-master
-description: Champion gold execution toolkit for MiniMax H3 / H3-Max Fast Master ultra-photorealistic video generation on Apple Silicon M5 Max (128GB Unified Memory). Combines 8-step / 5-step exact DPM++ 2M Trailing Flow, 50 full layers, dynamic int8 FC2 quantization, single-chunk and multi-chunk causal temporal lattice (T = 17n + 5), and zero-loss optical macro definition.
+description: Fast Master execution toolkit for MiniMax H3 / H3-Max video generation on Apple Silicon M-series (Unified Memory). Combines 8-step / 5-step exact DPM++ 2M Trailing Flow, 50 full layers, dynamic int8 FC2 quantization, single-chunk and multi-chunk causal temporal lattice (T = 17n + 5), and zero-loss optical macro definition.
 ---
 
-# MiniMax H3 Fast Master: Gold Standard Execution Skill
+# MiniMax H3 Fast Master: Architecture & Execution Guide
 
-Questa skill definisce la formula ingegneristica d'oro per la generazione video con **MiniMax H3 / H3-Max** su **Apple Silicon M5 Max**, testata e validata come la massima combinazione di **qualità fotorealistica (macro ottica 8k) e velocità estrema (Denoise GPU in 6-10s su 1s e 36-44s su 4s)**.
+This skill specifies the engineering configuration for video generation with **MiniMax H3 / H3-Max** on **Apple Silicon (M-series / Unified Memory)**, calibrated for photorealistic optical fidelity and high GPU throughput (DiT denoise pass in ~10s on 1s clips, ~44s on 4s clips on M5 Max).
 
 ---
 
-## 💎 Architettura & Formula Champion
+## 💎 Architecture & Pipeline
 
 ```mermaid
 graph TD
-    subgraph Fast_Master_Pipeline ["Pipeline Champion Fast Master"]
-        P["Prompting Ottico Macro (35mm f/1.4, micro-tessiture)"] --> Q["Text Encoder Qwen 3-VL (4.5s)"]
-        Q --> D["H3 DiT (50 Layer Pieni, 100% Token Spaziali)"]
-        D --> S["Solutore DPM++ 2M Trailing Flow + INT8-Row-FC2"]
-        S --> C1["Scelta Valutazioni GPU:<br/>1. Exact Mode (--reuse 1): 8 evals (Massima Qualità Assoluta)<br/>2. Turbo Mode (--reuse 2): 5 evals (Super Veloce)"]
-        C1 --> V["3D Causal Video VAE (3x3 Tiling con Overlap 32px)"]
-        V --> MP4["MP4 Nativo Diretto senza Post-Processing"]
+    subgraph Fast_Master_Pipeline ["Fast Master Pipeline"]
+        P["Macro Optical Prompting (35mm f/1.4, micro-textures)"] --> Q["Text Encoder Qwen 3-VL (4.5s)"]
+        Q --> D["H3 DiT (50 Full Layers, 100% Spatial Tokens)"]
+        D --> S["DPM++ 2M Trailing Flow Solver + INT8-Row-FC2"]
+        S --> C1["GPU Evaluation Mode:<br/>1. Exact Mode (--reuse 1): 8 evals (Maximum Quality)<br/>2. Turbo Mode (--reuse 2): 5 evals (Fast Turnaround)"]
+        C1 --> V["3D Causal Video VAE (3x3 Tiling with 32px Overlap)"]
+        V --> MP4["Direct Native MP4 Output"]
     end
 ```
 
 ---
 
-## ⚡ Parametri Chiave di Configurazione
+## ⚡ Key Configuration Parameters
 
-| Parametro | Valore Champion | Descrizione / Motivazione Ingegneristica |
+| Parameter | Recommended Value | Description / Engineering Rationale |
 | :--- | :--- | :--- |
-| **Risoluzione** | `640x640` (o `960x544` 16:9) | Risoluzione nativa ottimizzata per densità di token e M5 Max cache |
-| **Layer DiT** | `--layers 50` | Nessun layer skipping: 100% dei blocchi per resa fotorealistica |
-| **Token Reduction** | `OFF` (Nessun flag) | Zero compressione spaziale: preserva iride, pori, ciglia e denti |
-| **Quantizzazione** | `--use-int8-row-fc2` | Quantizzazione dinamica int8 single-scale su FC2 (massima banda UMA) |
-| **Solutore & Step** | `--steps 8` (o `5`) | Solutore DPM++ 2M Trailing Flow integrato in Metal 4 NAX |
-| **Step Reuse** | `--reuse 1` (Exact) / `--reuse 2` (Fast) | `--reuse 1` esegue 8 valutazioni piene; `--reuse 2` ne esegue 5 |
+| **Resolution** | `640x640` (or `960x544` 16:9) | Native resolution optimized for token density and UMA cache efficiency |
+| **DiT Layers** | `--layers 50` | No layer skipping: full 50 blocks evaluated for maximum photorealism |
+| **Token Reduction** | `OFF` (No flag) | Zero spatial token compression: preserves fine iris, pore, and hair strand detail |
+| **Quantization** | `--use-int8-row-fc2` | Dynamic INT8 row-wise quantization on FC2 linear projections (bandwidth optimization) |
+| **Solver & Steps** | `--steps 8` (or `5`) | Native DPM++ 2M Trailing Flow solver integrated in Metal 4 NAX kernels |
+| **Step Reuse** | `--reuse 1` (Exact) / `--reuse 2` (Fast) | `--reuse 1` executes 8 full evaluations; `--reuse 2` executes 5 evaluations |
 | **Causal Frame Lattice** | $T = 17n + 5$ | $n=1 \to 22\text{f}$ (1s), $n=2 \to 39\text{f}$ (2s), $n=5 \to 90\text{f}$ (4s) |
 
 ---
 
-## 🚀 Script di Esecuzione Rapida CLI
+## 🚀 CLI Execution Example
 
 ```bash
 #!/bin/bash
-# Gold Standard Fast Master Runner (M5 Max Native Optimized)
+# Fast Master Runner (Apple Silicon Native)
 export H3_PROFILE=1
 export H3_NAX="qkv-attn"
 export H3_ZERO_COPY_WEIGHTS=1
@@ -56,13 +56,11 @@ export MTL_DEBUG_LAYER=0
 export MTL_SHADER_VALIDATION=0
 export METAL_CAPTURE_ENABLED=0
 
-cd /Users/robzomb/Documents/antigravity/cool-hopper/h3-lora-lab
+MODEL_DIR="./models/MiniMax-H3-PDD-8Step"
+PROMPT="Cinematic close-up portrait of a woman in natural light. Crisp optical definition, detailed radial iris fibers and specular reflections, natural skin texture, soft warm smile, wavy hair catching rim lighting. Soft blurred cafe background, authentic 35mm f/1.4 lens bokeh."
 
-MODEL_DIR="/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step"
-PROMPT="Masterpiece award-winning cinematic close-up portrait of a breathtakingly beautiful young Italian woman. Crisp 8k optical definition, sparkling realistic hazel-green iris with detailed radial fibers and specular sunlight reflections, natural porcelain skin texture with delicate pores, soft genuine warm smile with immaculate separated teeth, loose chestnut wavy hair strands catching rim lighting. Soft blurred Roman cafe background, authentic 35mm f/1.4 lens bokeh, 48kHz spatial audio."
-
-# 1 Secondo Qualità Estrema (22 Frame, Denoise ~10s):
-./h3 --profile \
+# 1 Second High-Quality (22 Frames, Denoise ~10s):
+./h3-lora-lab/h3 --profile \
   -d "$MODEL_DIR" \
   -p "$PROMPT" \
   --width 640 --height 640 \
@@ -74,8 +72,8 @@ PROMPT="Masterpiece award-winning cinematic close-up portrait of a breathtakingl
   --seed 333 \
   -o outputs/fast_master_1s.mp4
 
-# 4 Secondi Qualità Master (90 Frame, Denoise ~44s):
-./h3 --profile \
+# 4 Seconds Master (90 Frames, Denoise ~44s):
+./h3-lora-lab/h3 --profile \
   -d "$MODEL_DIR" \
   -p "$PROMPT" \
   --width 640 --height 640 \
@@ -90,13 +88,13 @@ PROMPT="Masterpiece award-winning cinematic close-up portrait of a breathtakingl
 
 ---
 
-## ⏱️ Benchmark di Riferimento Telemetrico (M5 Max 128GB UMA)
+## ⏱️ Telemetry Reference Metrics (M5 Max 128GB UMA)
 
-* **1 Secondo ($640 \times 640$, 22 frame, 8 step esatti)**:
-  * DiT GPU Denoise: **$10.46\text{ secondi}$** 🚀
-  * VAE Decoder: **$8.73\text{ secondi}$**
-  * Tempo Totale Cold: **$36.0\text{ secondi}$** *(A caldo: $\approx 19.5\text{ s}$)*.
-* **4 Secondi ($640 \times 640$, 90 frame, 8 step reuse-2)**:
-  * DiT GPU Denoise: **$44.66\text{ secondi}$** 🚀
-  * VAE Decoder: **$43.89\text{ secondi}$**
-  * Tempo Totale Cold: **$107.0\text{ secondi}$** *(A caldo: $\approx 88.0\text{ s}$)*.
+* **1 Second ($640 \times 640$, 22 frames, 8 exact steps)**:
+  * DiT GPU Denoise: **$10.46\text{ seconds}$**
+  * VAE Decoder: **$8.73\text{ seconds}$**
+  * Total Cold Latency: **$36.0\text{ seconds}$** *(Warm run: $\approx 19.5\text{ s}$)*.
+* **4 Seconds ($640 \times 640$, 90 frames, 8 steps reuse-2)**:
+  * DiT GPU Denoise: **$44.66\text{ seconds}$**
+  * VAE Decoder: **$43.89\text{ seconds}$**
+  * Total Cold Latency: **$107.0\text{ seconds}$** *(Warm run: $\approx 88.0\text{ s}$)*.

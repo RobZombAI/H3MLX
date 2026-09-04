@@ -24,10 +24,10 @@ CANONICAL_RESOLUTIONS: Dict[str, Tuple[int, int]] = {
 
 # Systematic Studio-Quality Video Presets (All Tier 1 Platinum / Forensic Grade)
 PRESETS: Dict[str, Dict[str, Any]] = {
-    # 1. Champion Master Gold (The absolute benchmark for realistic portraits and Hollywood cinema)
+    # 1. Champion Master Gold (Standard 3:2 canvas for realistic portraits and cinematography)
     "h3mlx_champion_gold": {
-        "name": "👑 H3MLX Champion Master Gold (3:2)",
-        "description": "Massima fedeltà assoluta: 50 layer densi al 100%, senza potature spaziali, iride e pori sub-pixel.",
+        "name": "Champion Master (3:2)",
+        "description": "Standard 3:2 canvas (768x512). 50 dense DiT layers with DPM++ 2M flow matching.",
         "width": 768,
         "height": 512,
         "seconds": 3.75,
@@ -40,13 +40,13 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed"
+        "prompt": "Cinematic close-up portrait of a person smiling, natural soft lighting, highly detailed"
     },
 
-    # 2. Cinema Anamorphic Widescreen (16:9 Hollywood format)
+    # 2. Cinema Anamorphic Widescreen (16:9 widescreen format)
     "h3mlx_cinema_16x9": {
-        "name": "🎬 H3MLX Cinema Anamorphic (16:9)",
-        "description": "Formato panoramico widescreen 16:9 (960x544) con coerenza ottica e spaziale.",
+        "name": "Cinema Widescreen (16:9)",
+        "description": "Widescreen 16:9 format (960x544) with spatial optical consistency.",
         "width": 960,
         "height": 544,
         "seconds": 3.75,
@@ -62,10 +62,10 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "prompt": "Cinematic wide shot of a futuristic neon city at sunset with rain reflections, highly detailed"
     },
 
-    # 3. Macro High-Density Square (1:1 640x640 - replaces blurry 512x512)
+    # 3. Macro High-Density Square (1:1 640x640)
     "h3mlx_macro_square": {
-        "name": "💎 H3MLX Square High-Density (1:1 640x640)",
-        "description": "Quadrato ad altissima densità (1600 token) per dettagli estremi e composizioni 1:1.",
+        "name": "Square High-Density (1:1)",
+        "description": "High-density square canvas (640x640, 1600 tokens) for fine detail and 1:1 compositions.",
         "width": 640,
         "height": 640,
         "seconds": 3.75,
@@ -81,10 +81,10 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "prompt": "A sleek red sports car driving through a scenic mountain road in autumn, realistic, 4k"
     },
 
-    # 4. Vertical Cinema Reel (9:16 High Definition FHD)
+    # 4. Vertical Cinema Reel (9:16 High Definition)
     "h3mlx_vertical_reel": {
-        "name": "📱 H3MLX Vertical Cinema Reel (9:16 FHD)",
-        "description": "Rapporto esatto 9:16 FHD (576x1024, 2304 token) ottimizzato per Reel, Shorts e ritratti verticali cinematografici.",
+        "name": "Vertical Cinema Reel (9:16)",
+        "description": "Exact 9:16 vertical ratio (576x1024, 2304 tokens) optimized for mobile fullscreen portraits.",
         "width": 576,
         "height": 1024,
         "seconds": 3.75,
@@ -102,8 +102,8 @@ PRESETS: Dict[str, Dict[str, Any]] = {
 
     # 5. Studio Ghibli Aesthetic Master
     "h3mlx_ghibli_master": {
-        "name": "🌿 H3MLX Studio Ghibli Master (3:2)",
-        "description": "Estetica Hayao Miyazaki con dinamica del vento, texture ad acquerello soffici e cieli dipinti a mano.",
+        "name": "Stylized / Anime (3:2)",
+        "description": "Hand-painted aesthetic with fluid wind dynamics, soft watercolor textures, and vibrant skies.",
         "width": 768,
         "height": 512,
         "seconds": 3.75,

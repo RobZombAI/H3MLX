@@ -207,20 +207,20 @@ def main():
         fps = total_frames / wall_time if wall_time > 0 else 0
         raw_mb = Path(res.raw_output_path).stat().st_size / (1024 * 1024) if Path(res.raw_output_path).exists() else 0.0
         print("\n" + "=" * 70)
-        print("🎉 GENERAZIONE ALTA FEDELTÀ COMPLETATA CON SUCCESSO!")
-        print(f"⏱️  Tempo Totale Reale:       {wall_time:.2f}s  (Throughput: {fps:.2f} FPS)")
-        print(f"🎬  Video RAW (Nativo {args.width}x{args.height}): {res.raw_output_path} ({raw_mb:.2f} MB)")
+        print("GENERATION COMPLETED SUCCESSFULLY")
+        print(f"  • Total Wall Time:  {wall_time:.2f}s  (Throughput: {fps:.2f} FPS)")
+        print(f"  • Video RAW:        {res.raw_output_path} ({raw_mb:.2f} MB)")
         if res.master_output_path:
             master_mb = Path(res.master_output_path).stat().st_size / (1024 * 1024) if Path(res.master_output_path).exists() else 0.0
-            print(f"💎  Video MASTER (Smart 4K):   {res.master_output_path} ({master_mb:.2f} MB)")
-        print(f"📐  Risoluzione & Frame:      {args.width}x{args.height} {'-> 4K UHD' if args.upscale_4k else ''} | {total_frames} frames ({total_frames/24:.2f}s @ 24fps)")
+            print(f"  • Video MASTER 4K:  {res.master_output_path} ({master_mb:.2f} MB)")
+        print(f"  • Resolution:       {args.width}x{args.height} {'-> 4K UHD' if args.upscale_4k else ''} | {total_frames} frames (~{total_frames/24:.2f}s @ 24fps)")
         if res.profile_data:
-            print("\n📊 Profiling GPU Metal & Smart Mastering:")
+            print("\nMetal GPU Profiling:")
             for k, v in res.profile_data.items():
                 print(f"   • {k:<25}: {v:.2f}s")
         print("=" * 70 + "\n")
     else:
-        print(f"\n❌ Errore durante l'esecuzione di H3:\n{res.stderr}", file=sys.stderr)
+        print(f"\nError during H3 execution:\n{res.stderr}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":

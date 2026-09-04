@@ -103,10 +103,10 @@ def resolve_model_path(model_dir: Optional[str] = None, steps: int = 14) -> Path
             return c
 
     raise FileNotFoundError(
-        "❌ Nessun modello MiniMax H3 trovato nei percorsi standard.\n"
-        "💡 Per scaricare automaticamente i pesi su questo Mac, esegui:\n"
+        "❌ No MiniMax H3 model directory found in standard search paths.\n"
+        "💡 To automatically download weights on this Mac, run:\n"
         "   ./download_models.sh\n"
-        "Oppure specifica il percorso con l'opzione -d / --model-dir <percorso>."
+        "Or pass the checkpoint path explicitly via -d / --model-dir <path>."
     )
 
 from h3mlx_smart_filters import build_smart_video_filter
@@ -309,7 +309,7 @@ def execute_h3_generation(
             final_output_path = result_path
             master_path_str = result_path
         except Exception as e:
-            print(f"⚠️ Mastering avanzato fallito ({e}), mantenimento raw output.")
+            print(f"Mastering step failed ({e}), falling back to raw output.")
             
     success = (proc.returncode == 0 and out_file.exists())
     return H3EngineResult(

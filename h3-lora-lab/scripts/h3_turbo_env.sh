@@ -1,13 +1,13 @@
 #!/bin/bash
 # === H3 Engine Maximum Throughput — Zero Quality Loss ===
 
-# GIÀ ATTIVI (confermati funzionanti)
+# ACTIVE (verified operational)
 export H3_NAX=1
 export H3_ZERO_COPY_WEIGHTS=1
 export H3_REUSE_MPS_COMMAND=1
 export H3_PROFILE=1
 
-# NUOVI — Zero quality loss
+# NEW — Zero quality loss
 export H3_SOL_ATTN=1
 export H3_SOL_CACHE=1
 export H3_SOL_ATTN_THRESHOLD=10.0

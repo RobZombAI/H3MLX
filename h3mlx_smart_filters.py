@@ -16,37 +16,37 @@ from typing import Tuple, Dict, Any
 SMART_PROFILES: Dict[str, Dict[str, Any]] = {
     "portrait": {
         "name": "👤 Smart Portrait & Beauty",
-        "description": "De-gridding bilaterale edge-preserving + Lanczos 4K + AMD FidelityFX CAS (0.22). Elimina imperfezioni e quadretti senza toccare ciglia, occhi e capelli.",
+        "description": "Edge-preserving bilateral de-gridding + Lanczos 4K + AMD FidelityFX CAS (0.22). Eliminates patch artifacts without softening eyelashes, eyes, or hair.",
         "filter": "bilateral=sigmaS=2:sigmaR=0.06,scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int,cas=strength=0.22",
-        "keywords": ["portrait", "woman", "man", "girl", "boy", "person", "face", "smile", "eyes", "model", "brad pitt", "closeup", "close-up", "ritratto", "viso", "donna", "uomo"]
+        "keywords": ["portrait", "woman", "man", "girl", "boy", "person", "face", "smile", "eyes", "model", "brad pitt", "closeup", "close-up"]
     },
     "cinema": {
         "name": "🎬 Smart Hollywood Cinema",
-        "description": "Mastering cinematografico bilanciato: micro-contrasto adattivo AMD CAS (0.30) + de-gridding ottico + Lanczos 4K.",
+        "description": "Balanced cinematic mastering: adaptive micro-contrast AMD CAS (0.30) + optical de-gridding + Lanczos 4K.",
         "filter": "bilateral=sigmaS=2:sigmaR=0.05,scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int,cas=strength=0.30",
-        "keywords": ["cinema", "cinematic", "film", "movie", "landscape", "city", "street", "night", "sunset", "dramatic", "città", "tramonto"]
+        "keywords": ["cinema", "cinematic", "film", "movie", "landscape", "city", "street", "night", "sunset", "dramatic"]
     },
     "anime": {
         "name": "🌿 Smart Anime & Studio Ghibli",
-        "description": "F3KDB Debanding + Spline 4K + AMD CAS (0.42). Campiture di colore prive di banding e line-art dei contorni nitidissima.",
+        "description": "F3KDB Debanding + Spline 4K + AMD CAS (0.42). Solid color fields free of banding with crisp line-art edge preservation.",
         "filter": "deband=range=16:1thr=0.04:2thr=0.04:3thr=0.04:blur=true,scale=iw*{scale}:ih*{scale}:flags=spline+accurate_rnd+full_chroma_int,cas=strength=0.42",
-        "keywords": ["ghibli", "anime", "manga", "watercolor", "painted", "drawing", "illustration", "miyazaki", "cel", "cartone", "disegno", "acquerello"]
+        "keywords": ["ghibli", "anime", "manga", "watercolor", "painted", "drawing", "illustration", "miyazaki", "cel", "cartoon"]
     },
     "action": {
         "name": "🏎️ Smart Action & Speed",
-        "description": "Stabilizzazione temporale 3D + Lanczos 4K + AMD CAS (0.35). Ideale per veicoli veloci, riflessi neon e cineprese in movimento.",
+        "description": "3D temporal stabilization + Lanczos 4K + AMD CAS (0.35). Ideal for fast vehicles, neon reflections, and rapid camera panning.",
         "filter": "hqdn3d=1.0:1.0:2.0:2.0,scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int,cas=strength=0.35",
-        "keywords": ["car", "auto", "vehicle", "driving", "race", "speed", "fast", "drone", "neon", "cyberpunk", "rain", "action", "corsa", "macchina", "velocità"]
+        "keywords": ["car", "auto", "vehicle", "driving", "race", "speed", "fast", "drone", "neon", "cyberpunk", "rain", "action"]
     },
     "macro": {
         "name": "💎 Smart Macro & Forensic Detail",
-        "description": "Micro-texture enhancement + Lanczos 4K + AMD CAS (0.38). Massima risoluzione per texture, gioielli, tessuti e dettagli ravvicinati.",
+        "description": "Micro-texture enhancement + Lanczos 4K + AMD CAS (0.38). Maximum resolution for fine textures, jewelry, fabrics, and extreme close-ups.",
         "filter": "bilateral=sigmaS=1.5:sigmaR=0.04,scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int,cas=strength=0.38",
-        "keywords": ["macro", "texture", "fabric", "jewelry", "watch", "gold", "insect", "gemstone", "tessuto", "gioiello", "oro", "dettaglio"]
+        "keywords": ["macro", "texture", "fabric", "jewelry", "watch", "gold", "insect", "gemstone", "detail"]
     },
     "clean": {
         "name": "⚪ Clean Direct (Pure Lanczos)",
-        "description": "Nessuna maschera di contrasto. Solo supersampling Lanczos puro a piena gamma dinamica.",
+        "description": "No unsharp or contrast mask. Direct pure Lanczos supersampling with full dynamic range preservation.",
         "filter": "scale=iw*{scale}:ih*{scale}:flags=lanczos+accurate_rnd+full_chroma_int",
         "keywords": []
     }
@@ -54,27 +54,27 @@ SMART_PROFILES: Dict[str, Dict[str, Any]] = {
 
 def detect_best_profile(prompt: str, preset_id: str = "") -> str:
     """
-    Classificatore content-aware euristico basato su analisi semantica del prompt e del preset.
+    Content-aware heuristic classifier based on semantic analysis of prompt and preset ID.
     """
     text = f"{preset_id} {prompt}".lower()
     
-    # 1. Priorità Anime / Ghibli
+    # 1. Anime / Ghibli Priority
     if any(k in text for k in SMART_PROFILES["anime"]["keywords"]):
         return "anime"
         
-    # 2. Priorità Macro / Oggetti / Texture
+    # 2. Macro / Objects / Texture Priority
     if any(k in text for k in SMART_PROFILES["macro"]["keywords"]):
         return "macro"
 
-    # 3. Priorità Action / Veicoli / Movimento
+    # 3. Action / Vehicles / Speed Priority
     if any(k in text for k in SMART_PROFILES["action"]["keywords"]):
         return "action"
         
-    # 4. Priorità Portrait / Persone / Volti
+    # 4. Portrait / People / Faces Priority
     if any(k in text for k in SMART_PROFILES["portrait"]["keywords"]):
         return "portrait"
         
-    # Fallback universale: Hollywood Cinema
+    # Universal fallback: Hollywood Cinema
     return "cinema"
 
 def build_smart_video_filter(
@@ -84,7 +84,7 @@ def build_smart_video_filter(
     scale_factor: int = 4
 ) -> Tuple[str, str, str]:
     """
-    Costruisce la stringa filtro FFmpeg ottimale (-vf) e restituisce (filter_string, profile_key, profile_name).
+    Builds the optimal FFmpeg filter chain string (-vf) and returns (filter_string, profile_key, profile_name).
     """
     selected_key = profile.lower() if profile else "auto"
     if selected_key == "auto":
@@ -98,7 +98,7 @@ def build_smart_video_filter(
     return filter_chain, selected_key, prof["name"]
 
 if __name__ == "__main__":
-    # Test di verifica euristica
+    # Heuristic verification test
     test_prompts = [
         ("Cinematic vertical portrait of a beautiful woman with wavy hair", "h3mlx_vertical_reel"),
         ("Hayao Miyazaki watercolor castle floating in the sky with clouds", "h3mlx_ghibli_master"),

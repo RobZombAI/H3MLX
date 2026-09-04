@@ -31,12 +31,12 @@ def main():
     try:
         from huggingface_hub import snapshot_download
     except ImportError:
-        print("⚙️ Installazione di 'huggingface_hub' per il download accelerato...")
+        print("Installing 'huggingface_hub'...")
         import subprocess
         subprocess.check_call([sys.executable, "-m", "pip", "install", "huggingface_hub"])
         from huggingface_hub import snapshot_download
 
-    print("\n⬇️ Avvio download con supporto al resume (puoi interrompere e riprendere in qualsiasi momento)...")
+    print("\nStarting download with resume support...")
     try:
         snapshot_download(
             repo_id=args.model,
@@ -44,10 +44,10 @@ def main():
             local_dir_use_symlinks=False,
             resume_download=True
         )
-        print(f"\n✅ Modello scaricato con successo in: {target_path}")
+        print(f"\nModel weights downloaded successfully to: {target_path}")
     except Exception as e:
-        print(f"\n❌ Errore durante il download da HuggingFace:\n{e}", file=sys.stderr)
-        print("\n💡 In alternativa, puoi scaricare manualmente i pesi o posizionarli in:")
+        print(f"\nError during HuggingFace download:\n{e}", file=sys.stderr)
+        print("\nAlternatively, you can manually place model weights in:")
         print(f"   {target_path}")
         sys.exit(1)
 

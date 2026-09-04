@@ -195,20 +195,18 @@ class H3GraphOptimizer:
 
 if __name__ == '__main__':
     test_cases = [
-        "due tennisti che schiacciano a rete",
-        "una ferrari f40 che sfreccia a monza",
-        "mia wallace e vincent vega che ballano",
-        "un vecchio marinaio con la barba",
-        "un samurai cyberpunk sotto la pioggia",
-        "due maestri di kung fu che combattono",
-        "un leone che corre nella savana",
-        "panoramica aerea delle alpi e fiordi",
-        "un castello incantato in stile ghibli",
-        "un corridoio oscuro di un castello gotico",
-        "una stazione spaziale in orbita attorno a giove",
-        "cavalieri medievali in armatura prima della battaglia"
+        "mia wallace and vincent vega dancing in a diner",
+        "an old weathered sailor with a white beard",
+        "a cyberpunk samurai in the rain",
+        "two kung fu masters fighting",
+        "a lion running across the savanna",
+        "aerial panoramic sweep over alpine fjords",
+        "an enchanted castle in studio ghibli aesthetic",
+        "a dark hallway in a gothic castle",
+        "a space station orbiting jupiter",
+        "medieval knights in plate armor before battle"
     ]
-    print("=== TEST DEI 12 GRAFI CINEMATOGRAFICI UNIVERSALI ===")
+    print("=== UNIVERSAL CINEMATIC KNOWLEDGE SUBGRAPHS TEST ===")
     for t in test_cases:
         opt, dom, meta = H3GraphOptimizer.optimize_prompt(t)
         print(f"[{dom.upper()}]: {t} -> Safe={meta['sol_attn_safe']}")

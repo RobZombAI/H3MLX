@@ -88,7 +88,7 @@ def upscale_video(
     """Upscale and restore video using Apple Silicon native acceleration."""
     in_file = Path(input_path).resolve()
     if not in_file.exists():
-        raise FileNotFoundError(f"Video non trovato: {in_file}")
+        raise FileNotFoundError(f"Video not found: {in_file}")
 
     if output_path is None:
         suffix = "4k_master" if target_width >= 3840 else "1080p_master"
@@ -103,8 +103,8 @@ def upscale_video(
         raise RuntimeError("FFmpeg non trovato sul sistema.")
 
     has_audio = has_audio_stream(in_file)
-    print(f"🎬 Avvio Intraframe Detail Restoration & Upscale: {in_file.name} -> {out_file.name}")
-    print(f"   📐 Risoluzione: {target_width}x{target_height} | Denoise: {enable_denoise} | CAS: {cas_strength} | Audio: {'Presente' if has_audio else 'Muto'} | Filter: {smart_filter}")
+    print(f"Starting Intraframe Detail Restoration & Upscale: {in_file.name} -> {out_file.name}")
+    print(f"   Resolution: {target_width}x{target_height} | Denoise: {enable_denoise} | CAS: {cas_strength} | Audio: {'Present' if has_audio else 'Muted'} | Filter: {smart_filter}")
 
     if use_videotoolbox:
         vf_filter = build_filtergraph(
@@ -150,10 +150,10 @@ def upscale_video(
         res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         if res.returncode == 0:
             size_mb = out_file.stat().st_size / (1024 * 1024)
-            print(f"✅ Mastering VideoToolbox Main10 completato: {out_file.name} ({size_mb:.2f} MB)")
+            print(f"VideoToolbox Main10 mastering complete: {out_file.name} ({size_mb:.2f} MB)")
             return str(out_file)
         else:
-            print("⚠️ VideoToolbox non riuscito, fallback su libx264...")
+            print("VideoToolbox encoding failed, falling back to libx264...")
 
     vf_fallback = build_filtergraph(
         target_width, target_height, aspect_ratio, enable_denoise, cas_strength, "yuv420p"
@@ -186,10 +186,10 @@ def upscale_video(
         res_simple = subprocess.run(cmd_simple, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         if res_simple.returncode != 0:
             err = res_simple.stderr.decode("utf-8", errors="ignore")
-            raise RuntimeError(f"FFmpeg mastering fallito: {err}")
+            raise RuntimeError(f"FFmpeg mastering failed: {err}")
 
     size_mb = out_file.stat().st_size / (1024 * 1024)
-    print(f"✅ Upscaling completato: {out_file.name} ({size_mb:.2f} MB)")
+    print(f"Upscaling complete: {out_file.name} ({size_mb:.2f} MB)")
     return str(out_file)
 
 
@@ -199,11 +199,11 @@ def upscale_video_to_4k(input_path: str, output_path: str | None = None, target_
 
 def main():
     parser = argparse.ArgumentParser(description="H3 Cinema 4K & Intraframe Detail Restoration")
-    parser.add_argument("input", help="File video MP4 di input")
-    parser.add_argument("output", nargs="?", default=None, help="File video MP4 di output (opzionale)")
-    parser.add_argument("--res", choices=["1080p", "4k", "reel_9x16"], default="4k", help="Profilo risoluzione target")
-    parser.add_argument("--cas", type=float, default=0.25, help="Intensità Contrast Adaptive Sharpening (default: 0.25)")
-    parser.add_argument("--no-denoise", action="store_true", help="Disabilita Wavelet Bayesian Denoising")
+    parser.add_argument("input", help="Input MP4 video file path")
+    parser.add_argument("output", nargs="?", default=None, help="Output MP4 video file path (optional)")
+    parser.add_argument("--res", choices=["1080p", "4k", "reel_9x16"], default="4k", help="Target resolution profile")
+    parser.add_argument("--cas", type=float, default=0.25, help="Contrast Adaptive Sharpening intensity (default: 0.25)")
+    parser.add_argument("--no-denoise", action="store_true", help="Disable Wavelet Bayesian Denoising")
     args = parser.parse_args()
 
     if args.res == "1080p":

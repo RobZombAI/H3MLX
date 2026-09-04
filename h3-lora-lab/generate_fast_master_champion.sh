@@ -40,7 +40,7 @@ echo "=========================================================="
 
 START=$(date +%s)
 echo ""
-echo "🚀 [FASE 1/4] Inizializzazione Text Encoder Qwen 3-VL & Pesi UMA..."
+echo "🚀 [PHASE 1/4] Initializing Qwen 2.5-VL Text Encoder & UMA Weights..."
 
 caffeinate -dimsu nice -n 0 ./h3 --profile \
   -d "$MODEL_DIR" \

@@ -63,7 +63,7 @@ def main():
         model_path = DEFAULT_PDD_MODEL if is_pdd else DEFAULT_FULL_MODEL
         
     if not model_path.exists():
-        print(f"❌ Errore: Directory del modello non trovata: {model_path}", file=sys.stderr)
+        print(f"❌ Error: Model directory not found: {model_path}", file=sys.stderr)
         sys.exit(1)
         
     # 2. Resolve Frames & Lattice
@@ -168,19 +168,19 @@ def main():
     gpu_passes = args.steps // reuse + (1 if args.steps % reuse else 0) if reuse > 1 else args.steps
     
     print("=" * 72)
-    print("👑 UNIVERSAL ANTIREZ H3 BRIDGE v2.0 — HYPER-MASTER ACCELERATOR")
+    print("UNIVERSAL ANTIREZ H3 BRIDGE v2.0 — METAL 4 NAX ACCELERATOR")
     print("=" * 72)
-    print(f" • Modello           : {model_path.name} ({'PDD Distilled' if is_pdd else 'Full Continuous Flow'})")
-    print(f" • Modalità Motore   : {'🏛️ Canonical Pure (antirez baseline)' if is_canonical else '🚀 H3XML Boosted (RobZomb Frontier)'}")
-    print(f" • Quantizzazione    : {'⚡ Metal 4 NAX INT8 Row-Major (FC2 W8A8)' if (args.int8 and not is_canonical) else 'BF16 Standard'}")
-    print(f" • Risoluzione Base  : {args.width}x{args.height} ({frames} frame | {args.seconds:.1f}s @ 24fps)")
-    print(f" • Denoise Steps     : {args.steps} step (Reuse: {reuse} -> {gpu_passes} forward GPU reali)")
-    print(f" • Solutore ODE      : {resolved_solver.upper()} ({'Piecewise Linear' if resolved_solver == 'euler' else 'Adams-Bashforth 3M + Symplectic Flow'})")
-    print(f" • Runtime UMA       : {'⚡ Residente (/tmp/h3_resident.sock - 0.00s Load)' if is_resident else 'Standard Diretto'}")
+    print(f" • Model              : {model_path.name} ({'PDD Distilled' if is_pdd else 'Full Continuous Flow'})")
+    print(f" • Engine Mode        : {'Canonical Pure (antirez baseline)' if is_canonical else 'H3XML Boosted (Metal 4 NAX)'}")
+    print(f" • Quantization       : {'Metal 4 NAX INT8 Row-Major (FC2 W8A8)' if (args.int8 and not is_canonical) else 'BF16 Standard'}")
+    print(f" • Base Resolution    : {args.width}x{args.height} ({frames} frames | {args.seconds:.1f}s @ 24fps)")
+    print(f" • Denoise Steps      : {args.steps} steps (Reuse: {reuse} -> {gpu_passes} actual GPU passes)")
+    print(f" • ODE Solver         : {resolved_solver.upper()} ({'Piecewise Linear' if resolved_solver == 'euler' else 'Adams-Bashforth 3M + Symplectic Flow'})")
+    print(f" • UMA Runtime        : {'Resident (/tmp/h3_resident.sock - 0.00s Load)' if is_resident else 'Direct Cold Start'}")
     if args.first_frame:
-        print(f" • Image-to-Video    : 🖼️ First-Frame Conditioning ({args.first_frame})")
-    print(f" • 4K Super-Res      : {'💎 Attivo (Lanczos-4 Sub-pixel 3840x2160)' if args.upscale_4k else 'Disattivo (Output nativo)'}")
-    print(f" • Output File       : {out_file}")
+        print(f" • Image-to-Video     : First-Frame Conditioning ({args.first_frame})")
+    print(f" • 4K Super-Res       : {'Enabled (Lanczos-4 Sub-pixel 3840x2160)' if args.upscale_4k else 'Disabled (Native output)'}")
+    print(f" • Output File        : {out_file}")
     print("=" * 72)
     
     t0 = time.time()
@@ -190,19 +190,19 @@ def main():
     if res.returncode == 0 and out_file.exists():
         size_mb = out_file.stat().st_size / (1024 * 1024)
         print("=" * 72)
-        print(f"✅ GENERAZIONE DIRETTA COMPLETATA IN {elapsed:.2f}s!")
-        print(f"🎬 Video nativo salvato: {out_file} ({size_mb:.2f} MB)")
+        print(f"✅ DIRECT GENERATION COMPLETED IN {elapsed:.2f}s!")
+        print(f"🎬 Native video saved: {out_file} ({size_mb:.2f} MB)")
         
         # 4K Super-Resolution Pipeline
         if args.upscale_4k and upscale_video_to_4k is not None:
             t_up = time.time()
             out_4k = upscale_video_to_4k(str(out_file))
             elapsed_up = time.time() - t_up
-            print(f"👑 PIPELINE 4K MASTER COMPLETATA IN {elapsed + elapsed_up:.2f}s TOTALI!")
-            print(f"🌟 Video 4K Master: {out_4k}")
+            print(f"PIPELINE 4K MASTER COMPLETED IN {elapsed + elapsed_up:.2f}s TOTAL!")
+            print(f"Video 4K Master: {out_4k}")
         print("=" * 72)
     else:
-        print(f"❌ Errore durante l'esecuzione del motore H3 (Exit code: {res.returncode})", file=sys.stderr)
+        print(f"❌ Error during H3 engine execution (Exit code: {res.returncode})", file=sys.stderr)
         sys.exit(res.returncode)
 
 if __name__ == "__main__":
