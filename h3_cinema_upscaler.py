@@ -39,17 +39,25 @@ def build_filtergraph(
     if aspect_ratio == "9:16":
         filters.append("crop=ih*9/16:ih:(iw-ih*9/16)/2:0")
 
+    is_vertical = (aspect_ratio == "9:16") or (target_height > target_width)
+
     if enable_denoise:
         # Pre-scale Wavelet Bayesian Denoising: operates at native Nyquist resolution (16x fewer pixels)
-        # Prevents Lanczos sinc kernel from magnifying VAE high-frequency block noise into 4K band
-        filters.append("vaguedenoiser=threshold=1.2:method=garrote:nsteps=4:percent=45:planes=7:type=bayes")
+        # Prevents Lanczos sinc kernel from magnifying VAE high-frequency block noise into 4K band.
+        # On vertical 9:16 reels, human faces and hands occupy < 60px; a heavy threshold (1.2) erases
+        # pupils, nostrils, and finger joints. Use delicate micro-filtering (0.30) on portrait canvases.
+        if is_vertical:
+            filters.append("vaguedenoiser=threshold=0.30:method=garrote:nsteps=2:percent=15:planes=7:type=bayes")
+        else:
+            filters.append("vaguedenoiser=threshold=1.2:method=garrote:nsteps=4:percent=45:planes=7:type=bayes")
 
     filters.append(
         f"scale={target_width}:{target_height}:flags=lanczos+accurate_rnd+full_chroma_int+full_chroma_inp"
     )
 
-    if cas_strength > 0.0:
-        filters.append(f"cas=strength={cas_strength:.2f}")
+    effective_cas = 0.45 if (is_vertical and cas_strength <= 0.25) else cas_strength
+    if effective_cas > 0.0:
+        filters.append(f"cas=strength={effective_cas:.2f}")
 
     if smart_filter in ["master-optics", "optics", "cinema", "cinema-35mm"]:
         # Arri Alexa / Kodak 35mm tone curve: micro-contrast & skin tone vitality enhancement

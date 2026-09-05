@@ -2874,6 +2874,12 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
                                        strcmp(solver_env, "dpm2") == 0 ||
                                        strcmp(solver_env, "dpm3m") == 0 ||
                                        strcmp(solver_env, "dpm") == 0));
+    if (dit->sigmas.steps <= 5 && !getenv("H3_FORCE_DPM2M")) {
+        /* On PDD distilled Optimal Transport models at N <= 5 steps, step ratio r can exceed 3.7.
+         * Rather than collapsing to 1st-order Euler (which erases fine facial landmarks), we keep DPM++ 2M
+         * active with hyperbolic flux-limiting (beta = 2.5, max_ratio = 0.20) to provide gentle 2nd-order
+         * curvature without Adams-Bashforth explosive ballooning. */
+    }
     if ((reuse_interval > 1 || enable_dpm2m) && getenv("H3_PROFILE"))
         fprintf(stderr, "h3: %s GPU %s schedule has %d evaluations\n",
                 custom_count > 0 ? "custom" : "selected",
@@ -2987,9 +2993,9 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
             float hp_v = dit->sigmas.video[previous_evaluated] - dit->sigmas.video[step];
             if (hp_v > 1e-6f) {
                 float r = hk_v / hp_v;
-                if (use_flux_limiter) {
-                    float beta = 1.25f;
-                    if (use_bandpass) {
+                if (use_flux_limiter || dit->sigmas.steps <= 5) {
+                    float beta = (dit->sigmas.steps <= 5) ? 2.5f : 1.25f;
+                    if (use_bandpass && dit->sigmas.steps > 5) {
                         /* Bandpass spectral relaxation: for sigma <= 0.32 (late-step particle and spark formation),
                          * smoothly relax beta -> 0 so the second-order momentum is fully retained for
                          * sparks, droplets, and specular micro-highlights, while maintaining full
@@ -3000,29 +3006,31 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
                         beta = 1.25f * gate;
                     }
                     float r_damped = (beta > 0.01f) ? (tanhf(beta * r) / beta) : r;
-                    float max_ratio = (use_bandpass && dit->sigmas.video[step] <= 0.28f) ? 0.50f : 0.45f;
+                    float max_ratio = (dit->sigmas.steps <= 5) ? 0.20f : ((use_bandpass && dit->sigmas.video[step] <= 0.28f) ? 0.50f : 0.45f);
                     video_ratio = fminf(fmaxf(0.5f * r_damped, 0.0f), max_ratio);
                 } else {
-                    video_ratio = fminf(fmaxf(0.5f * r, 0.0f), 0.5f);
+                    float max_r = (dit->sigmas.steps <= 5) ? 0.20f : 0.5f;
+                    video_ratio = fminf(fmaxf(0.5f * r, 0.0f), max_r);
                 }
             }
             float hk_a = dit->sigmas.audio[step] - dit->sigmas.audio[step + 1];
             float hp_a = dit->sigmas.audio[previous_evaluated] - dit->sigmas.audio[step];
             if (hp_a > 1e-6f) {
                 float r = hk_a / hp_a;
-                if (use_flux_limiter) {
-                    float beta = 1.25f;
-                    if (use_bandpass) {
+                if (use_flux_limiter || dit->sigmas.steps <= 5) {
+                    float beta = (dit->sigmas.steps <= 5) ? 2.5f : 1.25f;
+                    if (use_bandpass && dit->sigmas.steps > 5) {
                         float curr_sigma = dit->sigmas.audio[step];
                         float sig_trans = (curr_sigma - 0.28f) / 0.05f;
                         float gate = 1.0f / (1.0f + expf(-sig_trans));
                         beta = 1.25f * gate;
                     }
                     float r_damped = (beta > 0.01f) ? (tanhf(beta * r) / beta) : r;
-                    float max_ratio = (use_bandpass && dit->sigmas.audio[step] <= 0.28f) ? 0.50f : 0.45f;
+                    float max_ratio = (dit->sigmas.steps <= 5) ? 0.20f : ((use_bandpass && dit->sigmas.audio[step] <= 0.28f) ? 0.50f : 0.45f);
                     audio_ratio = fminf(fmaxf(0.5f * r_damped, 0.0f), max_ratio);
                 } else {
-                    audio_ratio = fminf(fmaxf(0.5f * r, 0.0f), 0.5f);
+                    float max_r = (dit->sigmas.steps <= 5) ? 0.20f : 0.5f;
+                    audio_ratio = fminf(fmaxf(0.5f * r, 0.0f), max_r);
                 }
             }
         }
@@ -3186,6 +3194,44 @@ int h3_dit_denoise(h3_dit *dit, float *video_latent, float *audio_latent,
     return ok;
 }
 
+static void h3_activity_gate_velocity(float *velocity, int channels, int time,
+                                      int height, int width,
+                                      const float *activity_mask,
+                                      int step, int total_steps, float sigma) {
+    if (!velocity || !activity_mask || channels <= 0 || time <= 0 || height <= 0 || width <= 0) return;
+    if (getenv("H3_DISABLE_ACTIVITY_GATE")) return;
+
+    /* Only engage gate after initial coarse layout is established (step >= 2 and sigma <= 0.65) */
+    if (step < 2 || sigma > 0.65f) return;
+
+    float progress = (float)step / (float)(total_steps > 1 ? total_steps - 1 : 1);
+    size_t plane_size = (size_t)height * (size_t)width;
+    size_t total_planes = (size_t)channels * (size_t)time;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            float act = activity_mask[(size_t)y * (size_t)width + (size_t)x];
+            if (act < 0.15f) {
+                // Static background: damp velocity smoothly to 0 in late steps
+                float damp = 1.0f - progress;
+                float scale = damp * damp;
+                for (size_t p = 0; p < total_planes; p++) {
+                    velocity[p * plane_size + (size_t)y * (size_t)width + (size_t)x] *= scale;
+                }
+            } else if (act < 0.40f) {
+                // Transition boundary: mild damping in late steps
+                if (progress > 0.7f) {
+                    float t = (act - 0.15f) / 0.25f;
+                    float scale = 0.5f + 0.5f * t;
+                    for (size_t p = 0; p < total_planes; p++) {
+                        velocity[p * plane_size + (size_t)y * (size_t)width + (size_t)x] *= scale;
+                    }
+                }
+            }
+        }
+    }
+}
+
 int h3_dit_denoise_euler_preview(
                          h3_dit *dit, float *video_latent,
                          float *audio_latent, int reuse_interval,
@@ -3225,6 +3271,25 @@ int h3_dit_denoise_euler_preview(
     float *audio_velocity = malloc(audio_count * sizeof(*audio_velocity));
     float *last_video = malloc(video_count * sizeof(*last_video));
     float *previous_video = malloc(video_count * sizeof(*previous_video));
+    const char *act_path = getenv("H3_ACTIVITY_MASK");
+    float *activity_mask = NULL;
+    if (act_path && *act_path) {
+        FILE *fp = fopen(act_path, "rb");
+        if (fp) {
+            size_t exp_n = (size_t)dit->latent_h * (size_t)dit->latent_w;
+            activity_mask = malloc(exp_n * sizeof(float));
+            if (activity_mask) {
+                if (fread(activity_mask, sizeof(float), exp_n, fp) != exp_n) {
+                    free(activity_mask);
+                    activity_mask = NULL;
+                } else if (getenv("H3_PROFILE")) {
+                    fprintf(stderr, "h3: DiT denoiser loaded activity mask (%dx%d) for selective token freezing\n",
+                            (int)dit->latent_w, (int)dit->latent_h);
+                }
+            }
+            fclose(fp);
+        }
+    }
     float *previous2_video = malloc(video_count * sizeof(*previous2_video));
     float *last_audio = malloc(audio_count * sizeof(*last_audio));
     float *previous_audio = malloc(audio_count * sizeof(*previous_audio));
@@ -3385,6 +3450,13 @@ int h3_dit_denoise_euler_preview(
                     video_velocity, VIDEO_CHANNELS, dit->latent_t,
                     (int)dit->latent_h, (int)dit->latent_w, tfm_lambda);
             }
+            /* Spatial-Temporal Activity Token Gating: Freeze static background tokens in late steps */
+            if (activity_mask) {
+                h3_activity_gate_velocity(
+                    video_velocity, VIDEO_CHANNELS, dit->latent_t,
+                    (int)dit->latent_h, (int)dit->latent_w, activity_mask,
+                    step, dit->sigmas.steps, dit->sigmas.video[step]);
+            }
             if (solver_type == SOLVER_DPM3M) {
                 ok = h3_dpm3m_velocity_step(
                          video_latent, video_velocity,
@@ -3465,6 +3537,7 @@ int h3_dit_denoise_euler_preview(
     free(dpm_prev_audio);
     free(dpm_prev2_video);
     free(dpm_prev2_audio);
+    if (activity_mask) free(activity_mask);
     if (ok && !getenv("H3_DISABLE_DETAIL_BOOST")) {
         const float alpha = 0.075f; /* Laplacian high-frequency boost for ultra-sharp micro-textures */
         int lt = (int)dit->latent_t;

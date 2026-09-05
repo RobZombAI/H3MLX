@@ -193,9 +193,36 @@ static float h3_shifted_sigma(int index, int steps, float shift) {
     return shift * base / (1.0f + (shift - 1.0f) * base);
 }
 
+static int h3_parse_custom_sigmas(int count, h3_sigma_schedule *schedule) {
+    const char *env = getenv("H3_SIGMAS");
+    if (!env || !*env) return 0;
+    char buf[512];
+    strncpy(buf, env, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    char *token = strtok(buf, ", ");
+    int idx = 0;
+    while (token && idx <= count) {
+        float val = (float)atof(token);
+        if (val < 0.0f) val = 0.0f;
+        if (val > 1.0f) val = 1.0f;
+        schedule->video[idx] = val;
+        schedule->audio[idx] = val;
+        idx++;
+        token = strtok(NULL, ", ");
+    }
+    if (idx >= count) {
+        schedule->steps = count;
+        schedule->video[count] = 0.0f;
+        schedule->audio[count] = 0.0f;
+        return 1;
+    }
+    return 0;
+}
+
 int h3_schedule_build(int steps, h3_sigma_schedule *schedule) {
     if (!schedule || steps < 1 || steps > H3_MAX_STEPS) return 0;
     memset(schedule, 0, sizeof(*schedule));
+    if (h3_parse_custom_sigmas(steps, schedule)) return 1;
     schedule->steps = steps;
     float vshift = h3_get_video_shift();
     float ashift = h3_get_audio_shift();
@@ -219,6 +246,7 @@ int h3_schedule_build(int steps, h3_sigma_schedule *schedule) {
 int h3_serving_schedule_build(int evaluations, h3_sigma_schedule *schedule) {
     if (!schedule || evaluations < 2 || evaluations > H3_MAX_STEPS) return 0;
     memset(schedule, 0, sizeof(*schedule));
+    if (h3_parse_custom_sigmas(evaluations, schedule)) return 1;
     schedule->steps = evaluations;
     float vshift = h3_get_video_shift();
     float ashift = h3_get_audio_shift();

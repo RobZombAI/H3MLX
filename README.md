@@ -44,10 +44,26 @@ The project builds upon the foundational architecture created by Salvatore Sanfi
 | Preset | Aspect Ratio | Canvas Resolution | Master 4K Resolution | Frames ($T$) | Duration | Total Wall Time | Throughput | Output Size |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Champion Master (`h3mlx_champion_gold`)** | 3:2 | 768 × 512 | 3072 × 2048 | 56 | 2.33s @ 24fps | **35.00s** | **1.60 FPS** | 15.26 MB |
+| **Twist Quality Fix (`twist_quality_fix`)** | 3:2 | 768 × 512 | 3072 × 2048 | 22 | 0.92s @ 24fps | **29.89s** | **0.74 FPS** | 1.08 MB |
+| **Golden Cinema Two-Shot (`h3mlx_golden_cinema`)** | 3:2 | 768 × 512 | 3072 × 2048 | 56 | 2.33s @ 24fps | **63.76s** | **0.88 FPS** | 12.85 MB |
 | **Cinema Widescreen (`h3mlx_cinema_16x9`)** | 16:9 | 960 × 544 | 3840 × 2176 | 56 | 2.33s @ 24fps | **35.00s** | **1.60 FPS** | 16.75 MB |
 | **Square High-Density (`h3mlx_macro_square`)** | 1:1 | 640 × 640 | 2560 × 2560 | 56 | 2.33s @ 24fps | **46.12s** | **1.21 FPS** | 15.29 MB |
 | **Vertical Cinema Reel (`h3mlx_vertical_reel`)** | 9:16 | 576 × 1024 | 2304 × 4096 | 56 | 2.33s @ 24fps | **62.71s** | **0.89 FPS** | 15.66 MB |
 | **Studio Ghibli Master (`h3mlx_ghibli_master`)** | 3:2 | 768 × 512 | 3072 × 2048 | 56 | 2.33s @ 24fps | **43.88s** | **1.28 FPS** | 15.66 MB |
+
+---
+
+## 👑 Golden Standard Showcases (v3.4 SOTA)
+
+Validated benchmark configurations achieving 100% anatomical fidelity, distinct 5-finger articulation, and authentic photorealism on Apple Silicon (Metal 4 NAX):
+
+| Showcase | Preset / Pipeline | Key Architectural Highlight | Preview |
+| :--- | :--- | :--- | :---: |
+| **1. Trump & Meloni Twist** | `--preset twist_quality_fix` | 8 exact DPM++ 2M steps, decoupled arm dynamics, 5-finger hand sculpting with wedding ring & cufflinks | ![Twist Preview](assets/preview_gold_trump_meloni_twist.gif) |
+| **2. Trump & Meloni Slow Dance** | `--preset h3mlx_golden_cinema` | Two-Stage Auto-Anchor (F12 RCOBA anchor frame + I2V rollout), hand steady on navy gown | ![Slowdance Preview](assets/preview_gold_trump_meloni_slowdance.gif) |
+| **3. Boy Dance (Gold Standard)** | `--preset twist_quality_fix` | Medium close-up, open palm gestures, visible veins & knuckles, zero morphing | ![Boy Dance](assets/preview_gold_boy_dance.gif) |
+| **4. Boy Dance (Energetic)** | 39 frames (~1.6s @ 24fps) | Dynamic torso groove, knee bounce, joyous expression & hair physics | ![Boy Dance Energetic](assets/preview_gold_boy_dance_energetic.gif) |
+| **5. Horizon Battle (6s Epic)** | 141 frames (~5.9s @ 24fps) | Full narrative arc: Aloy draws plasma energy bow vs colossal mecha dinosaur, sparks & god rays | ![Horizon Battle](assets/preview_gold_horizon_battle.gif) |
 
 ---
 

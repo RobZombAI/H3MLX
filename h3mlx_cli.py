@@ -13,6 +13,38 @@ from pathlib import Path
 
 from h3mlx_presets import PRESETS, CANONICAL_RESOLUTIONS, calculate_canonical_frames, get_preset
 from h3mlx_engine_core import execute_h3_generation, resolve_model_path, resolve_optimal_frames, OPTIMAL_DURATIONS
+import re
+
+def derive_static_anchor_prompt(prompt: str) -> str:
+    """
+    Transforms a dynamic action prompt into a stable, high-fidelity starting pose
+    for Stage 1 anchor synthesis. Replaces rotational or kinetic motion phrases
+    with poised posture cues and reinforces anatomical hand and facial definitions.
+    """
+    anchor = prompt
+    replacements = [
+        (r"executing a sharp acrobatic spin and landing smoothly", "standing in a poised athletic ready stance"),
+        (r"executing a sharp acrobatic spin", "standing in a poised athletic stance"),
+        (r"performing an explosive spinning breakdance flare on the floor", "standing in a poised athletic ready pose"),
+        (r"performing an explosive breakdance", "in a stylish athletic stance"),
+        (r"acrobatic spin", "athletic pose"),
+        (r"drifting through a rain-soaked", "parked gleaming in a rain-soaked"),
+        (r"banking aggressively into a sharp curve", "positioned dynamically on"),
+        (r"running at full sprint", "standing heroically"),
+    ]
+    for pattern, repl in replacements:
+        anchor = re.sub(pattern, repl, anchor, flags=re.IGNORECASE)
+
+    # Ensure anatomical constraints on human subjects
+    human_keywords = ["dancer", "person", "man", "woman", "portrait", "tyler", "brad", "girl", "boy"]
+    if any(k in prompt.lower() for k in human_keywords):
+        if "hands" not in anchor.lower():
+            anchor += ", crisp anatomically correct hands with distinct articulated fingers"
+        if "facial" not in anchor.lower() and "face" not in anchor.lower():
+            anchor += ", clear symmetrical facial features, looking towards camera"
+        if "photorealistic" not in anchor.lower():
+            anchor += ", 8k photorealistic RAW portrait"
+    return anchor
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] in ["studio", "interactive", "ui", "tui", "-i", "--interactive"]:
@@ -105,10 +137,11 @@ def main():
                 continue
             name = cfg.get("name", pid)
             w, h = cfg.get("width", 768), cfg.get("height", 512)
-            steps = cfg.get("steps", 5)
+            steps = cfg.get("steps", 8)
+            frames = cfg.get("frames", 90)
             frontier = cfg.get("frontier", "12")
             desc = cfg.get("description", "")
-            print(f" • {pid:<22} | {name:<26} | {w}x{h} (56f) | {steps}st (F{frontier})")
+            print(f" • {pid:<22} | {name:<26} | {w}x{h} ({frames}f) | {steps}st (F{frontier})")
             print(f"   Desc: {desc}")
             print(f"   Prompt: \"{cfg.get('prompt', '')[:70]}...\"\n")
         print("Usage: python3 h3mlx_cli.py --preset <preset_name> [-o output.mp4]")
@@ -131,6 +164,14 @@ def main():
             args.upscale_4k = preset_cfg.get("upscale_4k", args.upscale_4k)
             args.layers = preset_cfg.get("layers", args.layers)
             args.reuse = preset_cfg.get("reuse", args.reuse)
+            if "seed" in preset_cfg and args.seed == 42:
+                args.seed = preset_cfg["seed"]
+            if "frames" in preset_cfg and args.frames == 0 and not args.duration and args.seconds == 0.0:
+                args.frames = preset_cfg["frames"]
+            if "auto_anchor" in preset_cfg:
+                args.auto_anchor = preset_cfg["auto_anchor"]
+            if "anchor_steps" in preset_cfg:
+                args.anchor_steps = preset_cfg["anchor_steps"]
             if "smart_filter" in preset_cfg and args.smart_filter == "auto":
                 args.smart_filter = preset_cfg["smart_filter"]
             if not args.frontier_level and "frontier" in preset_cfg:
@@ -200,7 +241,7 @@ def main():
         args.engine_mode = "boosted"
         args.upscale_4k = True
         args.smart_filter = "master-optics"
-        if "--steps" not in sys.argv and "-s" not in sys.argv:
+        if "--steps" not in sys.argv and "-s" not in sys.argv and not args.preset:
             args.steps = 5
 
     if not args.prompt:
@@ -243,7 +284,8 @@ def main():
         temp_anchor_video = str(anchor_dir / f"{stem}_anchor_raw.mp4")
         anchor_frame_path = str(anchor_dir / f"{stem}_anchor_frame.jpg")
 
-        prompt_stage1 = args.anchor_prompt if args.anchor_prompt else args.prompt
+        prompt_stage1 = args.anchor_prompt if args.anchor_prompt else derive_static_anchor_prompt(args.prompt)
+        print(f"📌 Stage 1 Anchor Prompt: \"{prompt_stage1[:90]}...\"\n")
 
         anchor_res = execute_h3_generation(
             prompt=prompt_stage1,
@@ -279,6 +321,30 @@ def main():
         else:
             print("⚠️ Stage 1 Anchor generation encountered an issue, falling back to direct rollout.")
 
+    activity_bin_path = None
+    if args.first_frame and Path(args.first_frame).exists():
+        try:
+            from h3_spatial_matrix import compute_activity_matrix
+            matrix_dir = Path(args.output).parent / "matrix"
+            matrix_dir.mkdir(parents=True, exist_ok=True)
+            stem = Path(args.output).stem
+            act_bin = str(matrix_dir / f"{stem}_activity.bin")
+            mat_res = compute_activity_matrix(
+                args.first_frame,
+                target_width=args.width,
+                target_height=args.height,
+                output_bin_path=act_bin
+            )
+            activity_bin_path = act_bin
+            os.environ["H3_ACTIVITY_MASK"] = act_bin
+            print("🧠 Matrice di Attività Spazio-Temporale Calcolata:")
+            print(f"   • Zone Statiche / Già Fatte: {mat_res['static_coverage_pct']:.1f}% (Calcolo VAE & DiT congelato)")
+            print(f"   • Soggetto Dinamico Primario: {mat_res['active_coverage_pct']:.1f}% (Priorità di calcolo 100%)")
+            print(f"   • Preview Mappa:             {mat_res['preview_png']}\n")
+        except Exception as e:
+            print(f"⚠️ Nota: Impossibile generare la matrice di attività ({e}), procedo con rollout standard.")
+
+    extra_env = {"H3_ACTIVITY_MASK": activity_bin_path} if activity_bin_path else None
     res = execute_h3_generation(
         prompt=args.prompt,
         output_path=args.output,
@@ -309,7 +375,8 @@ def main():
         nax_stride=args.nax_stride,
         frontier=args.frontier_level,
         fps=args.fps,
-        bandpass_limiter=args.bandpass_limiter
+        bandpass_limiter=args.bandpass_limiter,
+        extra_env=extra_env
     )
 
     if res.success:

@@ -110,6 +110,11 @@ struct h3_video_vae_decoder {
     int latent_w;
     float latent_mean[LATENT_CHANNELS];
     float latent_std[LATENT_CHANNELS];
+    float **cached_inputs;
+    float **cached_rgbs;
+    size_t cached_input_elements;
+    size_t cached_rgb_elements;
+    float *activity_mask;
 };
 
 static inline uint16_t f32_to_bf16(float f) {
@@ -915,6 +920,79 @@ static float *extract_latent_tile(const float *latent, int full_t,
 
 #include <dispatch/dispatch.h>
 
+static void h3_deblock_patch_boundaries(float *rgb, int frames, int height, int width) {
+    if (!rgb || frames < 1 || height < 32 || width < 32) return;
+    if (getenv("H3_DISABLE_DEBLOCK")) return;
+
+    size_t frame_stride = (size_t)height * (size_t)width * 3;
+
+    dispatch_apply((size_t)frames, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t f) {
+        float *frame_rgb = rgb + f * frame_stride;
+
+        // 1. Deblock vertical boundaries: x = 16, 32, 48, ... (seam between x-1 and x)
+        for (int x = 16; x < width; x += 16) {
+            for (int y = 0; y < height; y++) {
+                size_t idx_p1 = ((size_t)y * (size_t)width + (size_t)(x - 1)) * 3;
+                size_t idx_q0 = ((size_t)y * (size_t)width + (size_t)x) * 3;
+
+                float diff_r = frame_rgb[idx_q0 + 0] - frame_rgb[idx_p1 + 0];
+                float diff_g = frame_rgb[idx_q0 + 1] - frame_rgb[idx_p1 + 1];
+                float diff_b = frame_rgb[idx_q0 + 2] - frame_rgb[idx_p1 + 2];
+                float mean_abs_diff = (fabsf(diff_r) + fabsf(diff_g) + fabsf(diff_b)) * 0.3333333f;
+
+                if (mean_abs_diff < 0.15686f) { // ~40/255: skip real hard edges
+                    float delta_r = diff_r * 0.4f;
+                    float delta_g = diff_g * 0.4f;
+                    float delta_b = diff_b * 0.4f;
+
+                    const float max_delta = 0.03137f; // ~8/255
+                    if (delta_r > max_delta) delta_r = max_delta; else if (delta_r < -max_delta) delta_r = -max_delta;
+                    if (delta_g > max_delta) delta_g = max_delta; else if (delta_g < -max_delta) delta_g = -max_delta;
+                    if (delta_b > max_delta) delta_b = max_delta; else if (delta_b < -max_delta) delta_b = -max_delta;
+
+                    frame_rgb[idx_p1 + 0] += delta_r;
+                    frame_rgb[idx_p1 + 1] += delta_g;
+                    frame_rgb[idx_p1 + 2] += delta_b;
+                    frame_rgb[idx_q0 + 0] -= delta_r;
+                    frame_rgb[idx_q0 + 1] -= delta_g;
+                    frame_rgb[idx_q0 + 2] -= delta_b;
+                }
+            }
+        }
+
+        // 2. Deblock horizontal boundaries: y = 16, 32, 48, ... (seam between y-1 and y)
+        for (int y = 16; y < height; y += 16) {
+            for (int x = 0; x < width; x++) {
+                size_t idx_p1 = ((size_t)(y - 1) * (size_t)width + (size_t)x) * 3;
+                size_t idx_q0 = ((size_t)y * (size_t)width + (size_t)x) * 3;
+
+                float diff_r = frame_rgb[idx_q0 + 0] - frame_rgb[idx_p1 + 0];
+                float diff_g = frame_rgb[idx_q0 + 1] - frame_rgb[idx_p1 + 1];
+                float diff_b = frame_rgb[idx_q0 + 2] - frame_rgb[idx_p1 + 2];
+                float mean_abs_diff = (fabsf(diff_r) + fabsf(diff_g) + fabsf(diff_b)) * 0.3333333f;
+
+                if (mean_abs_diff < 0.15686f) {
+                    float delta_r = diff_r * 0.4f;
+                    float delta_g = diff_g * 0.4f;
+                    float delta_b = diff_b * 0.4f;
+
+                    const float max_delta = 0.03137f;
+                    if (delta_r > max_delta) delta_r = max_delta; else if (delta_r < -max_delta) delta_r = -max_delta;
+                    if (delta_g > max_delta) delta_g = max_delta; else if (delta_g < -max_delta) delta_g = -max_delta;
+                    if (delta_b > max_delta) delta_b = max_delta; else if (delta_b < -max_delta) delta_b = -max_delta;
+
+                    frame_rgb[idx_p1 + 0] += delta_r;
+                    frame_rgb[idx_p1 + 1] += delta_g;
+                    frame_rgb[idx_p1 + 2] += delta_b;
+                    frame_rgb[idx_q0 + 0] -= delta_r;
+                    frame_rgb[idx_q0 + 1] -= delta_g;
+                    frame_rgb[idx_q0 + 2] -= delta_b;
+                }
+            }
+        }
+    });
+}
+
 static int stitch_tiles(float **tiles, const tile_axis *y_axis,
                         const tile_axis *x_axis, int frame_count,
                         h3_video_frames *output,
@@ -990,6 +1068,7 @@ static int stitch_tiles(float **tiles, const tile_axis *y_axis,
             });
         }
     }
+    h3_deblock_patch_boundaries(rgb, frame_count, full_h, full_w);
     output->frames = frame_count;
     output->height = full_h;
     output->width = full_w;
@@ -1020,6 +1099,7 @@ static int decoder_decode_chunk(h3_video_vae_decoder *decoder,
     int ok = 1;
     for (int tile_y = 0; tile_y < decoder->y_axis.count && ok; tile_y++)
         for (int tile_x = 0; tile_x < decoder->x_axis.count && ok; tile_x++) {
+            int index = tile_y * decoder->x_axis.count + tile_x;
             float *input = extract_latent_tile(
                 normalized_latent, latent_time, decoder->latent_h,
                 decoder->latent_w, chunk * 5,
@@ -1031,23 +1111,95 @@ static int decoder_decode_chunk(h3_video_vae_decoder *decoder,
                 ok = 0;
                 break;
             }
-            free_tensor(&decoder->vae.latent);
-            ok = prepare_input(&decoder->vae, input,
-                               decoder->latent_mean, decoder->latent_std,
-                               error, error_size) &&
-                 run_resident_tile(&decoder->vae, error, error_size);
+
+            int use_cached = 0;
+            if (chunk > 0 && selected_frame < 0 && decoder->cached_inputs && decoder->cached_rgbs &&
+                decoder->cached_inputs[index] && decoder->cached_rgbs[index] && !getenv("H3_DISABLE_VAE_CACHE")) {
+                double diff = 0.0, ref = 0.0;
+                for (size_t i = 0; i < decoder->cached_input_elements; i += 16) {
+                    diff += fabsf(input[i] - decoder->cached_inputs[index][i]);
+                    ref += fabsf(decoder->cached_inputs[index][i]);
+                }
+                float rel = ref > 1e-4 ? (float)(diff / ref) : 0.0f;
+                float cache_thresh = 0.025f;
+
+                if (decoder->activity_mask) {
+                    int start_ly = decoder->y_axis.starts[tile_y] / SPATIAL_RATIO;
+                    int start_lx = decoder->x_axis.starts[tile_x] / SPATIAL_RATIO;
+                    int end_ly = start_ly + decoder->vae.latent_h;
+                    int end_lx = start_lx + decoder->vae.latent_w;
+                    if (end_ly > decoder->latent_h) end_ly = decoder->latent_h;
+                    if (end_lx > decoder->latent_w) end_lx = decoder->latent_w;
+
+                    double act_sum = 0.0;
+                    size_t act_cnt = 0;
+                    for (int ly = start_ly; ly < end_ly; ly++) {
+                        for (int lx = start_lx; lx < end_lx; lx++) {
+                            act_sum += decoder->activity_mask[(size_t)ly * (size_t)decoder->latent_w + (size_t)lx];
+                            act_cnt++;
+                        }
+                    }
+                    float mean_act = act_cnt > 0 ? (float)(act_sum / (double)act_cnt) : 0.5f;
+                    if (mean_act < 0.15f) {
+                        cache_thresh = 0.040f;
+                    } else if (mean_act >= 0.45f) {
+                        cache_thresh = 0.012f;
+                    }
+                }
+
+                const char *env_thresh = getenv("H3_VAE_CACHE_THRESH");
+                if (env_thresh && *env_thresh) cache_thresh = strtof(env_thresh, NULL);
+
+                if (rel < cache_thresh) {
+                    use_cached = 1;
+                    if (getenv("H3_PROFILE")) {
+                        fprintf(stderr, "h3: resident VAE chunk %d tile (%d,%d) stationary (rel=%.4f < %.4f) -> CACHE HIT\n",
+                                chunk, tile_x, tile_y, rel, cache_thresh);
+                    }
+                }
+            }
+
+            if (use_cached) {
+                tiles[index] = malloc(decoder->cached_rgb_elements * sizeof(float));
+                if (tiles[index]) {
+                    memcpy(tiles[index], decoder->cached_rgbs[index], decoder->cached_rgb_elements * sizeof(float));
+                } else {
+                    use_cached = 0;
+                }
+            }
+
+            if (!use_cached) {
+                free_tensor(&decoder->vae.latent);
+                ok = prepare_input(&decoder->vae, input,
+                                   decoder->latent_mean, decoder->latent_std,
+                                   error, error_size) &&
+                     run_resident_tile(&decoder->vae, error, error_size);
+                if (!ok) {
+                    free(input);
+                    break;
+                }
+                h3_video_frames tile;
+                memset(&tile, 0, sizeof(tile));
+                ok = selected_frame >= 0 ?
+                    unpack_frame_range(&decoder->vae, selected_frame, 1, &tile,
+                                       error, error_size) :
+                    unpack_frames(&decoder->vae, &tile, error, error_size);
+                if (ok) {
+                    tiles[index] = tile.rgb;
+                    if (selected_frame < 0 && decoder->cached_inputs && decoder->cached_rgbs) {
+                        if (!decoder->cached_inputs[index])
+                            decoder->cached_inputs[index] = malloc(decoder->cached_input_elements * sizeof(float));
+                        if (!decoder->cached_rgbs[index])
+                            decoder->cached_rgbs[index] = malloc(decoder->cached_rgb_elements * sizeof(float));
+                        if (decoder->cached_inputs[index])
+                            memcpy(decoder->cached_inputs[index], input, decoder->cached_input_elements * sizeof(float));
+                        if (decoder->cached_rgbs[index])
+                            memcpy(decoder->cached_rgbs[index], tile.rgb, decoder->cached_rgb_elements * sizeof(float));
+                    }
+                }
+            }
             free(input);
             if (!ok) break;
-            h3_video_frames tile;
-            memset(&tile, 0, sizeof(tile));
-            ok = selected_frame >= 0 ?
-                unpack_frame_range(&decoder->vae, selected_frame, 1, &tile,
-                                   error, error_size) :
-                unpack_frames(&decoder->vae, &tile, error, error_size);
-            if (ok) {
-                int index = tile_y * decoder->x_axis.count + tile_x;
-                tiles[index] = tile.rgb;
-            }
         }
     if (ok) ok = stitch_tiles(tiles, &decoder->y_axis, &decoder->x_axis,
                               frame_count, output, error, error_size);
@@ -1117,6 +1269,35 @@ h3_video_vae_decoder *h3_video_vae_decoder_load(
                                    error, error_size) &&
              prepare_rope(vae, error, error_size) &&
              allocate_activations(vae, error, error_size);
+        if (ok) {
+            int tile_count = decoder->y_axis.count * decoder->x_axis.count;
+            decoder->cached_inputs = calloc((size_t)tile_count, sizeof(*decoder->cached_inputs));
+            decoder->cached_rgbs = calloc((size_t)tile_count, sizeof(*decoder->cached_rgbs));
+            decoder->cached_input_elements = (size_t)16 * (size_t)CHUNK_LATENT_TIME * (size_t)vae->latent_h * (size_t)vae->latent_w;
+            decoder->cached_rgb_elements = (size_t)FIRST_CHUNK_FRAMES * (size_t)decoder->y_axis.length * (size_t)decoder->x_axis.length * 3;
+
+            const char *act_path = getenv("H3_ACTIVITY_MASK");
+            if (act_path && *act_path) {
+                FILE *fp = fopen(act_path, "rb");
+                if (fp) {
+                    size_t expected_elements = (size_t)decoder->latent_h * (size_t)decoder->latent_w;
+                    decoder->activity_mask = malloc(expected_elements * sizeof(float));
+                    if (decoder->activity_mask) {
+                        size_t read_n = fread(decoder->activity_mask, sizeof(float), expected_elements, fp);
+                        if (read_n == expected_elements) {
+                            if (getenv("H3_PROFILE")) {
+                                fprintf(stderr, "h3: resident video VAE loaded activity mask from %s (%zu elements)\n",
+                                        act_path, expected_elements);
+                            }
+                        } else {
+                            free(decoder->activity_mask);
+                            decoder->activity_mask = NULL;
+                        }
+                    }
+                    fclose(fp);
+                }
+            }
+        }
     }
     if (!ok) {
         h3_video_vae_decoder_free(decoder);
@@ -1184,7 +1365,7 @@ int h3_video_vae_decoder_decode(h3_video_vae_decoder *decoder,
         if (!ok) break;
         if (chunk) {
             dispatch_apply(5, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t frame) {
-                float alpha = 0.5f * (1.0f - cosf((float)frame * 3.14159265358979323846f / 5.0f));
+                float alpha = 0.5f * (1.0f - cosf((float)frame * 3.14159265358979323846f / 4.0f));
                 float inv_alpha = 1.0f - alpha;
                 size_t base = frame * frame_elements;
                 float *dst = decoded.rgb + base;
@@ -1218,6 +1399,16 @@ int h3_video_vae_decoder_decode(h3_video_vae_decoder *decoder,
 void h3_video_vae_decoder_free(h3_video_vae_decoder *decoder) {
     if (!decoder) return;
     cleanup(&decoder->vae);
+    int tile_count = decoder->y_axis.count * decoder->x_axis.count;
+    if (decoder->cached_inputs) {
+        for (int i = 0; i < tile_count; i++) free(decoder->cached_inputs[i]);
+        free(decoder->cached_inputs);
+    }
+    if (decoder->cached_rgbs) {
+        for (int i = 0; i < tile_count; i++) free(decoder->cached_rgbs[i]);
+        free(decoder->cached_rgbs);
+    }
+    if (decoder->activity_mask) free(decoder->activity_mask);
     tile_axis_free(&decoder->y_axis);
     tile_axis_free(&decoder->x_axis);
     free(decoder);
@@ -1371,7 +1562,7 @@ static int decode_chunked(const char *weight_directory,
             break;
         }
         if (chunk) for (int frame = 0; frame < 5; frame++) {
-            float alpha = 0.5f * (1.0f - cosf((float)frame * 3.14159265358979323846f / 5.0f));
+            float alpha = 0.5f * (1.0f - cosf((float)frame * 3.14159265358979323846f / 4.0f));
             size_t base = (size_t)frame * frame_elements;
             for (size_t index = 0; index < frame_elements; index++)
                 decoded.rgb[base + index] = temporal_overlap[base + index] *
