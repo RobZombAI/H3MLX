@@ -27,96 +27,106 @@ PRESETS: Dict[str, Dict[str, Any]] = {
     # 1. Champion Master Gold (Standard 3:2 canvas for realistic portraits and cinematography)
     "h3mlx_champion_gold": {
         "name": "Champion Master (3:2)",
-        "description": "Standard 3:2 canvas (768x512). 50 dense DiT layers with DPM++ 2M flow matching.",
+        "description": "Standard 3:2 canvas (768x512). 50 dense DiT layers with Frontier 12 S-FMC flow matching.",
         "width": 768,
         "height": 512,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 8,
+        "seconds": 2.33,
+        "frames": 56,
+        "steps": 5,
         "reuse": 1,
         "layers": 50,
         "mode": "boosted",
-        "solver": "dpm3m",
+        "solver": "dpm2m",
+        "frontier": "12",
+        "smart_filter": "master-optics",
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Cinematic close-up portrait of a person smiling, natural soft lighting, highly detailed"
+        "prompt": "Cinematic medium close-up tracking shot of an elegant person laughing dynamically while turning their head towards the camera, wind blowing wavy hair naturally, warm golden hour sunbeams and subtle lens flare, lifelike expressive eyes, natural smile with realistic teeth, visible skin pores, fluid head turn and shoulder sway, 8k photorealistic cinema"
     },
 
     # 2. Cinema Anamorphic Widescreen (16:9 widescreen format)
     "h3mlx_cinema_16x9": {
         "name": "Cinema Widescreen (16:9)",
-        "description": "Widescreen 16:9 format (960x544) with spatial optical consistency.",
+        "description": "Widescreen 16:9 format (960x544) with spatial optical consistency and dynamic tracking.",
         "width": 960,
         "height": 544,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 8,
+        "seconds": 2.33,
+        "frames": 56,
+        "steps": 5,
         "reuse": 1,
         "layers": 50,
         "mode": "boosted",
-        "solver": "dpm3m",
+        "solver": "dpm2m",
+        "frontier": "12",
+        "smart_filter": "master-optics",
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Cinematic wide shot of a futuristic neon city at sunset with rain reflections, highly detailed"
+        "prompt": "Anamorphic 16:9 high-speed tracking shot following a sleek futuristic hypercar drifting through a rain-soaked neon cyberpunk avenue at night, wheels spraying illuminated water droplets, neon sign reflections streaking across the glossy chassis, dynamic cinematic camera movement, photorealistic cinema 8k"
     },
 
     # 3. Macro High-Density Square (1:1 640x640)
     "h3mlx_macro_square": {
         "name": "Square High-Density (1:1)",
-        "description": "High-density square canvas (640x640, 1600 tokens) for fine detail and 1:1 compositions.",
+        "description": "High-density square canvas (640x640, 1600 tokens) for fine detail, sparks, and 1:1 compositions.",
         "width": 640,
         "height": 640,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 8,
+        "seconds": 2.33,
+        "frames": 56,
+        "steps": 5,
         "reuse": 1,
         "layers": 50,
         "mode": "boosted",
-        "solver": "dpm3m",
+        "solver": "dpm2m",
+        "frontier": "12",
+        "smart_filter": "master-optics",
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "A sleek red sports car driving through a scenic mountain road in autumn, realistic, 4k"
+        "prompt": "Dynamic action macro shot of a powerful sports motorcycle banking aggressively into a sharp curve, knee slider scraping the asphalt with tiny sparks, autumn leaves whirling in the high-speed turbulence, rapid background motion blur, razor-sharp metallic details and carbon fiber textures, 4k master"
     },
 
     # 4. Vertical Cinema Reel (9:16 High Definition)
     "h3mlx_vertical_reel": {
         "name": "Vertical Cinema Reel (9:16)",
-        "description": "Exact 9:16 vertical ratio (576x1024, 2304 tokens) optimized for mobile fullscreen portraits.",
+        "description": "Exact 9:16 vertical ratio (576x1024, 2304 tokens) optimized for mobile fullscreen action.",
         "width": 576,
         "height": 1024,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 8,
+        "seconds": 2.33,
+        "frames": 56,
+        "steps": 5,
         "reuse": 1,
         "layers": 50,
         "mode": "boosted",
-        "solver": "dpm3m",
+        "solver": "dpm2m",
+        "frontier": "12",
+        "smart_filter": "master-optics",
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Cinematic vertical portrait of a beautiful woman with wavy hair in Paris, soft golden hour sunlight, expressive eyes and warm smile, highly detailed"
+        "prompt": "Cinematic vertical 9:16 full-body reel of a stylish hip-hop dancer executing a sharp acrobatic spin and landing smoothly in a sunlit urban plaza, jacket billowing with momentum, crisp distinct hands and athletic motion, confident radiant expression, smooth camera tracking, ultra-detailed 8k"
     },
 
     # 5. Studio Ghibli Aesthetic Master
     "h3mlx_ghibli_master": {
-        "name": "Stylized / Anime (3:2)",
-        "description": "Hand-painted aesthetic with fluid wind dynamics, soft watercolor textures, and vibrant skies.",
+        "name": "Studio Ghibli Master (3:2)",
+        "description": "Hand-painted aesthetic with fluid wind dynamics, running sprint, and vibrant anime skies.",
         "width": 768,
         "height": 512,
-        "seconds": 3.75,
-        "frames": 90,
-        "steps": 8,
+        "seconds": 2.33,
+        "frames": 56,
+        "steps": 5,
         "reuse": 1,
         "layers": 50,
         "mode": "boosted",
-        "solver": "dpm3m",
+        "solver": "dpm2m",
+        "frontier": "12",
+        "smart_filter": "master-optics",
         "token_reduction": False,
         "int8": True,
         "upscale_4k": True,
-        "prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
+        "prompt": "Studio Ghibli aesthetic cinematic sequence of a spirited young adventurer running at full sprint across a windy flower-covered hill toward an enormous floating airship, cape and hair flying wildly, clouds rushing across an azure sky, vibrant fluid hand-painted animation, Hayao Miyazaki style"
     }
 }
 

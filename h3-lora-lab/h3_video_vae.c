@@ -1315,7 +1315,7 @@ static int decode_chunked(const char *weight_directory,
                 }
 
                 int use_cached = 0;
-                if (chunk > 0 && cached_inputs[index] && cached_rgbs[index]) {
+                if (chunk > 0 && cached_inputs[index] && cached_rgbs[index] && !getenv("H3_DISABLE_VAE_CACHE")) {
                     double diff = 0.0, ref = 0.0;
                     for (size_t i = 0; i < input_elements; i += 16) {
                         diff += fabsf(input[i] - cached_inputs[index][i]);

@@ -148,16 +148,25 @@ static float h3_shifted_sigma(int index, int steps, float shift) {
     if (steps <= 0) return 0.0f;
     float u = (float)index / (float)steps;
     const char *cheb_env = getenv("H3_CHEBYSHEV_WARP");
+    const char *radau_env = getenv("H3_RADAU_WARP");
     const char *frontier_env = getenv("H3_FRONTIER");
+    int frontier_level = frontier_env ? atoi(frontier_env) : 0;
     int cheb_warp = (cheb_env && (*cheb_env == '1' || *cheb_env == 'y' || *cheb_env == 't'));
-    if (frontier_env && atoi(frontier_env) >= 10) cheb_warp = 1;
+    int radau_warp = (radau_env && (*radau_env == '1' || *radau_env == 'y' || *radau_env == 't')) || (frontier_level == 12);
+    if (frontier_level >= 10) cheb_warp = 1;
 
-    if (cheb_warp) {
-        /* Frontier Level 10: Curvature-Adaptive Dual-Cusp Chebyshev Time-Warping (CACFM)
-         * Clusters ODE integration points at boundary cusps t in [1.0, 0.85] and t <= 0.15 */
+    if (cheb_warp || radau_warp) {
+        /* Frontier Level 10-12: Curvature-Adaptive Dual-Cusp Chebyshev & Radau-Anchored Time-Warping (RCOBA)
+         * In Frontier 12 (S-FMC), anchors penultimate node sigma_{N-1} to [0.18, 0.25] for N <= 8,
+         * eliminating Runge-phenomenon boundary jumps while preserving sub-pixel phase coherence. */
         float gamma = 1.15f;
         float alpha = 0.85f;
-        float u_pow = powf(u, gamma);
+        float u_coord = u;
+        if (radau_warp && steps > 1) {
+            float denom = (steps <= 8) ? ((float)steps - 0.35f) : (float)steps;
+            u_coord = fminf(1.0f, (float)index / denom);
+        }
+        float u_pow = powf(u_coord, gamma);
         float cheb = 0.5f * (1.0f - cosf((float)M_PI * u_pow));
         float t_val = 1.0f - powf(fmaxf(0.0f, fminf(1.0f, cheb)), alpha);
         float base = fmaxf(0.0f, fminf(1.0f, t_val));
@@ -843,6 +852,8 @@ int h3_freqflow_velocity_boost(float *velocity, int channels, int time,
 
     /* Dynamic late-step spectral scaling: smoothly grows as sigma -> 0 */
     float alpha = strength * (1.0f - (sigma / 0.35f));
+    const char *bandpass_env = getenv("H3_BANDPASS_LIMITER");
+    int bandpass_mode = (bandpass_env && (*bandpass_env == '1' || *bandpass_env == 'y' || *bandpass_env == 't'));
     size_t plane_size = (size_t)height * (size_t)width;
     size_t total_planes = (size_t)channels * (size_t)time;
 
@@ -865,7 +876,19 @@ int h3_freqflow_velocity_boost(float *velocity, int channels, int time,
                 float d_lf = fabsf(center - left);
                 float d_rt = fabsf(center - right);
                 float max_grad = fmaxf(fmaxf(d_up, d_dn), fmaxf(d_lf, d_rt));
-                float limited_lap = copysignf(fminf(fabsf(lap), 1.5f * max_grad), lap);
+                float max_limit = 1.5f * max_grad;
+                if (bandpass_mode) {
+                    /* Bandpass Particle Preservation:
+                     * Detect isolated point-source impulses (sparks, droplets, specular glints)
+                     * where Laplacian is high relative to surrounding gradient envelope.
+                     * Uncap limit up to 3.5x for impulsive particles so they don't get quenched. */
+                    float local_avg = 0.25f * (fabsf(up) + fabsf(down) + fabsf(left) + fabsf(right)) + 1e-5f;
+                    float particle_isolation = fabsf(center) / local_avg;
+                    if (particle_isolation > 2.2f) {
+                        max_limit = 3.5f * max_grad;
+                    }
+                }
+                float limited_lap = copysignf(fminf(fabsf(lap), max_limit), lap);
 
                 plane[row_curr + x] += alpha * limited_lap;
             }

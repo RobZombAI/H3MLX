@@ -8,6 +8,7 @@ with RobZomb H3MLX Metal 4 NAX Acceleration, All 5 Frontier Levels, INT8 FC2, 3D
 import os
 import sys
 import argparse
+import subprocess
 from pathlib import Path
 
 from h3mlx_presets import PRESETS, CANONICAL_RESOLUTIONS, calculate_canonical_frames, get_preset
@@ -29,9 +30,10 @@ def main():
     parser.add_argument("-p", "--prompt", type=str, default="", help="Text generation prompt (defaults to preset prompt if --preset is provided)")
     parser.add_argument("-o", "--output", type=str, default="outputs/h3mlx_output.mp4", help="Output MP4 file path")
     parser.add_argument("--preset", type=str, default="", choices=list(PRESETS.keys()), help="Load a pre-configured video preset")
+    parser.add_argument("--list-presets", action="store_true", help="List all available studio video presets and exit")
     parser.add_argument("--frontier", "--level", dest="frontier_level", type=str, default="",
-                        choices=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "champion", "ultra"],
-                        help="Select Frontier Level: 1-5, 6 (Temporal-FreqFlow), 7 (Cinema Optics), 8 (TFM Momentum), 9 (C1 Hann Tile Rectification), 10 (Chebyshev Curvature Warp), 11 (Spectral Eigen-Clamping)")
+                        choices=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "champion", "ultra", "sfmc", "fast-master"],
+                        help="Select Frontier Level: 1-5, 6 (Temporal-FreqFlow), 7 (Cinema Optics), 8 (TFM Momentum), 9 (C1 Hann Tile Rectification), 10 (Chebyshev Curvature Warp), 11 (Spectral Multi-Physics), 12 (S-FMC 5-Step Symplectic Flow)")
     parser.add_argument("-i", "--interactive", action="store_true", help="Launch interactive studio director")
     
     # 2. Dimensions & Temporal Grid
@@ -55,6 +57,9 @@ def main():
     
     # 4. Conditioning & Multimodal References
     parser.add_argument("--first-frame", "--i2v", dest="first_frame", type=str, default="", help="First conditioning frame (Image-to-Video)")
+    parser.add_argument("--auto-anchor", action="store_true", help="Two-Stage Pipeline: automatically synthesize and anchor the critical initial frame with dedicated spatial attention before temporal video rollout")
+    parser.add_argument("--anchor-steps", type=int, default=8, help="Dedicated steps for the initial anchor frame synthesis (default: 8)")
+    parser.add_argument("--anchor-prompt", type=str, default="", help="Optional dedicated prompt refinement for the anchor frame synthesis")
     parser.add_argument("--last-frame", type=str, default="", help="Last conditioning frame (Interpolation)")
     parser.add_argument("--ref-image", type=str, default="", help="Reference image conditioning")
     parser.add_argument("--ref-video", type=str, default="", help="Reference video conditioning")
@@ -75,11 +80,14 @@ def main():
     parser.add_argument("--smart-filter", type=str, default="auto",
                         choices=["auto", "portrait", "cinema", "anime", "action", "macro", "clean", "master-optics", "optics", "frontier-c1"],
                         help="Smart Mastering Filter: 'auto', 'portrait', 'cinema', 'anime', 'action', 'macro', 'clean', 'master-optics', or 'frontier-c1'")
+    parser.add_argument("--fps", type=int, default=24, help="Target output video framerate cadence: 24 (cinematic 35mm) or 48 (HFR motion smooth)")
     parser.add_argument("--profile", action="store_true", default=True, help="Print per-phase Metal profiling metrics")
     parser.add_argument("--frames-dir", type=str, default="", help="Directory to dump individual decoded RGB frames (.ppm)")
     parser.add_argument("--nax-st", action="store_true", help="Enable NAX-Spatiotemporal Multimodal Attention for long video")
     parser.add_argument("--nax-chunk", type=int, default=4, help="Frames per local temporal chunk (default: 4)")
     parser.add_argument("--nax-stride", type=int, default=4, help="Keyframe anchor stride in frames (default: 4)")
+    parser.add_argument("--bandpass-limiter", "--spark-preserve", dest="bandpass_limiter", action="store_true",
+                        help="Bandpass Spectral Limiter: preserves isolated impulsive high-frequency particles (sparks, droplets, glints)")
     
     args = parser.parse_args()
     
@@ -87,6 +95,48 @@ def main():
         import h3mlx_studio
         h3mlx_studio.main()
         return
+
+    if args.list_presets:
+        print("\n" + "=" * 78)
+        print("👑 H3MLX CANONICAL STUDIO PRESETS (Frontier 12 & Full Hardware Suite)")
+        print("=" * 78)
+        for pid, cfg in PRESETS.items():
+            if pid in ["h3mlx_champion_4s", "h3mlx_livello1", "h3mlx_cinema_4k_master", "h3mlx_ghibli_watercolor_4s"]:
+                continue
+            name = cfg.get("name", pid)
+            w, h = cfg.get("width", 768), cfg.get("height", 512)
+            steps = cfg.get("steps", 5)
+            frontier = cfg.get("frontier", "12")
+            desc = cfg.get("description", "")
+            print(f" • {pid:<22} | {name:<26} | {w}x{h} (56f) | {steps}st (F{frontier})")
+            print(f"   Desc: {desc}")
+            print(f"   Prompt: \"{cfg.get('prompt', '')[:70]}...\"\n")
+        print("Usage: python3 h3mlx_cli.py --preset <preset_name> [-o output.mp4]")
+        print("=" * 78 + "\n")
+        return
+
+    # Apply Preset first if specified
+    if args.preset:
+        preset_cfg = get_preset(args.preset)
+        if preset_cfg:
+            print(f"🎬 Loading Preset: {preset_cfg['name']} ({preset_cfg['description']})\n")
+            args.width = preset_cfg.get("width", args.width)
+            args.height = preset_cfg.get("height", args.height)
+            args.seconds = preset_cfg.get("seconds", args.seconds)
+            args.steps = preset_cfg.get("steps", args.steps)
+            args.engine_mode = preset_cfg.get("mode", preset_cfg.get("engine_mode", args.engine_mode))
+            args.solver = preset_cfg.get("solver", args.solver)
+            args.int8 = preset_cfg.get("int8", args.int8)
+            args.token_reduction = preset_cfg.get("token_reduction", args.token_reduction)
+            args.upscale_4k = preset_cfg.get("upscale_4k", args.upscale_4k)
+            args.layers = preset_cfg.get("layers", args.layers)
+            args.reuse = preset_cfg.get("reuse", args.reuse)
+            if "smart_filter" in preset_cfg and args.smart_filter == "auto":
+                args.smart_filter = preset_cfg["smart_filter"]
+            if not args.frontier_level and "frontier" in preset_cfg:
+                args.frontier_level = str(preset_cfg["frontier"])
+            if not args.prompt and "prompt" in preset_cfg:
+                args.prompt = preset_cfg["prompt"]
 
     # Handle Frontier Levels
     if args.frontier_level == "1":
@@ -145,25 +195,13 @@ def main():
         args.engine_mode = "boosted"
         args.upscale_4k = True
         args.smart_filter = "master-optics"
-
-    # Apply Preset if specified
-    if args.preset:
-        preset_cfg = get_preset(args.preset)
-        if preset_cfg:
-            print(f"🎬 Loading Preset: {preset_cfg['name']} ({preset_cfg['description']})\n")
-            args.width = preset_cfg.get("width", args.width)
-            args.height = preset_cfg.get("height", args.height)
-            args.seconds = preset_cfg.get("seconds", args.seconds)
-            args.steps = preset_cfg.get("steps", args.steps)
-            args.engine_mode = preset_cfg.get("mode", preset_cfg.get("engine_mode", args.engine_mode))
-            args.solver = preset_cfg.get("solver", args.solver)
-            args.int8 = preset_cfg.get("int8", args.int8)
-            args.token_reduction = preset_cfg.get("token_reduction", args.token_reduction)
-            args.upscale_4k = preset_cfg.get("upscale_4k", args.upscale_4k)
-            args.layers = preset_cfg.get("layers", args.layers)
-            args.reuse = preset_cfg.get("reuse", args.reuse)
-            if not args.prompt and "prompt" in preset_cfg:
-                args.prompt = preset_cfg["prompt"]
+    elif args.frontier_level in ["12", "sfmc", "fast-master"]:
+        print("⚡ Activating Frontier Level 12: S-FMC (Symplectic Flow Curvature + Radau-Chebyshev Anchoring)")
+        args.engine_mode = "boosted"
+        args.upscale_4k = True
+        args.smart_filter = "master-optics"
+        if "--steps" not in sys.argv and "-s" not in sys.argv:
+            args.steps = 5
 
     if not args.prompt:
         args.prompt = "Cinematic close-up portrait of Brad Pitt smiling, natural soft lighting, highly detailed"
@@ -192,7 +230,54 @@ def main():
     print(f"⚡ Accelerations: NAX={'ON' if args.engine_mode != 'canonical' else 'OFF'}, INT8={'ON' if args.int8 else 'OFF'}, TokenReduction={'ON' if args.token_reduction else 'OFF'}")
     print(f"📝 Prompt: \"{args.prompt[:80]}...\"")
     print(f"💾 Output: {args.output}")
-    print("=" * 70 + "\n")
+    # Two-Stage Auto-Anchor Workflow
+    if args.auto_anchor and not args.first_frame:
+        print("=" * 70)
+        print("🎯 TWO-STAGE AUTO-ANCHOR ACTIVATED")
+        print("Stage 1: Synthesizing critical anchor frame with dedicated spatial fidelity...")
+        print("=" * 70)
+
+        anchor_dir = Path(args.output).parent / "anchors"
+        anchor_dir.mkdir(parents=True, exist_ok=True)
+        stem = Path(args.output).stem
+        temp_anchor_video = str(anchor_dir / f"{stem}_anchor_raw.mp4")
+        anchor_frame_path = str(anchor_dir / f"{stem}_anchor_frame.jpg")
+
+        prompt_stage1 = args.anchor_prompt if args.anchor_prompt else args.prompt
+
+        anchor_res = execute_h3_generation(
+            prompt=prompt_stage1,
+            output_path=temp_anchor_video,
+            width=args.width,
+            height=args.height,
+            frames=22,
+            steps=args.anchor_steps,
+            seed=args.seed,
+            engine_mode=args.engine_mode,
+            solver=args.solver,
+            reuse=1,
+            layers=args.layers,
+            token_reduction=False,
+            int8=args.int8,
+            upscale_4k=False,
+            model_dir=args.model_dir if args.model_dir else None,
+            profile=False,
+            frontier=args.frontier_level
+        )
+
+        if anchor_res.success and Path(temp_anchor_video).exists():
+            cmd_extract = [
+                "ffmpeg", "-y", "-i", temp_anchor_video,
+                "-vf", "select=eq(n\\,0)", "-vsync", "0",
+                anchor_frame_path
+            ]
+            subprocess.run(cmd_extract, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            print(f"✅ Stage 1 Complete: Anchor frame synthesized & locked:\n   {anchor_frame_path}")
+            print("\nStage 2: Rolling out temporal motion conditioned on pristine anchor...")
+            print("=" * 70 + "\n")
+            args.first_frame = anchor_frame_path
+        else:
+            print("⚠️ Stage 1 Anchor generation encountered an issue, falling back to direct rollout.")
 
     res = execute_h3_generation(
         prompt=args.prompt,
@@ -222,7 +307,9 @@ def main():
         nax_st=args.nax_st,
         nax_chunk=args.nax_chunk,
         nax_stride=args.nax_stride,
-        frontier=args.frontier_level
+        frontier=args.frontier_level,
+        fps=args.fps,
+        bandpass_limiter=args.bandpass_limiter
     )
 
     if res.success:

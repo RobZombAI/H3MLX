@@ -31,6 +31,7 @@ def build_filtergraph(
     pix_fmt: str = "yuv420p10le",
     smart_filter: str = "auto",
     sensitometric_grain: bool = False,
+    fps: int = 24,
 ) -> str:
     """Build high-fidelity video filter chain."""
     filters = []
@@ -50,9 +51,16 @@ def build_filtergraph(
     if cas_strength > 0.0:
         filters.append(f"cas=strength={cas_strength:.2f}")
 
+    if smart_filter in ["master-optics", "optics", "cinema", "cinema-35mm"]:
+        # Arri Alexa / Kodak 35mm tone curve: micro-contrast & skin tone vitality enhancement
+        filters.append("eq=contrast=1.05:saturation=1.10:brightness=0.005")
+
     if sensitometric_grain or smart_filter in ["master-optics", "optics", "cinema-35mm"]:
-        # Kodak Vision3 5219 Sensitometric Optical Grain Emulation
-        filters.append("noise=alls=1.8:allf=t+u")
+        # Kodak Vision3 5219 Sensitometric Optical Grain Emulation (subtle organic 35mm micro-texture)
+        filters.append("noise=alls=1.2:allf=t+u")
+
+    if fps > 24:
+        filters.append(f"framerate=fps={fps}")
 
     if pix_fmt:
         filters.append(f"format={pix_fmt}")
@@ -86,6 +94,7 @@ def upscale_video(
     use_videotoolbox: bool = True,
     smart_filter: str = "auto",
     sensitometric_grain: bool = False,
+    fps: int = 24,
 ) -> str:
     """Upscale and restore video using Apple Silicon native acceleration."""
     in_file = Path(input_path).resolve()
@@ -106,12 +115,12 @@ def upscale_video(
 
     has_audio = has_audio_stream(in_file)
     print(f"Starting Intraframe Detail Restoration & Upscale: {in_file.name} -> {out_file.name}")
-    print(f"   Resolution: {target_width}x{target_height} | Denoise: {enable_denoise} | CAS: {cas_strength} | Audio: {'Present' if has_audio else 'Muted'} | Filter: {smart_filter}")
+    print(f"   Resolution: {target_width}x{target_height} | Denoise: {enable_denoise} | CAS: {cas_strength} | Audio: {'Present' if has_audio else 'Muted'} | Filter: {smart_filter} | FPS: {fps}")
 
     if use_videotoolbox:
         vf_filter = build_filtergraph(
             target_width, target_height, aspect_ratio, enable_denoise, cas_strength, "yuv420p10le",
-            smart_filter=smart_filter, sensitometric_grain=sensitometric_grain
+            smart_filter=smart_filter, sensitometric_grain=sensitometric_grain, fps=fps
         )
 
         if has_audio:
@@ -127,7 +136,7 @@ def upscale_video(
                 "-pix_fmt", "p010le",
                 "-b:v", bitrate,
                 "-tag:v", "hvc1",
-                "-r", "24",
+                "-r", str(fps),
                 "-c:a", "aac",
                 "-b:a", "320k",
                 "-ar", "48000",
@@ -145,7 +154,7 @@ def upscale_video(
                 "-pix_fmt", "p010le",
                 "-b:v", bitrate,
                 "-tag:v", "hvc1",
-                "-r", "24",
+                "-r", str(fps),
                 "-movflags", "+faststart",
                 str(out_file),
             ]

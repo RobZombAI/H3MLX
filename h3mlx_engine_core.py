@@ -141,6 +141,8 @@ def execute_h3_generation(
     nax_chunk: int = 4,
     nax_stride: int = 4,
     frontier: Optional[Union[str, int]] = None,
+    fps: int = 24,
+    bandpass_limiter: bool = False,
     extra_env: Optional[Dict[str, str]] = None
 ) -> H3EngineResult:
     """
@@ -171,18 +173,23 @@ def execute_h3_generation(
     if profile:
         cmd.append("--profile")
         
+    def _abs_path(p):
+        if not p: return None
+        path_obj = Path(p)
+        return str((BASE_DIR / path_obj).resolve() if not path_obj.is_absolute() else path_obj)
+
     if first_frame:
-        cmd.extend(["--first-frame", str(first_frame)])
+        cmd.extend(["--first-frame", _abs_path(first_frame)])
     if last_frame:
-        cmd.extend(["--last-frame", str(last_frame)])
+        cmd.extend(["--last-frame", _abs_path(last_frame)])
     if ref_image:
-        cmd.extend(["--ref-image", str(ref_image)])
+        cmd.extend(["--ref-image", _abs_path(ref_image)])
     if ref_video:
-        cmd.extend(["--ref-video", str(ref_video)])
+        cmd.extend(["--ref-video", _abs_path(ref_video)])
     if ref_audio:
-        cmd.extend(["--ref-audio", str(ref_audio)])
+        cmd.extend(["--ref-audio", _abs_path(ref_audio)])
     if speech_audio:
-        cmd.extend(["--speech-audio", str(speech_audio)])
+        cmd.extend(["--speech-audio", _abs_path(speech_audio)])
     if ssd_streaming:
         cmd.append("--ssd-streaming")
     if nax_st:
@@ -247,6 +254,8 @@ def execute_h3_generation(
                 f_val = 7
             elif frontier in ["ultra", "frontier-2026"]:
                 f_val = 11
+            elif frontier in ["12", 12, "sfmc", "fast-master"]:
+                f_val = 12
 
         if f_val >= 6 or frontier in ["6", 6]:
             env["H3_FREQFLOW"] = "0.08"
@@ -272,6 +281,23 @@ def execute_h3_generation(
             env["H3_FRONTIER"] = str(max(11, f_val))
             if smart_filter in ["auto", "master-optics"]:
                 smart_filter = "master-optics"
+        if f_val >= 12 or frontier in ["12", 12, "sfmc", "fast-master"]:
+            # Frontier Level 12: S-FMC (Symplectic Flow-Matching Curvature + Radau Anchoring)
+            # Damped Hermite-Taylor operator + Radau boundary collocation enables 5-step photorealism.
+            env["H3_FRONTIER"] = str(max(12, f_val))
+            env["H3_RADAU_WARP"] = "1"
+            env["H3_CHEBYSHEV_WARP"] = "1"
+            env["H3_FLUX_LIMITER"] = "1"
+            env["H3_BANDPASS_LIMITER"] = "1"
+            env["H3_SPECTRAL_CLAMP"] = "0"
+            env["H3_TFM_MOMENTUM"] = "0.04"
+            env["H3_SPATIAL_CRISP"] = "0.025"
+            env["H3_FREQFLOW"] = "0.05"
+            if smart_filter in ["auto", "master-optics"]:
+                smart_filter = "master-optics"
+
+    if bandpass_limiter:
+        env["H3_BANDPASS_LIMITER"] = "1"
             
     if extra_env:
         env.update(extra_env)
@@ -313,6 +339,8 @@ def execute_h3_generation(
                 t_w, t_h = 2560, 2560  # 1:1 True Square Master
             elif width == 576 and height == 1024:
                 t_w, t_h = 2304, 4096  # 9:16 True Vertical Cinema Reel
+            elif width == 576 and height == 768:
+                t_w, t_h = 2304, 3072  # 3:4 True Vertical Cinema Master
             elif width == 960 and height == 544:
                 t_w, t_h = 3840, 2176  # 16:9 True Cinema Anamorphic
             elif width == 768 and height == 512:
@@ -330,7 +358,8 @@ def execute_h3_generation(
                 enable_denoise=True,
                 cas_strength=0.25,
                 use_videotoolbox=True,
-                smart_filter=smart_filter
+                smart_filter=smart_filter,
+                fps=fps
             )
             final_output_path = result_path
             master_path_str = result_path

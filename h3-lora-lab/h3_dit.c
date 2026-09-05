@@ -2973,18 +2973,57 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
                     ? dit->sigmas.audio[previous_evaluated] : 0.0f,
                 previous_evaluated >= 0);
         } else if (enable_dpm2m && previous_evaluated >= 0 && step + 1 < dit->sigmas.steps) {
-            /* DPM-Solver++ 2M: 2nd-order Taylor curvature correction */
+            /* Frontier Level 11-12: DPM-Solver++ 2M with Curvature-Damped Hermite-Taylor Operator (CD-HTM)
+             * In Frontier 12 (S-FMC), smooth C-infinity tanh hyperbolic flux-limiting prevents Runge overshoot
+             * and phase shockwaves on fine skin textures and ocular details under large step sizes (N <= 6). */
+            const char *flux_lim_env = getenv("H3_FLUX_LIMITER");
+            const char *f_env = getenv("H3_FRONTIER");
+            const char *bandpass_env = getenv("H3_BANDPASS_LIMITER");
+            int use_flux_limiter = (flux_lim_env && (*flux_lim_env == '1' || *flux_lim_env == 'y' || *flux_lim_env == 't')) ||
+                                   (f_env && atoi(f_env) >= 12);
+            int use_bandpass = (bandpass_env && (*bandpass_env == '1' || *bandpass_env == 'y' || *bandpass_env == 't')) ||
+                               (f_env && atoi(f_env) >= 12);
             float hk_v = dit->sigmas.video[step] - dit->sigmas.video[step + 1];
             float hp_v = dit->sigmas.video[previous_evaluated] - dit->sigmas.video[step];
             if (hp_v > 1e-6f) {
                 float r = hk_v / hp_v;
-                video_ratio = fminf(fmaxf(0.5f * r, 0.0f), 0.5f);
+                if (use_flux_limiter) {
+                    float beta = 1.25f;
+                    if (use_bandpass) {
+                        /* Bandpass spectral relaxation: for sigma <= 0.32 (late-step particle and spark formation),
+                         * smoothly relax beta -> 0 so the second-order momentum is fully retained for
+                         * sparks, droplets, and specular micro-highlights, while maintaining full
+                         * beta = 1.25 Runge protection on facial/body manifolds during early/mid steps. */
+                        float curr_sigma = dit->sigmas.video[step];
+                        float sig_trans = (curr_sigma - 0.28f) / 0.05f;
+                        float gate = 1.0f / (1.0f + expf(-sig_trans));
+                        beta = 1.25f * gate;
+                    }
+                    float r_damped = (beta > 0.01f) ? (tanhf(beta * r) / beta) : r;
+                    float max_ratio = (use_bandpass && dit->sigmas.video[step] <= 0.28f) ? 0.50f : 0.45f;
+                    video_ratio = fminf(fmaxf(0.5f * r_damped, 0.0f), max_ratio);
+                } else {
+                    video_ratio = fminf(fmaxf(0.5f * r, 0.0f), 0.5f);
+                }
             }
             float hk_a = dit->sigmas.audio[step] - dit->sigmas.audio[step + 1];
             float hp_a = dit->sigmas.audio[previous_evaluated] - dit->sigmas.audio[step];
             if (hp_a > 1e-6f) {
                 float r = hk_a / hp_a;
-                audio_ratio = fminf(fmaxf(0.5f * r, 0.0f), 0.5f);
+                if (use_flux_limiter) {
+                    float beta = 1.25f;
+                    if (use_bandpass) {
+                        float curr_sigma = dit->sigmas.audio[step];
+                        float sig_trans = (curr_sigma - 0.28f) / 0.05f;
+                        float gate = 1.0f / (1.0f + expf(-sig_trans));
+                        beta = 1.25f * gate;
+                    }
+                    float r_damped = (beta > 0.01f) ? (tanhf(beta * r) / beta) : r;
+                    float max_ratio = (use_bandpass && dit->sigmas.audio[step] <= 0.28f) ? 0.50f : 0.45f;
+                    audio_ratio = fminf(fmaxf(0.5f * r_damped, 0.0f), max_ratio);
+                } else {
+                    audio_ratio = fminf(fmaxf(0.5f * r, 0.0f), 0.5f);
+                }
             }
         }
         const h3_gpu_tensor *previous_video = previous_evaluated >= 0
