@@ -43,6 +43,7 @@ The project builds upon the foundational architecture created by Salvatore Sanfi
 
 | Preset / Task | Aspect Ratio | Canvas Resolution | Master 4K Resolution | Frames ($T$) | Duration | Total Wall Time | Throughput | Output Size |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Flagship Commercial 8s (`--core-reuse 4`)** | 3:2 | 768 × 512 | - | 192 | 8.00s @ 24fps | **268.61s** | **0.71 FPS** | 2.71 MB |
 | **Master Commercial 5s (`--core-reuse 4`)** | 3:2 | 768 × 512 | - | 124 | 5.17s @ 24fps | **134.60s** | **0.92 FPS** | 1.57 MB |
 | **Champion Master (`h3mlx_champion_gold`)** | 3:2 | 768 × 512 | 3072 × 2048 | 56 | 2.33s @ 24fps | **35.00s** | **1.60 FPS** | 15.26 MB |
 | **Twist Quality Fix (`twist_quality_fix`)** | 3:2 | 768 × 512 | 3072 × 2048 | 22 | 0.92s @ 24fps | **29.89s** | **0.74 FPS** | 1.08 MB |
@@ -66,6 +67,7 @@ Validated benchmark configurations achieving 100% anatomical fidelity, distinct 
 | **4. Boy Dance (Energetic)** | 39 frames (~1.6s @ 24fps) | Dynamic torso groove, knee bounce, joyous expression & hair physics | ![Boy Dance Energetic](assets/preview_gold_boy_dance_energetic.gif) |
 | **5. Horizon Battle (6s Epic)** | 141 frames (~5.9s @ 24fps) | Full narrative arc: Aloy draws plasma energy bow vs colossal mecha dinosaur, sparks & god rays | ![Horizon Battle](assets/preview_gold_horizon_battle.gif) |
 | **6. H3MLX Master Commercial (5s)** | 124 frames (~5.17s @ 24fps) | Dynamic moving camera, Monica Bellucci & Brad Pitt silent acting, ethereal iridescent smoke forming 3D glowing "H3MLX" logo from MacBook Pro M5, native 32 kHz AAC audio | ![H3MLX Smoke Preview](assets/spot_h3mlx_macbook_smoke_preview.gif) |
+| **7. H3MLX Kinetic Commercial (8s)** | 192 frames (~8.00s @ 24fps) | Advertising masterwork: dynamic sweeping camera, Monica & Brad duo, fast glide to MacBook Pro M5, 3D iridescent cyan smoke forming razor-sharp "H3MLX" logo | ![H3MLX 8s Preview](assets/spot_h3mlx_smoke_8s_preview.gif) |
 
 ---
 
