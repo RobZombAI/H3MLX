@@ -14,7 +14,10 @@ import subprocess
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-H3_BIN = BASE_DIR / "h3-lora-lab" / "h3"
+if (BASE_DIR / "upstream_antirez_h3" / "h3").exists():
+    H3_BIN = BASE_DIR / "upstream_antirez_h3" / "h3"
+else:
+    H3_BIN = BASE_DIR / "h3-lora-lab" / "h3"
 DEFAULT_PDD_MODEL = Path("/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step")
 DEFAULT_FULL_MODEL = Path("/Users/robzomb/h3-models/MiniMax-H3")
 RESIDENT_SOCKET = Path("/tmp/h3_resident.sock")
@@ -40,6 +43,14 @@ def main():
     parser.add_argument("--steps", type=int, default=8, help="Denoising steps (8 for PDD, 25-40 for Full Flow)")
     parser.add_argument("--seed", type=int, default=42, help="RNG seed")
     parser.add_argument("--first-frame", "--i2v", dest="first_frame", type=str, default="", help="First-frame conditioning image for Image-to-Video")
+    parser.add_argument("--last-frame", type=str, default="", help="Last conditioning frame (Interpolation)")
+    parser.add_argument("--ref-image", type=str, default="", help="Reference image conditioning (Ref2VA)")
+    parser.add_argument("--ref-image-size", type=str, default="match", choices=["match", "max"], help="Ref image sizing: match (default) or max")
+    parser.add_argument("--ref-video", type=str, default="", help="Reference video conditioning (including embedded audio)")
+    parser.add_argument("--ref-silent-video", type=str, default="", help="Reference video conditioning without its audio track")
+    parser.add_argument("--ref-video-audio", nargs=2, metavar=("VIDEO", "AUDIO"), help="Reference video plus independent audio soundtrack")
+    parser.add_argument("--ref-audio", type=str, default="", help="Standalone ordered reference audio clip conditioning")
+    parser.add_argument("--export-audio", action="store_true", help="Extract and export lossless standalone audio stream (.aac) alongside video")
     
     # Frontier INT8, Solvers & 4K Cinema Options
     parser.add_argument("--mode", type=str, default="boosted", choices=["boosted", "canonical", "antirez", "h3xml"],
@@ -124,6 +135,30 @@ def main():
     # 6. Build Command
     is_resident = RESIDENT_SOCKET.exists() and not is_canonical
     
+    def _abs(p):
+        if not p:
+            return ""
+        p_obj = Path(p)
+        return str((BASE_DIR / p_obj).resolve() if not p_obj.is_absolute() else p_obj)
+
+    extra_cond = []
+    if args.first_frame:
+        extra_cond.extend(["--first-frame", _abs(args.first_frame)])
+    if args.last_frame:
+        extra_cond.extend(["--last-frame", _abs(args.last_frame)])
+    if args.ref_image:
+        extra_cond.extend(["--ref-image", _abs(args.ref_image)])
+        if args.ref_image_size != "match":
+            extra_cond.extend(["--ref-image-size", args.ref_image_size])
+    if args.ref_video:
+        extra_cond.extend(["--ref-video", _abs(args.ref_video)])
+    if args.ref_silent_video:
+        extra_cond.extend(["--ref-silent-video", _abs(args.ref_silent_video)])
+    if args.ref_video_audio:
+        extra_cond.extend(["--ref-video-audio", _abs(args.ref_video_audio[0]), _abs(args.ref_video_audio[1])])
+    if args.ref_audio:
+        extra_cond.extend(["--ref-audio", _abs(args.ref_audio)])
+
     if is_resident:
         cmd = [
             str(H3_BIN),
@@ -138,8 +173,7 @@ def main():
             "--seed", str(args.seed),
             "-o", str(out_file)
         ]
-        if args.first_frame:
-            cmd.extend(["--first-frame", str(Path(args.first_frame).resolve())])
+        cmd.extend(extra_cond)
     else:
         cmd = [
             str(H3_BIN),
@@ -154,8 +188,7 @@ def main():
             "--seed", str(args.seed),
             "-o", str(out_file)
         ]
-        if args.first_frame:
-            cmd.extend(["--first-frame", str(Path(args.first_frame).resolve())])
+        cmd.extend(extra_cond)
             
         if not is_canonical:
             if args.int8:
@@ -179,6 +212,20 @@ def main():
     print(f" • UMA Runtime        : {'Resident (/tmp/h3_resident.sock - 0.00s Load)' if is_resident else 'Direct Cold Start'}")
     if args.first_frame:
         print(f" • Image-to-Video     : First-Frame Conditioning ({args.first_frame})")
+    if args.last_frame:
+        print(f" • Video Interpolate  : Last-Frame Conditioning ({args.last_frame})")
+    if args.ref_image:
+        print(f" • Ref2VA Image       : Reference Image ({args.ref_image}) [size={args.ref_image_size}]")
+    if args.ref_video:
+        print(f" • Ref Video + Audio  : Reference Video with embedded audio ({args.ref_video})")
+    if args.ref_silent_video:
+        print(f" • Ref Silent Video   : Reference Video video-only ({args.ref_silent_video})")
+    if args.ref_video_audio:
+        print(f" • Ref Video + Audio  : Video ({args.ref_video_audio[0]}) + Audio ({args.ref_video_audio[1]})")
+    if args.ref_audio:
+        print(f" • Ref Audio Clip     : Reference Audio Track ({args.ref_audio})")
+    if args.export_audio:
+        print(f" • Audio Export       : Lossless standalone .aac demux enabled")
     print(f" • 4K Super-Res       : {'Enabled (Lanczos-4 Sub-pixel 3840x2160)' if args.upscale_4k else 'Disabled (Native output)'}")
     print(f" • Output File        : {out_file}")
     print("=" * 72)
@@ -192,6 +239,29 @@ def main():
         print("=" * 72)
         print(f"✅ DIRECT GENERATION COMPLETED IN {elapsed:.2f}s!")
         print(f"🎬 Native video saved: {out_file} ({size_mb:.2f} MB)")
+        
+        # Native Audio Verification & Lossless Demux
+        try:
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_name,sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", str(out_file)],
+                capture_output=True, text=True
+            )
+            audio_info = probe.stdout.strip().splitlines()
+            if audio_info:
+                codec = audio_info[0]
+                sr = audio_info[1] if len(audio_info) > 1 else "unknown"
+                print(f"🎙️ Native Audio Stream: {codec} @ {sr} Hz (Generated directly by Audio VAE)")
+                if args.export_audio:
+                    extracted_audio = out_file.parent / f"{out_file.stem}_audio.aac"
+                    subprocess.run(
+                        ["ffmpeg", "-y", "-i", str(out_file), "-vn", "-c:a", "copy", str(extracted_audio)],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True
+                    )
+                    if extracted_audio.exists():
+                        a_size_mb = extracted_audio.stat().st_size / (1024 * 1024)
+                        print(f"🎵 Standalone Native Audio: {extracted_audio} ({a_size_mb:.2f} MB)")
+        except Exception as e:
+            print(f"Audio inspection note: {e}")
         
         # 4K Super-Resolution Pipeline
         if args.upscale_4k and upscale_video_to_4k is not None:

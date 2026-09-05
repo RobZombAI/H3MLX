@@ -173,10 +173,34 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "int8": True,
         "upscale_4k": True,
         "prompt": "Studio Ghibli lush green valley with rolling hills, giant wind turbine, fluffy clouds, anime aesthetic"
+    },
+
+    # 6. Commercial Spot Master: Giorgia Meloni MacBook Pro M5 & Chase
+    "h3mlx_spot_meloni_chase": {
+        "name": "Giorgia Meloni MacBook Pro M5 Spot (Trump & Xi Chase)",
+        "description": "8-second narrative commercial spot: Giorgia Meloni with MacBook Pro M5, Trump & Xi Jinping emerging into real world, and H3MLX by RobZombAI endcard. 50 layers, 8 DPM++ 2M steps, macro smart filter.",
+        "width": 768,
+        "height": 512,
+        "seconds": 8.0,
+        "frames": 192,
+        "steps": 8,
+        "reuse": 1,
+        "layers": 50,
+        "mode": "boosted",
+        "solver": "dpm2m",
+        "frontier": "12",
+        "smart_filter": "macro",
+        "token_reduction": False,
+        "int8": True,
+        "upscale_4k": False,
+        "prompt": "Macro close-up cinematic commercial of Italian Prime Minister Giorgia Meloni sitting at a sleek desk using a space black Apple MacBook Pro M5. On the screen, video generation progress bar completes. Donald Trump and Xi Jinping emerge into real life running. Trump running in full dark navy suit with elbows bent at 90 degrees, rhythmic jogging stride, hands held in distinct relaxed fists showing clear knuckles and 5 fingers. Xi Jinping jogging behind with hands in steady running posture, smiling calmly. Meloni looks at them astonished with wide expressive eyes. At the end a metallic high-tech plaque with glowing blue embossed letters reading H3MLX by RobZombAI, hyper-detailed photorealistic 8k, stable anatomy, perfect hands and faces."
     }
 }
 
 # Aliases for backwards compatibility with previous preset names
+PRESETS["spot_meloni_chase"] = PRESETS["h3mlx_spot_meloni_chase"]
+PRESETS["meloni_chase"] = PRESETS["h3mlx_spot_meloni_chase"]
+PRESETS["meloni_spot"] = PRESETS["h3mlx_spot_meloni_chase"]
 PRESETS["h3mlx_champion_4s"] = PRESETS["h3mlx_champion_gold"]
 PRESETS["h3mlx_livello1"] = PRESETS["h3mlx_champion_gold"]
 PRESETS["h3mlx_cinema_4k_master"] = PRESETS["h3mlx_cinema_16x9"]

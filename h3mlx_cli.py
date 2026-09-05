@@ -53,7 +53,7 @@ def main():
         return
 
     parser = argparse.ArgumentParser(
-        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 11 Frontiers (v3.3 2026 SOTA Edition)",
+        description="👑 H3MLX Universal CLI - 1:1 Antirez h3.c Compatible with Metal 4 NAX Acceleration & All 11 Frontiers (v3.4 2026 SOTA Edition)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -85,6 +85,7 @@ def main():
     parser.add_argument("--layers", type=int, default=50, help="Number of DiT residual blocks to retain (35-50)")
     parser.add_argument("--core-reuse", type=int, default=1, help="Recompute transformer core every N steps")
     parser.add_argument("--token-reduction", action="store_true", help="Enable adaptive spatial token reduction in middle blocks 4-34")
+    parser.add_argument("--no-activity-mask", action="store_true", help="Disable spatial-temporal activity matrix calculation (ensures full token compute across all regions)")
     parser.add_argument("--ssd-streaming", action="store_true", help="Keep only 2 DiT blocks in memory and stream from SSD")
     
     # 4. Conditioning & Multimodal References
@@ -94,9 +95,11 @@ def main():
     parser.add_argument("--anchor-prompt", type=str, default="", help="Optional dedicated prompt refinement for the anchor frame synthesis")
     parser.add_argument("--last-frame", type=str, default="", help="Last conditioning frame (Interpolation)")
     parser.add_argument("--ref-image", type=str, default="", help="Reference image conditioning")
-    parser.add_argument("--ref-video", type=str, default="", help="Reference video conditioning")
-    parser.add_argument("--ref-audio", type=str, default="", help="Reference audio conditioning")
-    parser.add_argument("--speech-audio", type=str, default="", help="Overlay speech/dialogue audio track natively")
+    parser.add_argument("--ref-video", type=str, default="", help="Reference video conditioning (including embedded audio)")
+    parser.add_argument("--ref-silent-video", type=str, default="", help="Reference video conditioning without its audio track")
+    parser.add_argument("--ref-video-audio", nargs=2, metavar=("VIDEO", "AUDIO"), help="Reference video plus independent audio soundtrack")
+    parser.add_argument("--ref-audio", type=str, default="", help="Standalone ordered reference audio clip conditioning")
+    parser.add_argument("--export-audio", action="store_true", help="Extract and export lossless standalone audio stream (.aac) alongside video")
     
     # 5. Engine Selection & Accelerations
     parser.add_argument("--engine", "--mode", dest="engine_mode", type=str, default="h3mlx",
@@ -120,6 +123,14 @@ def main():
     parser.add_argument("--nax-stride", type=int, default=4, help="Keyframe anchor stride in frames (default: 4)")
     parser.add_argument("--bandpass-limiter", "--spark-preserve", dest="bandpass_limiter", action="store_true",
                         help="Bandpass Spectral Limiter: preserves isolated impulsive high-frequency particles (sparks, droplets, glints)")
+    
+    # 6. Physical ControlNet, Timeline & Forensic Pipeline
+    parser.add_argument("--control-pose", type=str, default="",
+                        help="Physical OpenPose / biomechanical skeletal guide video for precise limb & trajectory control")
+    parser.add_argument("--timeline", type=str, default="",
+                        help="Path to JSON storyboard timeline configuration for multi-beat narrative sequences")
+    parser.add_argument("--refine-subjects", "--forensic-refine", dest="refine_subjects", action="store_true",
+                        help="Run post-generation forensic micro-subject detailer on miniature characters, hands, and typography")
     
     args = parser.parse_args()
     
@@ -148,15 +159,50 @@ def main():
         print("=" * 78 + "\n")
         return
 
+    # Timeline Storyboard Mode
+    if args.timeline:
+        from h3_timeline_director import execute_timeline_storyboard
+        import json
+        timeline_path = Path(args.timeline).resolve()
+        if not timeline_path.exists():
+            print(f"❌ Error: Timeline configuration not found: {timeline_path}", file=sys.stderr)
+            sys.exit(1)
+        with open(timeline_path, "r") as f:
+            timeline_cfg = json.load(f)
+        
+        timeline_res = execute_timeline_storyboard(
+            timeline_config=timeline_cfg,
+            output_path=args.output,
+            width=args.width,
+            height=args.height,
+            base_seed=args.seed,
+            smart_filter=args.smart_filter if args.smart_filter != "auto" else "macro",
+            no_activity_mask=args.no_activity_mask
+        )
+        if not timeline_res.get("success", False):
+            sys.exit(1)
+            
+        if args.refine_subjects:
+            from h3_subject_detailer import refine_video_subjects
+            refined_path = Path(args.output).parent / f"{Path(args.output).stem}_refined.mp4"
+            print("🔬 Running Micro-Subject Forensic Detailer on timeline output...")
+            refine_video_subjects(args.output, str(refined_path))
+            print(f"✨ Forensic Refined Output Ready: {refined_path}")
+        return
+
     # Apply Preset first if specified
     if args.preset:
         preset_cfg = get_preset(args.preset)
         if preset_cfg:
             print(f"🎬 Loading Preset: {preset_cfg['name']} ({preset_cfg['description']})\n")
-            args.width = preset_cfg.get("width", args.width)
-            args.height = preset_cfg.get("height", args.height)
-            args.seconds = preset_cfg.get("seconds", args.seconds)
-            args.steps = preset_cfg.get("steps", args.steps)
+            if "--width" not in sys.argv:
+                args.width = preset_cfg.get("width", args.width)
+            if "--height" not in sys.argv:
+                args.height = preset_cfg.get("height", args.height)
+            if "--seconds" not in sys.argv and "--duration" not in sys.argv and "--frames" not in sys.argv:
+                args.seconds = preset_cfg.get("seconds", args.seconds)
+            if "--steps" not in sys.argv and "-s" not in sys.argv:
+                args.steps = preset_cfg.get("steps", args.steps)
             args.engine_mode = preset_cfg.get("mode", preset_cfg.get("engine_mode", args.engine_mode))
             args.solver = preset_cfg.get("solver", args.solver)
             args.int8 = preset_cfg.get("int8", args.int8)
@@ -322,7 +368,12 @@ def main():
             print("⚠️ Stage 1 Anchor generation encountered an issue, falling back to direct rollout.")
 
     activity_bin_path = None
-    if args.first_frame and Path(args.first_frame).exists():
+    if args.no_activity_mask or os.environ.get("H3_DISABLE_ACTIVITY_GATE") == "1":
+        if "H3_ACTIVITY_MASK" in os.environ:
+            del os.environ["H3_ACTIVITY_MASK"]
+        os.environ["H3_DISABLE_ACTIVITY_GATE"] = "1"
+        print("⚡ Matrice di Attività Disattivata: calcolo 100% full-token abilitato su tutto il canvas.")
+    elif args.first_frame and Path(args.first_frame).exists():
         try:
             from h3_spatial_matrix import compute_activity_matrix
             matrix_dir = Path(args.output).parent / "matrix"
@@ -344,7 +395,12 @@ def main():
         except Exception as e:
             print(f"⚠️ Nota: Impossibile generare la matrice di attività ({e}), procedo con rollout standard.")
 
-    extra_env = {"H3_ACTIVITY_MASK": activity_bin_path} if activity_bin_path else None
+    if args.control_pose:
+        if not args.ref_video:
+            args.ref_video = args.control_pose
+        print(f"🦴 Physical ControlNet Pose Guidance Active: {args.control_pose}")
+
+    extra_env = {"H3_ACTIVITY_MASK": activity_bin_path} if activity_bin_path else {"H3_DISABLE_ACTIVITY_GATE": "1"}
     res = execute_h3_generation(
         prompt=args.prompt,
         output_path=args.output,
@@ -357,14 +413,17 @@ def main():
         solver=args.solver,
         reuse=args.reuse,
         layers=args.layers,
+        core_reuse=args.core_reuse,
         token_reduction=args.token_reduction,
         int8=args.int8,
         first_frame=args.first_frame if args.first_frame else None,
         last_frame=args.last_frame if args.last_frame else None,
         ref_image=args.ref_image if args.ref_image else None,
         ref_video=args.ref_video if args.ref_video else None,
+        ref_silent_video=args.ref_silent_video if args.ref_silent_video else None,
+        ref_video_audio=tuple(args.ref_video_audio) if args.ref_video_audio else None,
         ref_audio=args.ref_audio if args.ref_audio else None,
-        speech_audio=args.speech_audio if args.speech_audio else None,
+        export_audio=args.export_audio,
         ssd_streaming=args.ssd_streaming,
         upscale_4k=args.upscale_4k,
         smart_filter=args.smart_filter,
@@ -387,6 +446,9 @@ def main():
         print("GENERATION COMPLETED SUCCESSFULLY")
         print(f"  • Total Wall Time:  {wall_time:.2f}s  (Throughput: {fps:.2f} FPS)")
         print(f"  • Video RAW:        {res.raw_output_path} ({raw_mb:.2f} MB)")
+        if res.audio_output_path:
+            audio_mb = Path(res.audio_output_path).stat().st_size / (1024 * 1024) if Path(res.audio_output_path).exists() else 0.0
+            print(f"  • Audio NATIVE:     {res.audio_output_path} ({audio_mb:.2f} MB)")
         if res.master_output_path:
             master_mb = Path(res.master_output_path).stat().st_size / (1024 * 1024) if Path(res.master_output_path).exists() else 0.0
             print(f"  • Video MASTER 4K:  {res.master_output_path} ({master_mb:.2f} MB)")
@@ -394,8 +456,18 @@ def main():
         if res.profile_data:
             print("\nMetal GPU Profiling:")
             for k, v in res.profile_data.items():
-                print(f"   • {k:<25}: {v:.2f}s")
+                if isinstance(v, (int, float)):
+                    print(f"   • {k:<25}: {v:.2f}s")
+                else:
+                    print(f"   • {k:<25}: {v}")
         print("=" * 70 + "\n")
+
+        if args.refine_subjects and res.raw_output_path and Path(res.raw_output_path).exists():
+            from h3_subject_detailer import refine_video_subjects
+            refined_output = str(Path(res.raw_output_path).parent / f"{Path(res.raw_output_path).stem}_refined.mp4")
+            print("🔬 Running Micro-Subject Forensic Detailer on output...")
+            refine_video_subjects(res.raw_output_path, refined_output)
+            print(f"✨ Forensic Refined Output Ready: {refined_output}\n")
     else:
         print(f"\nError during H3 execution:\n{res.stderr}", file=sys.stderr)
         sys.exit(1)

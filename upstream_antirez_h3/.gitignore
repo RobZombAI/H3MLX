@@ -1,0 +1,30 @@
+# Local models, references, experiments, and generated media.
+misc/
+MiniMax-H3/
+outputs/
+.ruff_cache/
+
+# Compiler and test outputs.
+*.o
+*.d
+*.air
+*.metallib
+h3
+h3_*test
+h3_*tests
+h3_*bench
+h3_dit_bench_864
+h3_tests
+h3_metal_tests
+h3_bf16_tests
+h3_tokenizer_tests
+h3_text_tests
+h3_real_prompt_test
+h3_real_dit_block_test
+h3_real_dit_schedule_test
+h3_real_dit_test
+h3_semantic_dit_test
+h3_real_video_vae_test
+h3_semantic_vae_test
+libh3.a
+.DS_Store

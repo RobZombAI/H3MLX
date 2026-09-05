@@ -17,7 +17,10 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 
 BASE_DIR = Path(__file__).resolve().parent
-H3_BIN = BASE_DIR / "h3-lora-lab" / "h3"
+if (BASE_DIR / "upstream_antirez_h3" / "h3").exists():
+    H3_BIN = BASE_DIR / "upstream_antirez_h3" / "h3"
+else:
+    H3_BIN = BASE_DIR / "h3-lora-lab" / "h3"
 DEFAULT_PDD_MODEL = Path("/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step")
 DEFAULT_FULL_MODEL = Path("/Users/robzomb/h3-models/MiniMax-H3")
 
@@ -30,7 +33,8 @@ class H3EngineResult:
                  stderr: str,
                  profile_data: Optional[Dict[str, float]] = None,
                  raw_output_path: str = "",
-                 master_output_path: Optional[str] = None):
+                 master_output_path: Optional[str] = None,
+                 audio_output_path: Optional[str] = None):
         self.success = success
         self.output_path = output_path
         self.wall_time_s = wall_time_s
@@ -39,6 +43,7 @@ class H3EngineResult:
         self.profile_data = profile_data or {}
         self.raw_output_path = raw_output_path or output_path
         self.master_output_path = master_output_path
+        self.audio_output_path = audio_output_path
 
 # Standard Optimal Duration Table for MiniMax-H3 Multimodal Architecture
 # Aligned strictly with the 3D Video VAE Temporal Lattice: frames = 17k + 5, latents = 5k + 2
@@ -87,13 +92,13 @@ def resolve_model_path(model_dir: Optional[str] = None, steps: int = 14) -> Path
             return p
 
     candidates = [
-        Path.home() / "h3-models" / "MiniMax-H3-PDD-8Step",
         Path.home() / "h3-models" / "MiniMax-H3",
-        Path("/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step"),
         Path("/Users/robzomb/h3-models/MiniMax-H3"),
+        Path.home() / "h3-models" / "MiniMax-H3-PDD-8Step",
+        Path("/Users/robzomb/h3-models/MiniMax-H3-PDD-8Step"),
         Path.home() / "Desktop" / "H3" / "MiniMax-H3",
-        BASE_DIR / "models" / "MiniMax-H3-PDD-8Step",
-        BASE_DIR / "models" / "MiniMax-H3"
+        BASE_DIR / "models" / "MiniMax-H3",
+        BASE_DIR / "models" / "MiniMax-H3-PDD-8Step"
     ]
 
     for c in candidates:
@@ -123,6 +128,7 @@ def execute_h3_generation(
     solver: str = "auto",          # "euler", "dpm3m", "ab3", "auto"
     reuse: int = 2,
     layers: int = 50,
+    core_reuse: int = 1,
     token_reduction: bool = True,
     token_reduction_blocks: str = "4:34",
     int8: bool = True,
@@ -130,8 +136,10 @@ def execute_h3_generation(
     last_frame: Optional[str] = None,
     ref_image: Optional[str] = None,
     ref_video: Optional[str] = None,
+    ref_silent_video: Optional[str] = None,
+    ref_video_audio: Optional[Tuple[str, str]] = None,
     ref_audio: Optional[str] = None,
-    speech_audio: Optional[str] = None,
+    export_audio: bool = False,
     ssd_streaming: bool = False,
     upscale_4k: bool = False,
     smart_filter: str = "auto",
@@ -166,9 +174,12 @@ def execute_h3_generation(
         "--frames", str(frames),
         "--steps", str(steps),
         "--seed", str(seed),
-        "--layers", str(layers),
-        "--reuse", str(reuse)
+        "--layers", str(layers)
     ]
+    if core_reuse > 1:
+        cmd.extend(["--core-reuse", str(core_reuse), "--reuse", "1"])
+    else:
+        cmd.extend(["--reuse", str(reuse)])
     
     if profile:
         cmd.append("--profile")
@@ -186,18 +197,15 @@ def execute_h3_generation(
         cmd.extend(["--ref-image", _abs_path(ref_image)])
     if ref_video:
         cmd.extend(["--ref-video", _abs_path(ref_video)])
+    if ref_silent_video:
+        cmd.extend(["--ref-silent-video", _abs_path(ref_silent_video)])
+    if ref_video_audio:
+        v_clip, a_clip = ref_video_audio
+        cmd.extend(["--ref-video-audio", _abs_path(v_clip), _abs_path(a_clip)])
     if ref_audio:
         cmd.extend(["--ref-audio", _abs_path(ref_audio)])
-    if speech_audio:
-        cmd.extend(["--speech-audio", _abs_path(speech_audio)])
     if ssd_streaming:
         cmd.append("--ssd-streaming")
-    if nax_st:
-        cmd.append("--nax-st")
-        if nax_chunk > 0:
-            cmd.extend(["--nax-chunk", str(nax_chunk)])
-        if nax_stride > 0:
-            cmd.extend(["--nax-stride", str(nax_stride)])
         
     env = os.environ.copy()
     
@@ -214,7 +222,6 @@ def execute_h3_generation(
     env["METAL_CAPTURE_ENABLED"] = "0"
     
     if engine_mode in ["canonical", "pure", "antirez"]:
-        cmd.append("--canonical")
         cmd.append("--use-int8-row-fc2")
         env["H3_NAX"] = "0"
         env["H3_INT8_FC2"] = "1"
@@ -229,7 +236,6 @@ def execute_h3_generation(
             env["H3_TOKEN_REDUCTION"] = "0"
 
         if int8:
-            cmd.append("--int8")
             cmd.append("--use-int8-row-fc2")
             env["H3_INT8_FC2"] = "1"
         else:
@@ -303,7 +309,7 @@ def execute_h3_generation(
         env.update(extra_env)
         
     t_start = time.perf_counter()
-    proc = subprocess.run(cmd, env=env, cwd=str(BASE_DIR / "h3-lora-lab"), capture_output=True, text=True)
+    proc = subprocess.run(cmd, env=env, cwd=str(H3_BIN.parent), capture_output=True, text=True)
     t_end = time.perf_counter()
     wall_time = t_end - t_start
     
@@ -326,6 +332,32 @@ def execute_h3_generation(
                     profile_data["vae_decode_s"] = float(line_str.split(":")[-1].replace("s", "").strip())
                 except Exception:
                     pass
+
+    # Native Audio Stream Verification & Optional Standalone Demux
+    audio_output_path = None
+    if proc.returncode == 0 and out_file.exists():
+        try:
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_name,sample_rate", "-of", "default=noprint_wrappers=1:nokey=1", str(out_file)],
+                capture_output=True, text=True
+            )
+            audio_info = probe.stdout.strip().splitlines()
+            if audio_info:
+                profile_data["audio_codec"] = audio_info[0]
+                if len(audio_info) > 1:
+                    profile_data["audio_sample_rate"] = audio_info[1]
+                    
+            if export_audio and audio_info:
+                extracted_audio = out_file.parent / f"{out_file.stem}_audio.aac"
+                subprocess.run(
+                    ["ffmpeg", "-y", "-i", str(out_file), "-vn", "-c:a", "copy", str(extracted_audio)],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True
+                )
+                if extracted_audio.exists():
+                    audio_output_path = str(extracted_audio)
+                    profile_data["exported_audio"] = str(extracted_audio)
+        except Exception as e:
+            print(f"Native audio verification notice: {e}")
 
     # Level 5 Smart Cinema Mastering & 48kHz Audio Foley (Wavelet Bayes + CAS + VideoToolbox)
     final_output_path = str(out_file)
@@ -375,5 +407,6 @@ def execute_h3_generation(
         stderr=proc.stderr,
         profile_data=profile_data,
         raw_output_path=str(out_file),
-        master_output_path=master_path_str
+        master_output_path=master_path_str,
+        audio_output_path=audio_output_path
     )

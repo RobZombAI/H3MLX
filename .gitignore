@@ -4,10 +4,14 @@
 *.a
 h3-lora-lab/h3
 h3-lora-lab/h3_resident_engine
+upstream_antirez_h3/h3
+bin/h3
+bin/h3_shaders.metal
 
 # Generated Media & Outputs
 outputs/
 outputs_*/
+inputs/
 *.mp4
 *.gif
 *.jpg
