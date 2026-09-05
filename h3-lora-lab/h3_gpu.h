@@ -178,6 +178,14 @@ int h3_gpu_scale_add_f32(h3_gpu *gpu, h3_gpu_tensor *output,
                          const h3_gpu_tensor *branch,
                          const h3_gpu_tensor *scale, uint32_t rows,
                          uint32_t width);
+int h3_gpu_scale_add_bf16(h3_gpu *gpu, h3_gpu_tensor *output,
+                          const h3_gpu_tensor *residual,
+                          const h3_gpu_tensor *branch,
+                          const h3_gpu_tensor *scale, uint32_t rows,
+                          uint32_t width);
+int h3_gpu_bias_add_bf16(h3_gpu *gpu, h3_gpu_tensor *output,
+                         const h3_gpu_tensor *bias, uint32_t rows,
+                         uint32_t width);
 int h3_gpu_layer_norm_f32(h3_gpu *gpu, h3_gpu_tensor *output,
                           const h3_gpu_tensor *input,
                           const h3_gpu_tensor *weight,
@@ -191,6 +199,15 @@ int h3_gpu_video_qkv_rope_f32(h3_gpu *gpu, h3_gpu_tensor *query,
                               uint32_t sequence, uint32_t heads,
                               uint32_t head_dim, uint32_t rope_half,
                               float epsilon);
+int h3_gpu_video_qkv_rope_bf16(h3_gpu *gpu, h3_gpu_tensor *query,
+                               h3_gpu_tensor *key, h3_gpu_tensor *value,
+                               const h3_gpu_tensor *qkv,
+                               const h3_gpu_tensor *rope_cos,
+                               const h3_gpu_tensor *rope_sin,
+                               uint32_t sequence, uint32_t heads,
+                               uint32_t head_dim, uint32_t rope_half,
+                               float epsilon);
+
 
 /* H3 AudioVAE uses time-major [batch,length,channels] activations and stores
  * Conv1d/ConvTranspose1d weights in PyTorch OIK/IOK order respectively. */
@@ -327,6 +344,17 @@ int h3_gpu_linear_int8_bf16(h3_gpu *gpu, h3_gpu_tensor *output,
                             uint32_t rows, uint32_t input_dim,
                             uint32_t output_dim,
                             int use_slower_uncached_int8_scales);
+int h3_gpu_linear_int8_bf16_bias(h3_gpu *gpu, h3_gpu_tensor *output,
+                                 h3_gpu_tensor *quantized_input,
+                                 h3_gpu_tensor *input_scales,
+                                 const h3_gpu_tensor *input,
+                                 const h3_gpu_tensor *weight,
+                                 const h3_gpu_tensor *weight_scales,
+                                 const h3_gpu_tensor *bias,
+                                 uint32_t rows, uint32_t input_dim,
+                                 uint32_t output_dim,
+                                 int use_slower_uncached_int8_scales);
+
 /* Consume SDPA's native [head,row,dimension] BF16 layout without a full
  * BF16 transpose, gathering directly into the projection's row-major int8. */
 int h3_gpu_linear_int8_head_major_bf16(

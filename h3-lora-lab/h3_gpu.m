@@ -1733,6 +1733,52 @@ int h3_gpu_scale_add_f32(h3_gpu *opaque, h3_gpu_tensor *output,
         });
 }
 
+int h3_gpu_scale_add_bf16(h3_gpu *opaque, h3_gpu_tensor *output,
+                          const h3_gpu_tensor *residual,
+                          const h3_gpu_tensor *branch,
+                          const h3_gpu_tensor *scale, uint32_t rows,
+                          uint32_t width) {
+    H3GPU *gpu = GPU(opaque);
+    size_t count = (size_t)rows * width;
+    if (!h3_gpu_require_elements(gpu, residual, count, @"scale-add residual") ||
+        TENSOR(residual).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, branch, count, @"scale-add branch") ||
+        TENSOR(branch).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, scale, width, @"scale-add scale") ||
+        TENSOR(scale).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, output, count, @"scale-add output") ||
+        TENSOR(output).dtype != H3_GPU_BF16) return 0;
+    swiglu_args args = {rows, width};
+    return h3_gpu_dispatch_2d(gpu, @"h3_scale_add_bf16", width, rows,
+        ^(id<MTLComputeCommandEncoder> encoder) {
+            [encoder setBuffer:TENSOR(residual).buffer offset:0 atIndex:0];
+            [encoder setBuffer:TENSOR(branch).buffer offset:0 atIndex:1];
+            [encoder setBuffer:TENSOR(scale).buffer offset:0 atIndex:2];
+            [encoder setBuffer:TENSOR(output).buffer offset:0 atIndex:3];
+            [encoder setBytes:&args length:sizeof(args) atIndex:4];
+        });
+}
+
+int h3_gpu_bias_add_bf16(h3_gpu *opaque, h3_gpu_tensor *output,
+                         const h3_gpu_tensor *bias, uint32_t rows,
+                         uint32_t width) {
+    H3GPU *gpu = GPU(opaque);
+    size_t count = (size_t)rows * width;
+    if (!h3_gpu_require_elements(gpu, output, count, @"bias-add output") ||
+        TENSOR(output).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, bias, width, @"bias-add bias") ||
+        TENSOR(bias).dtype != H3_GPU_BF16) return 0;
+    swiglu_args args = {rows, width};
+    return h3_gpu_dispatch_2d(gpu, @"h3_bias_add_bf16", width, rows,
+        ^(id<MTLComputeCommandEncoder> encoder) {
+            [encoder setBuffer:TENSOR(output).buffer offset:0 atIndex:0];
+            [encoder setBuffer:TENSOR(bias).buffer offset:0 atIndex:1];
+            [encoder setBuffer:TENSOR(output).buffer offset:0 atIndex:2];
+            [encoder setBytes:&args length:sizeof(args) atIndex:3];
+        });
+}
+
+
 int h3_gpu_layer_norm_f32(h3_gpu *opaque, h3_gpu_tensor *output,
                           const h3_gpu_tensor *input,
                           const h3_gpu_tensor *weight,
@@ -1796,6 +1842,45 @@ int h3_gpu_video_qkv_rope_f32(h3_gpu *opaque, h3_gpu_tensor *query,
             [encoder setBytes:&args length:sizeof(args) atIndex:6];
         });
 }
+
+int h3_gpu_video_qkv_rope_bf16(h3_gpu *opaque, h3_gpu_tensor *query,
+                               h3_gpu_tensor *key, h3_gpu_tensor *value,
+                               const h3_gpu_tensor *qkv,
+                               const h3_gpu_tensor *rope_cos,
+                               const h3_gpu_tensor *rope_sin,
+                               uint32_t sequence, uint32_t heads,
+                               uint32_t head_dim, uint32_t rope_half,
+                               float epsilon) {
+    H3GPU *gpu = GPU(opaque);
+    size_t inner = (size_t)heads * head_dim;
+    size_t count = (size_t)sequence * inner;
+    size_t rope_count = (size_t)sequence * rope_half;
+    if (!h3_gpu_require_elements(gpu, qkv, count * 3, @"video QKV") ||
+        TENSOR(qkv).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, rope_cos, rope_count, @"video RoPE cosine") ||
+        TENSOR(rope_cos).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, rope_sin, rope_count, @"video RoPE sine") ||
+        TENSOR(rope_sin).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, query, count, @"video query") ||
+        TENSOR(query).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, key, count, @"video key") ||
+        TENSOR(key).dtype != H3_GPU_BF16 ||
+        !h3_gpu_require_elements(gpu, value, count, @"video value") ||
+        TENSOR(value).dtype != H3_GPU_BF16 || rope_half * 2 > head_dim) return 0;
+    qkv_args args = {sequence, heads, head_dim, rope_half, 0, epsilon};
+    return h3_gpu_dispatch_3d(gpu, @"h3_video_qkv_rope_bf16",
+        MTLSizeMake(head_dim, heads, sequence),
+        ^(id<MTLComputeCommandEncoder> encoder) {
+            [encoder setBuffer:TENSOR(qkv).buffer offset:0 atIndex:0];
+            [encoder setBuffer:TENSOR(rope_cos).buffer offset:0 atIndex:1];
+            [encoder setBuffer:TENSOR(rope_sin).buffer offset:0 atIndex:2];
+            [encoder setBuffer:TENSOR(query).buffer offset:0 atIndex:3];
+            [encoder setBuffer:TENSOR(key).buffer offset:0 atIndex:4];
+            [encoder setBuffer:TENSOR(value).buffer offset:0 atIndex:5];
+            [encoder setBytes:&args length:sizeof(args) atIndex:6];
+        });
+}
+
 
 static H3Conv *h3_gpu_conv_graph(H3GPU *gpu, uint32_t batch,
                                  uint32_t length, uint32_t input_channels,
@@ -3101,6 +3186,26 @@ int h3_gpu_linear_int8_bf16(h3_gpu *opaque, h3_gpu_tensor *output,
         weight_scales, rows, input_dim, output_dim,
         use_slower_uncached_int8_scales, NO, 0, 0);
 }
+
+int h3_gpu_linear_int8_bf16_bias(h3_gpu *opaque, h3_gpu_tensor *output,
+                                 h3_gpu_tensor *quantized_input,
+                                 h3_gpu_tensor *input_scales,
+                                 const h3_gpu_tensor *input,
+                                 const h3_gpu_tensor *weight,
+                                 const h3_gpu_tensor *weight_scales,
+                                 const h3_gpu_tensor *bias,
+                                 uint32_t rows, uint32_t input_dim,
+                                 uint32_t output_dim,
+                                 int use_slower_uncached_int8_scales) {
+    if (!h3_gpu_linear_int8_bf16(opaque, output, quantized_input, input_scales,
+                                input, weight, weight_scales, rows, input_dim,
+                                output_dim, use_slower_uncached_int8_scales)) return 0;
+    if (bias) {
+        return h3_gpu_bias_add_bf16(opaque, output, bias, rows, output_dim);
+    }
+    return 1;
+}
+
 
 int h3_gpu_linear_int8_head_major_bf16(
                             h3_gpu *opaque, h3_gpu_tensor *output,

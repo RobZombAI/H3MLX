@@ -3038,30 +3038,16 @@ static int denoise_euler_gpu(h3_dit *dit, float *video_latent,
             ? dit->previous_video_velocity : dit->video_output_bf16;
         const h3_gpu_tensor *previous_audio = previous_evaluated >= 0
             ? dit->previous_audio_velocity : dit->audio_output_bf16;
-        int use_dataward = !getenv("H3_DISABLE_DATAWARD");
-        if (use_dataward) {
-            ok = gpu_op(dit, h3_gpu_dataward_euler_bf16(
-                    dit->gpu, dit->video_input, video_offset,
-                    dit->video_output_bf16, previous_video, (uint32_t)video_count,
-                    dit->sigmas.video[step], dit->sigmas.video[step + 1],
-                    video_ratio), error, error_size, "GPU video Data-Ward Euler step") &&
-                 gpu_op(dit, h3_gpu_dataward_euler_bf16(
-                    dit->gpu, dit->audio_input, audio_offset,
-                    dit->audio_output_bf16, previous_audio, (uint32_t)audio_count,
-                    dit->sigmas.audio[step], dit->sigmas.audio[step + 1],
-                    audio_ratio), error, error_size, "GPU audio Data-Ward Euler step");
-        } else {
-            ok = gpu_op(dit, h3_gpu_euler_bf16(
-                    dit->gpu, dit->video_input, video_offset,
-                    dit->video_output_bf16, previous_video, (uint32_t)video_count,
-                    dit->sigmas.video[step] - dit->sigmas.video[step + 1],
-                    video_ratio), error, error_size, "GPU video Euler step") &&
-                 gpu_op(dit, h3_gpu_euler_bf16(
-                    dit->gpu, dit->audio_input, audio_offset,
-                    dit->audio_output_bf16, previous_audio, (uint32_t)audio_count,
-                    dit->sigmas.audio[step] - dit->sigmas.audio[step + 1],
-                    audio_ratio), error, error_size, "GPU audio Euler step");
-        }
+        ok = gpu_op(dit, h3_gpu_euler_bf16(
+                dit->gpu, dit->video_input, video_offset,
+                dit->video_output_bf16, previous_video, (uint32_t)video_count,
+                dit->sigmas.video[step] - dit->sigmas.video[step + 1],
+                video_ratio), error, error_size, "GPU video Euler step") &&
+             gpu_op(dit, h3_gpu_euler_bf16(
+                dit->gpu, dit->audio_input, audio_offset,
+                dit->audio_output_bf16, previous_audio, (uint32_t)audio_count,
+                dit->sigmas.audio[step] - dit->sigmas.audio[step + 1],
+                audio_ratio), error, error_size, "GPU audio Euler step");
         if (ok && (evaluate || preview)) {
             int finish = preview || step + 1 == dit->sigmas.steps ||
                          (window && pending_evaluations >= window);

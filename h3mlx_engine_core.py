@@ -14,7 +14,7 @@ import sys
 import time
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
 
 BASE_DIR = Path(__file__).resolve().parent
 if (BASE_DIR / "upstream_antirez_h3" / "h3").exists():

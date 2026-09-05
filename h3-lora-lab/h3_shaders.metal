@@ -256,6 +256,34 @@ kernel void h3_scale_add_f32(device const float *residual [[buffer(0)]],
     output[index] = residual[index] + branch[index] * scale[column];
 }
 
+kernel void h3_scale_add_bf16(device const bfloat *residual [[buffer(0)]],
+                              device const bfloat *branch [[buffer(1)]],
+                              device const bfloat *scale [[buffer(2)]],
+                              device bfloat *output [[buffer(3)]],
+                              constant scale_add_args &args [[buffer(4)]],
+                              uint2 gid [[thread_position_in_grid]]) {
+    uint column = gid.x;
+    uint row = gid.y;
+    if (row >= args.rows || column >= args.width) return;
+    uint index = row * args.width + column;
+    float r = (float)residual[index];
+    float b = (float)branch[index];
+    float s = (float)scale[column];
+    output[index] = (bfloat)(r + b * s);
+}
+
+kernel void h3_bias_add_bf16(device const bfloat *input [[buffer(0)]],
+                             device const bfloat *bias [[buffer(1)]],
+                             device bfloat *output [[buffer(2)]],
+                             constant scale_add_args &args [[buffer(3)]],
+                             uint2 gid [[thread_position_in_grid]]) {
+    uint column = gid.x;
+    uint row = gid.y;
+    if (row >= args.rows || column >= args.width) return;
+    uint index = row * args.width + column;
+    output[index] = (bfloat)((float)input[index] + (float)bias[column]);
+}
+
 kernel void h3_layer_norm_f32(device const float *input [[buffer(0)]],
                               device const float *weight [[buffer(1)]],
                               device const float *bias [[buffer(2)]],
@@ -344,6 +372,55 @@ kernel void h3_video_qkv_rope_f32(
     key[output_index] = k0;
     value[output_index] = qkv[base + args.head_dim * 2 + dimension];
 }
+
+kernel void h3_video_qkv_rope_bf16(
+                            device const bfloat *qkv [[buffer(0)]],
+                            device const bfloat *rope_cos [[buffer(1)]],
+                            device const bfloat *rope_sin [[buffer(2)]],
+                            device bfloat *query [[buffer(3)]],
+                            device bfloat *key [[buffer(4)]],
+                            device bfloat *value [[buffer(5)]],
+                            constant qkv_args &args [[buffer(6)]],
+                            uint3 gid [[thread_position_in_grid]]) {
+    uint dimension = gid.x;
+    uint head = gid.y;
+    uint row = gid.z;
+    if (dimension >= args.head_dim || head >= args.heads || row >= args.sequence) return;
+    uint base = (row * args.heads + head) * args.head_dim * 3;
+    float q_sum = 0.0f, k_sum = 0.0f;
+    for (uint d = 0; d < args.head_dim; d++) {
+        float q = (float)qkv[base + d];
+        float k = (float)qkv[base + args.head_dim + d];
+        q_sum = fma(q, q, q_sum);
+        k_sum = fma(k, k, k_sum);
+    }
+    float qi = rsqrt(q_sum / float(args.head_dim) + args.epsilon);
+    float ki = rsqrt(k_sum / float(args.head_dim) + args.epsilon);
+    float q0 = (float)qkv[base + dimension] * qi;
+    float k0 = (float)qkv[base + args.head_dim + dimension] * ki;
+    if (dimension < args.rope_half) {
+        uint pair = dimension + args.rope_half;
+        float q1 = (float)qkv[base + pair] * qi;
+        float k1 = (float)qkv[base + args.head_dim + pair] * ki;
+        float c = (float)rope_cos[row * args.rope_half + dimension];
+        float s = (float)rope_sin[row * args.rope_half + dimension];
+        q0 = q0 * c - q1 * s;
+        k0 = k0 * c - k1 * s;
+    } else if (dimension < args.rope_half * 2) {
+        uint pair = dimension - args.rope_half;
+        float q1 = (float)qkv[base + pair] * qi;
+        float k1 = (float)qkv[base + args.head_dim + pair] * ki;
+        float c = (float)rope_cos[row * args.rope_half + pair];
+        float s = (float)rope_sin[row * args.rope_half + pair];
+        q0 = q0 * c + q1 * s;
+        k0 = k0 * c + k1 * s;
+    }
+    uint output_index = (row * args.heads + head) * args.head_dim + dimension;
+    query[output_index] = (bfloat)q0;
+    key[output_index] = (bfloat)k0;
+    value[output_index] = qkv[base + args.head_dim * 2 + dimension];
+}
+
 
 struct adaln_args {
     uint rows;
