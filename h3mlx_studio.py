@@ -328,13 +328,20 @@ def main():
         print(f"{C_BOLD}{C_WHITE}GENERATION FINISHED SUCCESSFULLY{C_RESET}")
         print(f"  • Wall Time   : {C_GREEN}{C_BOLD}{wall_time:.2f}s{C_RESET} (Throughput: {C_BOLD}{fps:.2f} FPS{C_RESET})")
         print(f"  • Output File : {C_CYAN}{C_BOLD}{res.output_path}{C_RESET}")
+        if res.raw_output_path and os.path.exists(res.raw_output_path) and res.raw_output_path != res.output_path:
+            print(f"  • Raw Video   : {C_CYAN}{C_BOLD}{res.raw_output_path}{C_RESET}")
         if res.master_output_path and os.path.exists(res.master_output_path):
             print(f"  • Master 4K   : {C_CYAN}{C_BOLD}{res.master_output_path}{C_RESET}")
+        if res.audio_output_path and os.path.exists(res.audio_output_path):
+            print(f"  • Audio NATIVE: {C_CYAN}{C_BOLD}{res.audio_output_path}{C_RESET}")
             
         if res.profile_data:
             print(f"\n  Profiling Metrics:")
             for phase, dur in res.profile_data.items():
-                print(f"     • {phase:26s}: {C_CYAN}{dur:.2f}s{C_RESET}")
+                if isinstance(dur, (int, float)):
+                    print(f"     • {phase:26s}: {C_CYAN}{dur:.2f}s{C_RESET}")
+                else:
+                    print(f"     • {phase:26s}: {C_CYAN}{dur}{C_RESET}")
                 
         print(C_GREEN + "═" * 70 + C_RESET + "\n")
     else:

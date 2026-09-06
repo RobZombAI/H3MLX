@@ -31,7 +31,7 @@ class H3EngineResult:
                  wall_time_s: float,
                  stdout: str,
                  stderr: str,
-                 profile_data: Optional[Dict[str, float]] = None,
+                 profile_data: Optional[Dict[str, Any]] = None,
                  raw_output_path: str = "",
                  master_output_path: Optional[str] = None,
                  audio_output_path: Optional[str] = None):
